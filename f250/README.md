@@ -8,6 +8,7 @@ Robust tooling for managing OBD diagnostics and maintenance logs for the Ford F2
 - **Query Engine**: Query OBD data with DTC filtering, date ranges, and misfire analysis
 - **Maintenance Tracking**: CSV-based maintenance log with SQLite sync
 - **Diagnostic Reports**: Generate comprehensive diagnostic sheets with linked data
+- **Google Sheets Sync**: Sync F250 data to Google Sheets for easy sharing and collaboration
 
 ## Directory Structure
 
@@ -24,7 +25,8 @@ f250/
     ├── obd_import.py            # Import OBD data
     ├── obd_query.py             # Query and analyze OBD data
     ├── maintenance.py           # Manage maintenance log
-    └── diag_report.py           # Generate diagnostic reports
+    ├── diag_report.py           # Generate diagnostic reports
+    └── gsheets_sync.py          # Sync data to Google Sheets
 ```
 
 ## Setup
@@ -34,7 +36,7 @@ Install required dependencies:
 ```bash
 pip install -r requirements.txt
 # or install individually:
-pip install pandas pyarrow
+pip install pandas pyarrow gspread google-auth
 ```
 
 ## Usage
@@ -117,6 +119,31 @@ python f250/scripts/diag_report.py \
   --job-type repair
 ```
 
+### Sync to Google Sheets
+
+Sync F250 data to Google Sheets for easy collaboration:
+
+```bash
+# Sync all data (maintenance, OBD summary, and DTC summary)
+python f250/scripts/gsheets_sync.py \
+  --credentials path/to/service-account.json \
+  --spreadsheet-id YOUR_SPREADSHEET_ID
+
+# Sync only maintenance data
+python f250/scripts/gsheets_sync.py \
+  --credentials path/to/service-account.json \
+  --spreadsheet-id YOUR_SPREADSHEET_ID \
+  --maintenance-only
+
+# Sync only OBD data
+python f250/scripts/gsheets_sync.py \
+  --credentials path/to/service-account.json \
+  --spreadsheet-id YOUR_SPREADSHEET_ID \
+  --obd-only
+```
+
+**Note**: You need a Google service account JSON credentials file. See [Google Cloud documentation](https://cloud.google.com/iam/docs/service-accounts) for setup instructions.
+
 ## Data Schema
 
 ### OBD Logs Table
@@ -195,6 +222,15 @@ CREATE TABLE maintenance (
 - Photo discovery and linking
 - Markdown format for easy viewing
 
+### Google Sheets Sync (`gsheets_sync.py`)
+
+- Sync maintenance log to Google Sheets
+- Sync OBD data summary by date
+- Sync DTC occurrence summary
+- Service account authentication
+- Multiple worksheet management
+- Selective sync options (maintenance-only, obd-only, dtc-only)
+
 ## Error Handling
 
 All scripts include:
@@ -203,6 +239,10 @@ All scripts include:
 - Database transaction safety
 - Non-zero exit codes on errors
 - Graceful error messages
+- **Automatic directory creation** for missing paths
+- **Absolute path resolution** to avoid working directory issues
+- **Database existence validation** before queries
+- **Detailed error messages** with actionable guidance
 
 ## Examples
 
