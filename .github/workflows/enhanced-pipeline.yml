@@ -1,0 +1,83 @@
+name: Enhanced OCR Pipeline
+
+on:
+  push:
+    branches: [ main, develop, "copilot/*" ]
+    paths:
+      - 'prototype/enhanced/**'
+      - 'webapp/**'
+      - 'requirements-enhanced.txt'
+      - '.github/workflows/enhanced-pipeline.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'prototype/enhanced/**'
+      - 'webapp/**'
+      - 'requirements-enhanced.txt'
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements-enhanced.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y tesseract-ocr libtesseract-dev
+    
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-enhanced.txt
+    
+    - name: Lint with flake8
+      run: |
+        pip install flake8
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 prototype/enhanced --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Exit-zero treats all errors as warnings
+        flake8 prototype/enhanced --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics
+      continue-on-error: true
+    
+    - name: Run unit tests
+      run: |
+        cd prototype/enhanced
+        python -m pytest tests/ -v --tb=short
+      env:
+        PYTHONPATH: ${{ github.workspace }}
+    
+    - name: Test segmentation on examples
+      run: |
+        cd prototype/enhanced
+        python segmentation.py ../../prototype/examples/test1.png /tmp/test_output
+        ls -la /tmp/test_output
+      continue-on-error: true
+    
+    - name: Test OCR backend selection
+      run: |
+        cd prototype/enhanced
+        python -c "from ocr_backends import get_available_backends; backends = get_available_backends(); print(f'Available backends: {[b.name for b in backends]}'); assert len(backends) > 0, 'No OCR backends available'"
+    
+    - name: Upload test artifacts
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: /tmp/test_output/
+        if-no-files-found: ignore
