@@ -55,7 +55,7 @@ def search_code(query: str, language: Optional[str] = None,
     }
     
     if GITHUB_TOKEN:
-        headers["Authorization"] = f"token {GITHUB_TOKEN}"
+        headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
     
     try:
         response = requests.get(url, params=params, headers=headers)
@@ -66,7 +66,12 @@ def search_code(query: str, language: Optional[str] = None,
     
     except requests.exceptions.HTTPError as e:
         if response.status_code == 403:
-            print(f"Error: API rate limit exceeded or authentication required.")
+            # Check if it's rate limiting or permission issue
+            rate_limit_remaining = response.headers.get('X-RateLimit-Remaining', 'unknown')
+            if rate_limit_remaining == '0':
+                print(f"Error: API rate limit exceeded.")
+            else:
+                print(f"Error: Authentication required or insufficient permissions.")
             print(f"Set GITHUB_TOKEN in .env for higher rate limits.")
         else:
             print(f"HTTP Error: {e}")
@@ -111,7 +116,7 @@ def search_repositories(query: str, language: Optional[str] = None,
     }
     
     if GITHUB_TOKEN:
-        headers["Authorization"] = f"token {GITHUB_TOKEN}"
+        headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
     
     try:
         response = requests.get(url, params=params, headers=headers)
@@ -122,7 +127,12 @@ def search_repositories(query: str, language: Optional[str] = None,
     
     except requests.exceptions.HTTPError as e:
         if response.status_code == 403:
-            print(f"Error: API rate limit exceeded or authentication required.")
+            # Check if it's rate limiting or permission issue
+            rate_limit_remaining = response.headers.get('X-RateLimit-Remaining', 'unknown')
+            if rate_limit_remaining == '0':
+                print(f"Error: API rate limit exceeded.")
+            else:
+                print(f"Error: Authentication required or insufficient permissions.")
             print(f"Set GITHUB_TOKEN in .env for higher rate limits.")
         else:
             print(f"HTTP Error: {e}")
