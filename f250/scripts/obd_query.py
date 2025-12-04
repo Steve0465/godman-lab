@@ -207,8 +207,14 @@ def write_diagnostic_report(df, output_path, dtc=None):
         # Recent events
         report.append("\n=== RECENT EVENTS (Last 10) ===")
         if not df.empty:
-            recent = df.head(10)[['timestamp', 'dtc_code', 'rpm', 'speed', 'engine_load']].to_string(index=False)
-            report.append(f"\n{recent}")
+            # Only include columns that exist in the dataframe
+            display_cols = ['timestamp', 'dtc_code', 'rpm', 'speed', 'engine_load']
+            available_cols = [col for col in display_cols if col in df.columns]
+            if available_cols:
+                recent = df.head(10)[available_cols].to_string(index=False)
+                report.append(f"\n{recent}")
+            else:
+                report.append("\nNo displayable columns available.")
         
         # Write to file
         output_path.parent.mkdir(parents=True, exist_ok=True)
