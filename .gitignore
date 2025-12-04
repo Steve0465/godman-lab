@@ -7,3 +7,12 @@ scans/
 *.pyc
 .DS_Store
 .env.local
+
+# f250 data files
+f250/data/*.db
+f250/data/*.db-journal
+f250/data/*.parquet
+f250/data/*.csv
+f250/data/notes/*.md
+!f250/data/.gitkeep
+!f250/data/notes/.gitkeep

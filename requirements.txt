@@ -7,3 +7,6 @@ python-dotenv
 openai
 streamlit
 requests
+pyarrow
+gspread
+google-auth
