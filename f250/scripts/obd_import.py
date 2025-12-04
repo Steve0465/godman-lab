@@ -10,7 +10,7 @@ import sqlite3
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import List, Dict, Set, Optional
+from typing import List, Dict, Set, Optional, Tuple
 
 import pandas as pd
 
@@ -119,7 +119,7 @@ class OBDImporter:
             logger.error(f"Error marking file as imported: {e}")
             raise
     
-    def validate_csv(self, file_path: Path) -> tuple[bool, List[str]]:
+    def validate_csv(self, file_path: Path) -> Tuple[bool, List[str]]:
         """Validate CSV file has required columns"""
         try:
             with open(file_path, 'r') as f:

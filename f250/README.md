@@ -32,7 +32,9 @@ f250/
 Install required dependencies:
 
 ```bash
-pip install pandas pyarrow sqlite3
+pip install -r requirements.txt
+# or install individually:
+pip install pandas pyarrow
 ```
 
 ## Usage

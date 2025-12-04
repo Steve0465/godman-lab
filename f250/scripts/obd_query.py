@@ -68,8 +68,11 @@ class OBDQueryEngine:
         if use_parquet:
             return self.query_parquet({'dtc': dtc})
         else:
-            query = f"SELECT * FROM obd_logs WHERE dtc = '{dtc}' ORDER BY timestamp"
-            return self.query_sqlite(query)
+            query = "SELECT * FROM obd_logs WHERE dtc = ? ORDER BY timestamp"
+            conn = sqlite3.connect(self.db_path)
+            df = pd.read_sql_query(query, conn, params=(dtc,))
+            conn.close()
+            return df
     
     def query_by_date_range(
         self, 
@@ -83,13 +86,16 @@ class OBDQueryEngine:
             df = df[(df['timestamp'] >= start_date) & (df['timestamp'] <= end_date)]
             return df
         else:
-            query = f"""
+            query = """
                 SELECT * FROM obd_logs 
-                WHERE timestamp >= '{start_date}' 
-                AND timestamp <= '{end_date}'
+                WHERE timestamp >= ? 
+                AND timestamp <= ?
                 ORDER BY timestamp
             """
-            return self.query_sqlite(query)
+            conn = sqlite3.connect(self.db_path)
+            df = pd.read_sql_query(query, conn, params=(start_date, end_date))
+            conn.close()
+            return df
     
     def query_misfires(self, use_parquet: bool = False) -> pd.DataFrame:
         """Query logs with misfire events"""

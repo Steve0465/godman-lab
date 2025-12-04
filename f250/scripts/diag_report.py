@@ -36,7 +36,7 @@ class DiagnosticReportGenerator:
             conn = sqlite3.connect(self.db_path)
             
             if dtc:
-                query = f"SELECT * FROM obd_logs WHERE dtc = ? ORDER BY timestamp DESC"
+                query = "SELECT * FROM obd_logs WHERE dtc = ? ORDER BY timestamp DESC"
                 params = (dtc,)
             else:
                 query = "SELECT * FROM obd_logs ORDER BY timestamp DESC"
