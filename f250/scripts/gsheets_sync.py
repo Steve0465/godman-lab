@@ -110,15 +110,17 @@ def push_maintenance_csv_to_sheet(service_account_json, sheet_name, csv_path=Non
             try:
                 spreadsheet = client.open_by_url(sheet_name)
                 logger.info(f"Opened spreadsheet by URL")
-            except:
+            except Exception as e:
                 logger.error(f"Spreadsheet not found: {sheet_name}")
+                logger.error(f"Error: {e}")
                 logger.info("Ensure the spreadsheet exists and is shared with the service account email")
                 return False
         
         # Get or create worksheet
         try:
             worksheet = spreadsheet.sheet1
-        except:
+        except Exception as e:
+            logger.debug(f"Sheet1 not found, creating new worksheet: {e}")
             worksheet = spreadsheet.add_worksheet(title="Maintenance Log", rows=1000, cols=20)
         
         # Clear existing data
