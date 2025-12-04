@@ -499,7 +499,13 @@ class OCRComparator:
         return 1.0 - (dist / max_len) if max_len > 0 else 0.0
     
     def _levenshtein_distance(self, s1: str, s2: str) -> int:
-        """Calculate Levenshtein distance between two strings."""
+        """
+        Calculate Levenshtein distance between two strings.
+        
+        Note: This is an iterative implementation suitable for moderate string lengths.
+        For production use with large texts, consider using optimized libraries like
+        'python-Levenshtein' or 'jellyfish' for better performance.
+        """
         if len(s1) < len(s2):
             return self._levenshtein_distance(s2, s1)
         

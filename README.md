@@ -26,6 +26,11 @@ A comprehensive proof-of-concept system for extracting, analyzing, and visualizi
 1. Install dependencies:
 ```bash
 pip install -r requirements-enhanced.txt
+
+# Or install as a package with optional dependencies
+pip install -e ".[all]"  # All features
+pip install -e ".[webapp]"  # Just webapp
+pip install -e ".[embeddings]"  # Just embeddings
 ```
 
 2. Install Tesseract (Ubuntu/Debian):

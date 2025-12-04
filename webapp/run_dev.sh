@@ -21,8 +21,10 @@ fi
 
 # Install dependencies if needed
 if ! python3 -c "import fastapi" 2>/dev/null; then
-    echo "📦 Installing dependencies..."
-    pip3 install -r requirements-enhanced.txt
+    echo "⚠️  Warning: Required dependencies not found"
+    echo "Please install dependencies first:"
+    echo "  pip install -r requirements-enhanced.txt"
+    exit 1
 fi
 
 # Create necessary directories
@@ -30,10 +32,21 @@ mkdir -p webapp/uploads
 mkdir -p webapp/results
 mkdir -p webapp/templates
 
-# Kill any existing processes on these ports
+# Kill any existing processes on these ports (gracefully first)
 echo "🔄 Checking for existing processes..."
-lsof -ti:8000 | xargs kill -9 2>/dev/null || true
-lsof -ti:8501 | xargs kill -9 2>/dev/null || true
+if lsof -ti:8000 > /dev/null 2>&1; then
+    echo "  Stopping existing process on port 8000..."
+    lsof -ti:8000 | xargs kill -15 2>/dev/null || true
+    sleep 2
+    lsof -ti:8000 | xargs kill -9 2>/dev/null || true
+fi
+
+if lsof -ti:8501 > /dev/null 2>&1; then
+    echo "  Stopping existing process on port 8501..."
+    lsof -ti:8501 | xargs kill -15 2>/dev/null || true
+    sleep 2
+    lsof -ti:8501 | xargs kill -9 2>/dev/null || true
+fi
 
 # Start FastAPI server
 echo -e "${BLUE}Starting FastAPI server on http://localhost:8000${NC}"
@@ -77,8 +90,22 @@ echo "Press Ctrl+C to stop all services..."
 cleanup() {
     echo ""
     echo "🛑 Stopping services..."
-    kill $FASTAPI_PID 2>/dev/null || true
-    kill $STREAMLIT_PID 2>/dev/null || true
+    
+    # Send SIGTERM first for graceful shutdown
+    if kill -0 $FASTAPI_PID 2>/dev/null; then
+        kill -15 $FASTAPI_PID 2>/dev/null || true
+    fi
+    if kill -0 $STREAMLIT_PID 2>/dev/null; then
+        kill -15 $STREAMLIT_PID 2>/dev/null || true
+    fi
+    
+    # Wait a bit for graceful shutdown
+    sleep 2
+    
+    # Force kill if still running
+    kill -9 $FASTAPI_PID 2>/dev/null || true
+    kill -9 $STREAMLIT_PID 2>/dev/null || true
+    
     echo "✅ Services stopped"
     exit 0
 }

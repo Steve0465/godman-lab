@@ -27,6 +27,8 @@ import uuid
 from datetime import datetime
 
 # Add prototype/enhanced to path
+# Note: For production, consider installing the enhanced package as an editable dependency
+# using 'pip install -e .' with a proper setup.py instead of manipulating sys.path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'enhanced'))
 
 from segmentation import BubbleSegmenter, MessageUIPreset
@@ -43,10 +45,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configuration
-UPLOAD_DIR = Path("webapp/uploads")
-RESULTS_DIR = Path("webapp/results")
-DB_PATH = Path("webapp/corrections.db")
+# Configuration - can be overridden with environment variables
+UPLOAD_DIR = Path(os.environ.get('UPLOAD_DIR', 'webapp/uploads'))
+RESULTS_DIR = Path(os.environ.get('RESULTS_DIR', 'webapp/results'))
+DB_PATH = Path(os.environ.get('DB_PATH', 'webapp/corrections.db'))
 
 # Create directories
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
