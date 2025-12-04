@@ -42,16 +42,16 @@ if ! command -v lsof &> /dev/null; then
 else
     if lsof -ti:8000 > /dev/null 2>&1; then
         echo "  Stopping existing process on port 8000..."
-        lsof -ti:8000 | xargs kill -15 2>/dev/null || true
+        lsof -ti:8000 | xargs -r kill -15 2>/dev/null || true
         sleep 2
-        lsof -ti:8000 | xargs kill -9 2>/dev/null || true
+        lsof -ti:8000 | xargs -r kill -9 2>/dev/null || true
     fi
 
     if lsof -ti:8501 > /dev/null 2>&1; then
         echo "  Stopping existing process on port 8501..."
-        lsof -ti:8501 | xargs kill -15 2>/dev/null || true
+        lsof -ti:8501 | xargs -r kill -15 2>/dev/null || true
         sleep 2
-        lsof -ti:8501 | xargs kill -9 2>/dev/null || true
+        lsof -ti:8501 | xargs -r kill -9 2>/dev/null || true
     fi
 fi
 

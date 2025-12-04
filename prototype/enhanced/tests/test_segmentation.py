@@ -53,9 +53,9 @@ class TestBubbleSegmenter:
         for img_path in test_images:
             bubbles = segmenter.segment_image(str(img_path))
             
-            # Assert at least one bubble is detected
-            # (our test images have text, so we expect detection)
-            assert len(bubbles) >= 0, f"Failed to process {img_path.name}"
+            # Just verify processing completes without error
+            # (bubble count may be zero for simple test images)
+            assert isinstance(bubbles, list), f"Failed to process {img_path.name}"
     
     def test_bubble_box(self):
         """Test BubbleBox dataclass."""

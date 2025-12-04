@@ -20,7 +20,7 @@ setup(
     install_requires=[
         "pytesseract>=0.3.10",
         "pillow>=10.0.0",
-        "opencv-python>=4.8.0",
+        "opencv-contrib-python>=4.8.0",  # Includes all opencv-python functionality
         "numpy>=1.24.0",
         "pandas>=2.0.0",
         "python-dotenv>=1.0.0",

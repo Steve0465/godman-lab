@@ -330,14 +330,26 @@
                     card.className = 'image-card' + (image.processed ? ' processed' : '');
                     card.onclick = () => loadImageResults(image.id);
                     
-                    card.innerHTML = `
-                        <h3>${image.filename}</h3>
-                        <div class="meta">
-                            Uploaded: ${new Date(image.uploaded_at).toLocaleString()}<br>
-                            Status: ${image.processed ? '✅ Processed' : '⏳ Pending'}
-                        </div>
-                    `;
+                    // Create elements safely to avoid XSS
+                    const title = document.createElement('h3');
+                    title.textContent = image.filename;  // Safe text content
                     
+                    const meta = document.createElement('div');
+                    meta.className = 'meta';
+                    
+                    const uploadedText = document.createTextNode(
+                        `Uploaded: ${new Date(image.uploaded_at).toLocaleString()}`
+                    );
+                    meta.appendChild(uploadedText);
+                    meta.appendChild(document.createElement('br'));
+                    
+                    const statusText = document.createTextNode(
+                        `Status: ${image.processed ? '✅ Processed' : '⏳ Pending'}`
+                    );
+                    meta.appendChild(statusText);
+                    
+                    card.appendChild(title);
+                    card.appendChild(meta);
                     container.appendChild(card);
                 });
             } catch (error) {
