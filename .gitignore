@@ -7,3 +7,15 @@ scans/
 *.pyc
 .DS_Store
 .env.local
+
+# Enhanced OCR/Thread Analyzer
+webapp/uploads/
+webapp/corrections.db
+webapp/logs/
+output/
+*.pkl
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+

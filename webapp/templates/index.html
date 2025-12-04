@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced OCR/Thread Analyzer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+        
+        header h1 {
+            margin: 0;
+        }
+        
+        .status {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .upload-section {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .upload-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        label {
+            font-weight: 600;
+            color: #555;
+        }
+        
+        input[type="file"],
+        select {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        button {
+            padding: 12px 24px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #2980b9;
+        }
+        
+        button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        .uploads-list {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .upload-item {
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .upload-item:hover {
+            background: #f9f9f9;
+        }
+        
+        .upload-item h3 {
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+        
+        .upload-item .meta {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .status-uploaded { background: #f39c12; color: white; }
+        .status-processing { background: #3498db; color: white; }
+        .status-completed { background: #27ae60; color: white; }
+        .status-failed { background: #e74c3c; color: white; }
+        
+        .bubbles-view {
+            margin-top: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .bubble-item {
+            display: flex;
+            gap: 20px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            background: #fafafa;
+        }
+        
+        .bubble-image {
+            flex-shrink: 0;
+        }
+        
+        .bubble-image img {
+            max-width: 200px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .bubble-content {
+            flex-grow: 1;
+        }
+        
+        .bubble-text {
+            margin-bottom: 10px;
+        }
+        
+        .bubble-text textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 14px;
+            min-height: 80px;
+        }
+        
+        .bubble-meta {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+        
+        .export-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #ecf0f1;
+            border-radius: 8px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .message {
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>📱 Enhanced OCR/Thread Analyzer</h1>
+            <p>Upload screenshots to extract and correct message threads</p>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div id="status" class="status">
+            <strong>Status:</strong> <span id="statusText">Loading...</span>
+            <br>
+            <strong>Available Backends:</strong> <span id="backends">-</span>
+        </div>
+        
+        <div id="messages"></div>
+        
+        <div class="upload-section">
+            <h2>📤 Upload Screenshot</h2>
+            <form id="uploadForm" class="upload-form">
+                <div class="form-group">
+                    <label for="imageFile">Select Image:</label>
+                    <input type="file" id="imageFile" name="file" accept="image/*" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="preset">Messaging Platform:</label>
+                    <select id="preset" name="preset">
+                        <option value="imessage">iMessage</option>
+                        <option value="whatsapp">WhatsApp</option>
+                        <option value="android_sms">Android SMS</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="backend">OCR Backend:</label>
+                    <select id="backend" name="backend">
+                        <option value="tesseract">Tesseract (Local)</option>
+                        <option value="google_vision">Google Cloud Vision</option>
+                        <option value="aws_textract">AWS Textract</option>
+                    </select>
+                </div>
+                
+                <button type="submit" id="uploadBtn">Upload & Process</button>
+            </form>
+        </div>
+        
+        <div class="uploads-list">
+            <h2>📋 Recent Uploads</h2>
+            <div id="uploadsList"></div>
+        </div>
+        
+        <div id="bubblesView" class="bubbles-view hidden">
+            <h2>💬 Detected Messages</h2>
+            <div id="bubblesContainer"></div>
+            <div class="export-section">
+                <button id="exportBtn">📥 Export Corrected Thread JSON</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = '';
+        let currentUploadId = null;
+        
+        // Show message
+        function showMessage(text, type = 'info') {
+            const messagesDiv = document.getElementById('messages');
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${type}`;
+            messageEl.textContent = text;
+            messagesDiv.appendChild(messageEl);
+            
+            setTimeout(() => {
+                messageEl.remove();
+            }, 5000);
+        }
+        
+        // Load status
+        async function loadStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/api/status`);
+                const data = await response.json();
+                document.getElementById('statusText').textContent = data.status;
+                document.getElementById('backends').textContent = data.available_backends.join(', ') || 'None';
+                
+                // Update backend dropdown
+                const backendSelect = document.getElementById('backend');
+                Array.from(backendSelect.options).forEach(option => {
+                    option.disabled = !data.available_backends.includes(option.value);
+                });
+            } catch (error) {
+                document.getElementById('statusText').textContent = 'Error';
+                showMessage('Failed to load status: ' + error.message, 'error');
+            }
+        }
+        
+        // Load uploads list
+        async function loadUploads() {
+            try {
+                const response = await fetch(`${API_BASE}/api/uploads`);
+                const data = await response.json();
+                
+                const listDiv = document.getElementById('uploadsList');
+                if (data.uploads.length === 0) {
+                    listDiv.innerHTML = '<p style="color: #999;">No uploads yet</p>';
+                    return;
+                }
+                
+                listDiv.innerHTML = data.uploads.map(upload => `
+                    <div class="upload-item" onclick="viewUpload('${upload.id}')">
+                        <h3>${upload.filename}
+                            <span class="status-badge status-${upload.status}">${upload.status}</span>
+                        </h3>
+                        <div class="meta">
+                            Uploaded: ${new Date(upload.upload_time).toLocaleString()} | 
+                            Preset: ${upload.preset} | 
+                            Backend: ${upload.backend}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                showMessage('Failed to load uploads: ' + error.message, 'error');
+            }
+        }
+        
+        // Upload and process
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const uploadBtn = document.getElementById('uploadBtn');
+            
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Uploading...';
+            
+            try {
+                // Upload
+                const uploadResponse = await fetch(`${API_BASE}/api/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!uploadResponse.ok) {
+                    throw new Error('Upload failed');
+                }
+                
+                const uploadData = await uploadResponse.json();
+                showMessage('Upload successful! Processing...', 'success');
+                
+                uploadBtn.textContent = 'Processing...';
+                
+                // Process
+                const processResponse = await fetch(`${API_BASE}/api/process/${uploadData.upload_id}`, {
+                    method: 'POST'
+                });
+                
+                if (!processResponse.ok) {
+                    throw new Error('Processing failed');
+                }
+                
+                const processData = await processResponse.json();
+                showMessage(`Processing complete! Found ${processData.bubble_count} message bubbles.`, 'success');
+                
+                // Reset form and reload
+                e.target.reset();
+                await loadUploads();
+                await viewUpload(uploadData.upload_id);
+                
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = 'Upload & Process';
+            }
+        });
+        
+        // View upload details
+        async function viewUpload(uploadId) {
+            currentUploadId = uploadId;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/uploads/${uploadId}`);
+                const data = await response.json();
+                
+                if (data.bubbles.length === 0) {
+                    showMessage('No bubbles detected yet. Processing may still be in progress.', 'info');
+                    document.getElementById('bubblesView').classList.add('hidden');
+                    return;
+                }
+                
+                const container = document.getElementById('bubblesContainer');
+                container.innerHTML = data.bubbles.map(bubble => `
+                    <div class="bubble-item">
+                        <div class="bubble-image">
+                            <img src="${API_BASE}/api/bubbles/${bubble.id}/image" alt="Bubble ${bubble.bubble_index}">
+                        </div>
+                        <div class="bubble-content">
+                            <div class="bubble-meta">
+                                Bubble #${bubble.bubble_index} | 
+                                Confidence: ${(bubble.confidence * 100).toFixed(1)}% |
+                                Position: (${bubble.x}, ${bubble.y})
+                            </div>
+                            <div class="bubble-text">
+                                <label><strong>Text (editable):</strong></label>
+                                <textarea id="text_${bubble.id}" data-bubble-id="${bubble.id}">${bubble.corrected_text || bubble.original_text || ''}</textarea>
+                            </div>
+                            <button onclick="saveCorrection('${bubble.id}')">💾 Save Correction</button>
+                        </div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('bubblesView').classList.remove('hidden');
+                document.getElementById('bubblesView').scrollIntoView({ behavior: 'smooth' });
+                
+            } catch (error) {
+                showMessage('Failed to load upload details: ' + error.message, 'error');
+            }
+        }
+        
+        // Save correction
+        async function saveCorrection(bubbleId) {
+            const textarea = document.getElementById(`text_${bubbleId}`);
+            const correctedText = textarea.value;
+            
+            try {
+                const formData = new FormData();
+                formData.append('corrected_text', correctedText);
+                
+                const response = await fetch(`${API_BASE}/api/bubbles/${bubbleId}/correction`, {
+                    method: 'PUT',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to save correction');
+                }
+                
+                showMessage('Correction saved!', 'success');
+            } catch (error) {
+                showMessage('Error saving correction: ' + error.message, 'error');
+            }
+        }
+        
+        // Export thread
+        document.getElementById('exportBtn').addEventListener('click', async () => {
+            if (!currentUploadId) {
+                showMessage('No upload selected', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/export/${currentUploadId}`);
+                const data = await response.json();
+                
+                // Download as JSON file
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `thread_${currentUploadId}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                showMessage('Thread exported!', 'success');
+            } catch (error) {
+                showMessage('Error exporting thread: ' + error.message, 'error');
+            }
+        });
+        
+        // Initialize
+        loadStatus();
+        loadUploads();
+        
+        // Auto-refresh uploads every 10 seconds
+        setInterval(loadUploads, 10000);
+    </script>
+</body>
+</html>

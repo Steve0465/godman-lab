@@ -1,0 +1,12 @@
+[
+  {
+    "image": "test_image1.png",
+    "text": "Hello World This is a test",
+    "description": "Two message bubbles with simple text"
+  },
+  {
+    "image": "test_image2.png",
+    "text": "Good morning",
+    "description": "Single message bubble"
+  }
+]
