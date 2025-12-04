@@ -19,6 +19,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Misfire DTC patterns (P030x codes indicate cylinder misfires)
+MISFIRE_DTC_PATTERN = 'P030'
+
 
 def query_sqlite(db_path: Path, filters: Dict[str, Any]) -> pd.DataFrame:
     """
@@ -50,7 +53,7 @@ def query_sqlite(db_path: Path, filters: Dict[str, Any]) -> pd.DataFrame:
         params.append(filters['end_date'])
     
     if filters.get('misfire_only'):
-        query += " AND (misfire_count > 0 OR dtc_code LIKE '%P030%')"
+        query += f" AND (misfire_count > 0 OR dtc_code LIKE '%{MISFIRE_DTC_PATTERN}%')"
     
     query += " ORDER BY timestamp"
     
@@ -108,9 +111,9 @@ def query_parquet(parquet_dir: Path, filters: Dict[str, Any]) -> pd.DataFrame:
     if filters.get('misfire_only'):
         if 'misfire_count' in df.columns:
             df = df[(df['misfire_count'] > 0) | 
-                   (df['dtc_code'].str.contains('P030', case=False, na=False))]
+                   (df['dtc_code'].str.contains(MISFIRE_DTC_PATTERN, case=False, na=False))]
         else:
-            df = df[df['dtc_code'].str.contains('P030', case=False, na=False)]
+            df = df[df['dtc_code'].str.contains(MISFIRE_DTC_PATTERN, case=False, na=False)]
     
     # Sort by timestamp
     if 'timestamp' in df.columns:
@@ -152,12 +155,12 @@ def analyze_misfires(df: pd.DataFrame) -> Dict[str, Any]:
     
     # Count misfire DTCs
     if 'dtc_code' in df.columns:
-        misfire_dtcs = df[df['dtc_code'].str.contains('P030', case=False, na=False)]
+        misfire_dtcs = df[df['dtc_code'].str.contains(MISFIRE_DTC_PATTERN, case=False, na=False)]
         analysis['misfire_dtc_count'] = len(misfire_dtcs)
         
         # Extract cylinder numbers from DTC codes (P0301 = cylinder 1, etc.)
         for dtc in misfire_dtcs['dtc_code'].dropna().unique():
-            if dtc.startswith('P030') and len(dtc) >= 5:
+            if dtc.upper().startswith(MISFIRE_DTC_PATTERN) and len(dtc) >= 5:
                 cyl = dtc[4]
                 if cyl.isdigit() and cyl != '0':
                     analysis['affected_cylinders'].add(int(cyl))

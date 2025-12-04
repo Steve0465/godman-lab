@@ -27,6 +27,9 @@ DEFAULT_DB_PATH = Path('f250/data/f250.db')
 # CSV headers
 CSV_HEADERS = ['date', 'mileage', 'type', 'description', 'cost', 'shop', 'notes']
 
+# Composite key separator for duplicate detection
+KEY_SEPARATOR = '|'
+
 # SQLite schema
 MAINTENANCE_SCHEMA = """
 CREATE TABLE IF NOT EXISTS maintenance (
@@ -181,9 +184,9 @@ def sync_to_sqlite(csv_path: Path, db_path: Path) -> int:
     # Find new entries (not already in database)
     if not existing_df.empty:
         # Create composite key for comparison
-        df['key'] = df['date'] + '|' + df['type'] + '|' + df['description']
-        existing_df['key'] = (existing_df['date'] + '|' + 
-                             existing_df['type'] + '|' + 
+        df['key'] = df['date'] + KEY_SEPARATOR + df['type'] + KEY_SEPARATOR + df['description']
+        existing_df['key'] = (existing_df['date'] + KEY_SEPARATOR + 
+                             existing_df['type'] + KEY_SEPARATOR + 
                              existing_df['description'])
         
         new_df = df[~df['key'].isin(existing_df['key'])].drop('key', axis=1)

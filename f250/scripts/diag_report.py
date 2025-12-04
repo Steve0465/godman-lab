@@ -304,7 +304,10 @@ def generate_report(output_path: Path, dtc: Optional[str] = None,
         report.append("")
         for photo in photos:
             # Use relative path from notes directory
-            rel_path = photo.relative_to(output_path.parent.parent) if photo.is_relative_to(output_path.parent.parent) else photo
+            try:
+                rel_path = photo.relative_to(output_path.parent.parent)
+            except (ValueError, AttributeError):
+                rel_path = photo
             report.append(f"- `{rel_path}`")
         report.append("")
     else:
