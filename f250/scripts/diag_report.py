@@ -252,19 +252,21 @@ def generate_report(output_path: Path, dtc: Optional[str] = None,
             
             if 'ltft_bank1' in obd_data.columns:
                 ltft1_avg = obd_data['ltft_bank1'].mean()
-                report.append(f"- **Bank 1 LTFT**: {ltft1_avg:.2f}%")
-                if ltft1_avg > 10:
-                    report.append("  - ⚠️ Running lean (high positive)")
-                elif ltft1_avg < -10:
-                    report.append("  - ⚠️ Running rich (high negative)")
+                if pd.notna(ltft1_avg):
+                    report.append(f"- **Bank 1 LTFT**: {ltft1_avg:.2f}%")
+                    if ltft1_avg > 10:
+                        report.append("  - ⚠️ Running lean (high positive)")
+                    elif ltft1_avg < -10:
+                        report.append("  - ⚠️ Running rich (high negative)")
             
             if 'ltft_bank2' in obd_data.columns:
                 ltft2_avg = obd_data['ltft_bank2'].mean()
-                report.append(f"- **Bank 2 LTFT**: {ltft2_avg:.2f}%")
-                if ltft2_avg > 10:
-                    report.append("  - ⚠️ Running lean (high positive)")
-                elif ltft2_avg < -10:
-                    report.append("  - ⚠️ Running rich (high negative)")
+                if pd.notna(ltft2_avg):
+                    report.append(f"- **Bank 2 LTFT**: {ltft2_avg:.2f}%")
+                    if ltft2_avg > 10:
+                        report.append("  - ⚠️ Running lean (high positive)")
+                    elif ltft2_avg < -10:
+                        report.append("  - ⚠️ Running rich (high negative)")
         
         report.append("")
     else:

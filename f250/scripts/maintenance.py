@@ -224,15 +224,15 @@ def format_history_table(df: pd.DataFrame) -> str:
     
     for idx, row in df.iterrows():
         lines.append(f"Date: {row['date']}")
-        if row['mileage']:
+        if pd.notna(row['mileage']) and row['mileage']:
             lines.append(f"Mileage: {row['mileage']:,}")
         lines.append(f"Type: {row['type']}")
         lines.append(f"Description: {row['description']}")
-        if row['cost']:
+        if pd.notna(row['cost']) and row['cost']:
             lines.append(f"Cost: ${row['cost']:.2f}")
-        if row['shop']:
+        if pd.notna(row['shop']) and row['shop']:
             lines.append(f"Shop: {row['shop']}")
-        if row['notes']:
+        if pd.notna(row['notes']) and row['notes']:
             lines.append(f"Notes: {row['notes']}")
         lines.append('-' * 80)
     
