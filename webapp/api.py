@@ -29,7 +29,7 @@ from datetime import datetime
 # Add prototype/enhanced to path
 # Note: For production, consider installing the enhanced package as an editable dependency
 # using 'pip install -e .' with a proper setup.py instead of manipulating sys.path
-sys.path.insert(0, str(Path(__file__).parent.parent / 'enhanced'))
+sys.path.insert(0, str(Path(__file__).parent.parent / 'prototype' / 'enhanced'))
 
 from segmentation import BubbleSegmenter, MessageUIPreset
 from ocr_backends import get_ocr_backend, get_available_backends
@@ -37,9 +37,11 @@ from ocr_backends import get_ocr_backend, get_available_backends
 app = FastAPI(title="OCR Thread Analyzer", version="1.0.0")
 
 # Enable CORS for development
+# Note: In production, restrict origins to specific domains instead of "*"
+# Example: allow_origins=["https://yourdomain.com"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

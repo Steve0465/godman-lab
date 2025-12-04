@@ -11,7 +11,7 @@ openai>=1.0.0
 streamlit>=1.28.0
 
 # Computer Vision and OCR
-opencv-python>=4.8.0
+# Note: opencv-contrib-python includes all opencv-python functionality
 opencv-contrib-python>=4.8.0
 
 # Cloud OCR backends

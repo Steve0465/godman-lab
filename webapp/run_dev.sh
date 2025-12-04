@@ -34,18 +34,25 @@ mkdir -p webapp/templates
 
 # Kill any existing processes on these ports (gracefully first)
 echo "🔄 Checking for existing processes..."
-if lsof -ti:8000 > /dev/null 2>&1; then
-    echo "  Stopping existing process on port 8000..."
-    lsof -ti:8000 | xargs kill -15 2>/dev/null || true
-    sleep 2
-    lsof -ti:8000 | xargs kill -9 2>/dev/null || true
-fi
 
-if lsof -ti:8501 > /dev/null 2>&1; then
-    echo "  Stopping existing process on port 8501..."
-    lsof -ti:8501 | xargs kill -15 2>/dev/null || true
-    sleep 2
-    lsof -ti:8501 | xargs kill -9 2>/dev/null || true
+# Check if lsof is available
+if ! command -v lsof &> /dev/null; then
+    echo "⚠️  Warning: lsof command not found. Cannot check for existing processes."
+    echo "If you have services running on ports 8000 or 8501, please stop them manually."
+else
+    if lsof -ti:8000 > /dev/null 2>&1; then
+        echo "  Stopping existing process on port 8000..."
+        lsof -ti:8000 | xargs kill -15 2>/dev/null || true
+        sleep 2
+        lsof -ti:8000 | xargs kill -9 2>/dev/null || true
+    fi
+
+    if lsof -ti:8501 > /dev/null 2>&1; then
+        echo "  Stopping existing process on port 8501..."
+        lsof -ti:8501 | xargs kill -15 2>/dev/null || true
+        sleep 2
+        lsof -ti:8501 | xargs kill -9 2>/dev/null || true
+    fi
 fi
 
 # Start FastAPI server

@@ -16,7 +16,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/Steve0465/godman-lab",
     packages=find_packages(include=['prototype', 'prototype.*', 'webapp', 'webapp.*']),
-    python_requires=">=3.11",
+    python_requires=">=3.9",
     install_requires=[
         "pytesseract>=0.3.10",
         "pillow>=10.0.0",
@@ -76,6 +76,8 @@ setup(
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
     ],
