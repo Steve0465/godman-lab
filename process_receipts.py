@@ -11,11 +11,18 @@ from pdf2image import convert_from_path
 import pandas as pd
 from dotenv import load_dotenv
 
+# Optional LLM extractor
+try:
+    from ocr.llm_extractor import extract_fields as llm_extract_fields
+except Exception:
+    llm_extract_fields = None
+
 load_dotenv()
 
 # Optional environment overrides
-POPPLER_PATH = os.getenv("POPPLER_PATH", None)  # e.g. /opt/homebrew/bin for mac homebrew
-TESSERACT_CMD = os.getenv("TESSERACT_CMD", None)  # full path to tesseract binary if not in PATH
+POPPLER_PATH = os.getenv("POPPLER_PATH", None)
+TESSERACT_CMD = os.getenv("TESSERACT_CMD", None)
+OPENAI_ENABLED = os.getenv("OPENAI_ENABLED", "false").lower() in ("1","true","yes")
 
 if TESSERACT_CMD:
     pytesseract.pytesseract.tesseract_cmd = TESSERACT_CMD
@@ -60,13 +67,14 @@ def extract_date(text):
 
 def extract_total(text):
     amounts = re.findall(r'[\$€£]?\s*\d{1,3}(?:[,
-\d{3}])*(?:\.\d{2})', text)
-    if 'total' in text.lower():
+    amounts = re.findall(r'[
+    amounts = re.findall(r'[\$€£]?\s*\d{1,3}(?:[,
+    amounts = re.findall(r'[
+        if 'total' in text.lower():
         lines = text.splitlines()
         for l in lines:
             if 'total' in l.lower():
                 a = re.findall(r'[\$€£]?\s*\d{1,3}(?:[,
-\d{3}])*(?:\.\d{2})', l)
                 if a:
                     try:
                         return float(a[-1].replace('$','').replace(',','').strip())
@@ -94,9 +102,8 @@ def extract_vendor(text):
 
 
 def needs_review(rec):
-    if rec['vendor'] == 'UNKNOWN' or rec['total'] == 0.0:
+    if rec.get('vendor') == 'UNKNOWN' or float(rec.get('total',0.0)) == 0.0:
         return True
-    # additional heuristics could be added here
     return False
 
 
@@ -119,12 +126,34 @@ def process_file(path: Path):
         except Exception as e:
             print(f"OCR error on {path}: {e}")
 
+    # initial heuristic extraction
     vendor = extract_vendor(textual) or "UNKNOWN"
     date_iso = extract_date(textual) or datetime.now().date().isoformat()
     total = extract_total(textual) or 0.0
 
-    year = date_iso.split("-")[0]
-    month = date_iso.split("-")[1]
+    # optional LLM-assisted extraction (overrides heuristics when confident)
+    if OPENAI_ENABLED and llm_extract_fields:
+        try:
+            parsed = llm_extract_fields(textual)
+            if parsed:
+                # prefer LLM values when present
+                vendor = parsed.get('vendor') or vendor
+                date_iso = parsed.get('date') or date_iso
+                try:
+                    total = float(parsed.get('subtotal')) if parsed.get('subtotal') is not None else total
+                except Exception:
+                    pass
+                category = parsed.get('category')
+            else:
+                category = None
+        except Exception as e:
+            print('LLM extraction failed:', e)
+            category = None
+    else:
+        category = None
+
+    year = date_iso.split('-')[0]
+    month = date_iso.split('-')[1]
     dest_dir = OUTPUT_DIR / year / month / vendor
     dest_dir.mkdir(parents=True, exist_ok=True)
     new_name = f"{date_iso}_{vendor}_{total:.2f}{path.suffix}".replace(' ','_')
@@ -141,6 +170,7 @@ def process_file(path: Path):
         "vendor": vendor,
         "date": date_iso,
         "total": float(total),
+        "category": category or "",
         "parsed_text_snippet": textual[:1000].replace('\n',' ')
     }
     rec['needs_review'] = needs_review(rec)

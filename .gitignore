@@ -1,0 +1,9 @@
+.env
+__pycache__/
+.venv/
+venv/
+receipts/
+scans/
+*.pyc
+.DS_Store
+.env.local

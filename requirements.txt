@@ -1,0 +1,8 @@
+pytesseract
+pillow
+pdf2image
+pandas
+python-dateutil
+python-dotenv
+openai
+streamlit
