@@ -1,0 +1,64 @@
+# F250 Parts Catalog
+# Commonly replaced parts and specifications
+
+engine:
+  spark_plugs:
+    part_number: "SP-546"
+    brand: "Motorcraft"
+    gap: "0.054 inches"
+    replacement_interval: "100,000 miles"
+    notes: "Use only OEM or equivalent"
+  
+  oil_filter:
+    part_number: "FL-820S"
+    brand: "Motorcraft"
+    replacement_interval: "10,000 miles"
+    oil_capacity: "15 quarts with filter"
+  
+  air_filter:
+    part_number: "FA-1927"
+    brand: "Motorcraft"
+    replacement_interval: "30,000 miles"
+  
+  fuel_filter:
+    part_number: "FD-4616"
+    brand: "Motorcraft"
+    replacement_interval: "30,000 miles"
+
+ignition:
+  coil_packs:
+    part_number: "DG-511"
+    brand: "Motorcraft"
+    quantity: 8
+    notes: "One per cylinder"
+
+fluids:
+  engine_oil:
+    type: "5W-40 Synthetic"
+    capacity: "15 quarts"
+    spec: "API CK-4"
+  
+  coolant:
+    type: "Orange/Gold Extended Life"
+    capacity: "28 quarts"
+    spec: "Ford WSS-M97B51-A1"
+  
+  transmission_fluid:
+    type: "Mercon ULV"
+    capacity: "17.5 quarts"
+    spec: "Ford XT-12-QULV"
+
+suspension:
+  front_shocks:
+    part_number: "TBD"
+    brand: "Bilstein"
+    notes: "Heavy duty recommended for towing"
+  
+  rear_shocks:
+    part_number: "TBD"
+    brand: "Bilstein"
+
+notes: |
+  This is a skeleton parts catalog. Update with actual part numbers for your specific F250 model year.
+  Always verify part numbers with dealer or trusted parts supplier.
+  Keep receipts in maintenance log for warranty purposes.

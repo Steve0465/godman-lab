@@ -1,0 +1,54 @@
+# F250 Fuse Map Configuration
+# Reference for electrical troubleshooting
+
+engine_compartment:
+  - number: 1
+    amperage: 20
+    circuit: "Powertrain Control Module (PCM)"
+    color: yellow
+  
+  - number: 2
+    amperage: 15
+    circuit: "Electronic Throttle Control"
+    color: blue
+  
+  - number: 3
+    amperage: 10
+    circuit: "Mass Air Flow Sensor"
+    color: red
+  
+  - number: 4
+    amperage: 15
+    circuit: "Fuel Pump Relay"
+    color: blue
+  
+  - number: 5
+    amperage: 20
+    circuit: "Ignition Coil Pack"
+    color: yellow
+
+passenger_compartment:
+  - number: 1
+    amperage: 10
+    circuit: "OBD-II Diagnostic Port"
+    color: red
+  
+  - number: 2
+    amperage: 15
+    circuit: "Instrument Cluster"
+    color: blue
+  
+  - number: 3
+    amperage: 20
+    circuit: "Power Windows"
+    color: yellow
+  
+  - number: 4
+    amperage: 15
+    circuit: "Radio/Entertainment"
+    color: blue
+
+notes: |
+  This is an example fuse map. Update with actual F250 fuse configuration.
+  Refer to owner's manual for complete fuse diagram.
+  Always disconnect battery before working on electrical system.

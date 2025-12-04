@@ -14,18 +14,25 @@ This workspace provides robust, production-ready scripts for:
 
 ```
 f250/
+├── config/
+│   ├── fuse_map.yaml        # Electrical fuse reference
+│   └── parts.yaml           # Parts catalog with part numbers
 ├── data/
 │   ├── f250.db              # SQLite database (auto-generated)
 │   ├── obd_logs.parquet     # Parquet format OBD data (auto-generated)
 │   ├── maintenance_log.csv  # Maintenance history CSV
+│   ├── obd/                 # OBD data with README
 │   ├── obd_csv/            # Input directory for OBD CSV files
 │   ├── photos/             # Photos related to repairs/diagnostics
 │   └── notes/              # Generated diagnostic reports
-└── scripts/
-    ├── obd_import.py       # CSV import tool
-    ├── obd_query.py        # Query and analysis tool
-    ├── maintenance.py      # Maintenance log manager
-    └── diag_report.py      # Diagnostic report generator
+├── scripts/
+│   ├── obd_import.py       # CSV import tool
+│   ├── obd_query.py        # Query and analysis tool
+│   ├── maintenance.py      # Maintenance log manager
+│   ├── diag_report.py      # Diagnostic report generator
+│   └── gsheets_sync.py     # Google Sheets synchronization
+├── test_integration.sh     # Integration test script
+└── README.md              # This file
 ```
 
 ## Setup
@@ -204,14 +211,70 @@ All scripts include:
 - Graceful failure handling
 - Informative error messages
 
-## Integration Notes
+## Google Sheets Sync
 
-### Google Sheets Sync (Future Enhancement)
-To enable Google Sheets synchronization:
-1. Set up a service account in Google Cloud Console
-2. Download credentials JSON
-3. Store as `f250/data/service_account.json`
-4. Share target spreadsheet with service account email
+Sync maintenance log to Google Sheets for easy access and sharing:
+
+```bash
+# Set up service account credentials (see below)
+python f250/scripts/gsheets_sync.py \
+  --service-account path/to/service_account.json \
+  --sheet-name "F250 Maintenance Log"
+
+# Or use environment variable
+export F250_GS_SERVICE_ACCOUNT=/path/to/service_account.json
+python f250/scripts/gsheets_sync.py --sheet-name "F250 Maintenance Log"
+```
+
+### Setting up Google Service Account
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com)
+2. Create a new project or select existing one
+3. Enable **Google Sheets API** and **Google Drive API**
+4. Go to **IAM & Admin** → **Service Accounts**
+5. Create a service account (e.g., "f250-sheets-sync")
+6. Create and download a JSON key file
+7. **Important**: Store this file securely, never commit to repository
+8. Share your Google Sheet with the service account email (found in JSON)
+
+**Security Best Practices:**
+- Store credentials outside the repository
+- Use environment variables for paths
+- Restrict service account permissions
+- Rotate credentials periodically
+
+## Configuration Files
+
+The `config/` directory contains reference YAML files:
+
+- `fuse_map.yaml` - Electrical fuse reference
+- `parts.yaml` - Common parts catalog with part numbers
+
+Update these files with your specific F250 model year information.
+
+## Running Tests
+
+Run the test suite using pytest:
+
+```bash
+# Run all tests
+pytest tests/f250/
+
+# Run specific test file
+pytest tests/f250/test_obd_import.py
+
+# Run with verbose output
+pytest tests/f250/ -v
+
+# Run with coverage report
+pytest tests/f250/ --cov=f250/scripts --cov-report=html
+```
+
+Test fixtures are provided in `tests/f250/fixtures/`:
+- `sample_obd.csv` - Sample OBD scan data
+- `sample_photo.jpg` - Sample photo file
+
+## Integration Notes
 
 Note: Trello integration is explicitly excluded per requirements.
 
@@ -221,6 +284,7 @@ Note: Trello integration is explicitly excluded per requirements.
 2. **Backup Data**: Regularly backup `f250.db` and `maintenance_log.csv`
 3. **Photo Organization**: Name photos with DTC codes or job names for automatic linking
 4. **Maintenance Tracking**: Always sync after adding maintenance entries for full database integration
+5. **Google Sheets**: Keep sheets synced for mobile access to maintenance history
 
 ## Troubleshooting
 
@@ -238,6 +302,44 @@ Note: Trello integration is explicitly excluded per requirements.
 - Check that maintenance log has been synced
 - Verify OBD imports completed successfully
 - Review import logs in database
+
+### Google Sheets Sync Issues
+- Verify service account JSON is valid
+- Ensure sheet is shared with service account email
+- Check that APIs are enabled in Google Cloud Console
+- Review logs for detailed error messages
+
+## Quick Start Guide
+
+1. **Install and Initialize:**
+   ```bash
+   pip install -r requirements.txt
+   python f250/scripts/maintenance.py init
+   ```
+
+2. **Import Your First OBD Scan:**
+   - Save OBD scanner CSV to `f250/data/obd_csv/`
+   - Run: `python f250/scripts/obd_import.py --csv-dir f250/data/obd_csv --run`
+
+3. **Add Maintenance Entry:**
+   ```bash
+   python f250/scripts/maintenance.py add \
+     --date $(date +%Y-%m-%d) \
+     --mileage 50000 \
+     --type oil_change \
+     --description "Full synthetic" \
+     --cost 75.00
+   ```
+
+4. **Generate Diagnostic Report:**
+   ```bash
+   python f250/scripts/obd_query.py --dtc P0301 --report analysis.md
+   ```
+
+5. **Run Tests:**
+   ```bash
+   pytest tests/f250/ -v
+   ```
 
 ## License
 
