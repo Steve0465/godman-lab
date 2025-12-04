@@ -450,16 +450,32 @@
                     const confidence = bubble.confidence || 0;
                     const confidenceClass = confidence > 0.8 ? 'high' : confidence > 0.5 ? 'medium' : 'low';
                     
-                    card.innerHTML = `
-                        <img src="/api/bubbles/${imageId}/${bubble.index}" class="bubble-image" alt="Bubble ${bubble.index}">
-                        <div class="bubble-text">
-                            <label>Text (editable):</label>
-                            <textarea id="text-${bubble.index}">${text}</textarea>
-                        </div>
-                        <div class="confidence ${confidenceClass}">
-                            Confidence: ${(confidence * 100).toFixed(1)}%
-                        </div>
-                    `;
+                    // Create elements safely to avoid XSS
+                    const img = document.createElement('img');
+                    img.src = `/api/bubbles/${imageId}/${bubble.index}`;
+                    img.className = 'bubble-image';
+                    img.alt = `Bubble ${bubble.index}`;
+                    
+                    const bubbleTextDiv = document.createElement('div');
+                    bubbleTextDiv.className = 'bubble-text';
+                    
+                    const label = document.createElement('label');
+                    label.textContent = 'Text (editable):';
+                    
+                    const textarea = document.createElement('textarea');
+                    textarea.id = `text-${bubble.index}`;
+                    textarea.value = text;  // Safe: value property, not innerHTML
+                    
+                    bubbleTextDiv.appendChild(label);
+                    bubbleTextDiv.appendChild(textarea);
+                    
+                    const confidenceDiv = document.createElement('div');
+                    confidenceDiv.className = `confidence ${confidenceClass}`;
+                    confidenceDiv.textContent = `Confidence: ${(confidence * 100).toFixed(1)}%`;
+                    
+                    card.appendChild(img);
+                    card.appendChild(bubbleTextDiv);
+                    card.appendChild(confidenceDiv);
                     
                     container.appendChild(card);
                 });
