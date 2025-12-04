@@ -25,10 +25,17 @@ class DiagnosticReportGenerator:
     """Generate diagnostic reports from OBD and maintenance data"""
     
     def __init__(self, db_path: Path, notes_dir: Path, photos_dir: Optional[Path] = None):
-        self.db_path = db_path
-        self.notes_dir = notes_dir
-        self.photos_dir = photos_dir or Path('f250/data/photos')
+        self.db_path = Path(db_path).resolve()
+        self.notes_dir = Path(notes_dir).resolve()
+        self.photos_dir = Path(photos_dir).resolve() if photos_dir else Path('f250/data/photos').resolve()
+        
+        # Ensure directories exist
         self.notes_dir.mkdir(parents=True, exist_ok=True)
+        self.photos_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Validate database exists
+        if not self.db_path.exists():
+            raise FileNotFoundError(f"Database not found: {self.db_path}. Run obd_import.py and maintenance.py sync first.")
         
     def get_obd_events(self, dtc: Optional[str] = None, limit: Optional[int] = None) -> pd.DataFrame:
         """Get OBD events from database"""
@@ -112,6 +119,9 @@ class DiagnosticReportGenerator:
         if not output_path:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             output_path = self.notes_dir / f"diagnostics_{dtc}_{timestamp}.md"
+        else:
+            output_path = Path(output_path).resolve()
+            output_path.parent.mkdir(parents=True, exist_ok=True)
         
         # Get OBD events
         obd_df = self.get_obd_events(dtc=dtc, limit=50)
@@ -225,6 +235,9 @@ class DiagnosticReportGenerator:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             safe_job_name = job_name.replace(' ', '_').lower()
             output_path = self.notes_dir / f"diagnostics_{safe_job_name}_{timestamp}.md"
+        else:
+            output_path = Path(output_path).resolve()
+            output_path.parent.mkdir(parents=True, exist_ok=True)
         
         # Get relevant OBD data (last 30 days)
         obd_df = self.get_obd_events(limit=100)
@@ -378,20 +391,26 @@ def main():
         parser.error("--job-type is required when using --job-name")
     
     try:
+        # Convert paths to absolute
+        db_path = Path(args.db).resolve()
+        notes_dir = Path(args.notes_dir).resolve()
+        photos_dir = Path(args.photos_dir).resolve()
+        output_path = Path(args.output).resolve() if args.output else None
+        
         generator = DiagnosticReportGenerator(
-            args.db,
-            args.notes_dir,
-            args.photos_dir
+            db_path,
+            notes_dir,
+            photos_dir
         )
         
         if args.dtc:
-            report_path = generator.generate_dtc_report(args.dtc, args.output)
+            report_path = generator.generate_dtc_report(args.dtc, output_path)
             print(f"Generated DTC report: {report_path}")
         else:
             report_path = generator.generate_job_report(
                 args.job_name,
                 args.job_type,
-                args.output
+                output_path
             )
             print(f"Generated job report: {report_path}")
         

@@ -26,14 +26,16 @@ class MaintenanceManager:
     """Manage maintenance log in CSV and SQLite"""
     
     def __init__(self, csv_path: Path, db_path: Path):
-        self.csv_path = csv_path
-        self.db_path = db_path
+        self.csv_path = Path(csv_path).resolve()
+        self.db_path = Path(db_path).resolve()
+        # Ensure parent directories exist
+        self.csv_path.parent.mkdir(parents=True, exist_ok=True)
+        self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._ensure_csv_exists()
         
     def _ensure_csv_exists(self):
         """Create CSV file with headers if it doesn't exist"""
         if not self.csv_path.exists():
-            self.csv_path.parent.mkdir(parents=True, exist_ok=True)
             with open(self.csv_path, 'w', newline='') as f:
                 writer = csv.DictWriter(f, fieldnames=[
                     'date', 'mileage', 'type', 'description', 
@@ -284,7 +286,11 @@ def main():
         sys.exit(1)
     
     try:
-        manager = MaintenanceManager(args.csv, args.db)
+        # Convert paths to absolute
+        csv_path = Path(args.csv).resolve()
+        db_path = Path(args.db).resolve()
+        
+        manager = MaintenanceManager(csv_path, db_path)
         
         if args.command == 'add':
             success = manager.add_entry(

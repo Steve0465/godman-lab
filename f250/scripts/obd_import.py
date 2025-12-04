@@ -30,8 +30,10 @@ class OBDImporter:
     """Handles OBD CSV import to SQLite and Parquet"""
     
     def __init__(self, db_path: Path, parquet_dir: Path):
-        self.db_path = db_path
-        self.parquet_dir = parquet_dir
+        self.db_path = Path(db_path).resolve()
+        self.parquet_dir = Path(parquet_dir).resolve()
+        # Ensure directories exist
+        self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.parquet_dir.mkdir(parents=True, exist_ok=True)
         
     def init_db(self):
@@ -213,6 +215,10 @@ class OBDImporter:
     
     def discover_csvs(self, csv_dir: Path) -> List[Path]:
         """Discover all CSV files in directory"""
+        csv_dir = Path(csv_dir).resolve()
+        if not csv_dir.exists():
+            logger.warning(f"CSV directory does not exist: {csv_dir}")
+            return []
         csv_files = list(csv_dir.glob("*.csv"))
         logger.info(f"Found {len(csv_files)} CSV files in {csv_dir}")
         return csv_files
@@ -286,14 +292,24 @@ def main():
         parser.error("Must specify either --run or --dry-run")
     
     try:
-        importer = OBDImporter(args.db, args.parquet_dir)
+        # Convert paths to absolute
+        db_path = Path(args.db).resolve()
+        parquet_dir = Path(args.parquet_dir).resolve()
+        csv_dir = Path(args.csv_dir).resolve()
+        
+        # Ensure CSV directory exists
+        if not csv_dir.exists():
+            csv_dir.mkdir(parents=True, exist_ok=True)
+            logger.warning(f"Created CSV directory: {csv_dir}")
+        
+        importer = OBDImporter(db_path, parquet_dir)
         
         # Initialize database
         if not args.dry_run:
             importer.init_db()
         
         # Import files
-        success, failed = importer.import_all(args.csv_dir, args.dry_run)
+        success, failed = importer.import_all(csv_dir, args.dry_run)
         
         logger.info(f"Import complete: {success} successful, {failed} failed")
         

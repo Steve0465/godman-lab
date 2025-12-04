@@ -25,8 +25,12 @@ class OBDQueryEngine:
     """Query and analyze OBD data"""
     
     def __init__(self, db_path: Path, parquet_dir: Optional[Path] = None):
-        self.db_path = db_path
-        self.parquet_dir = parquet_dir
+        self.db_path = Path(db_path).resolve()
+        self.parquet_dir = Path(parquet_dir).resolve() if parquet_dir else None
+        
+        # Validate database exists
+        if not self.db_path.exists():
+            raise FileNotFoundError(f"Database not found: {self.db_path}. Run obd_import.py first.")
         
     def query_sqlite(self, query: str) -> pd.DataFrame:
         """Execute query against SQLite database"""
@@ -220,6 +224,8 @@ class OBDQueryEngine:
         issue_title: str = "Diagnostic Report"
     ):
         """Write a diagnostic markdown report"""
+        output_path = Path(output_path).resolve()
+        output_path.parent.mkdir(parents=True, exist_ok=True)
         with open(output_path, 'w') as f:
             f.write(f"# {issue_title}\n\n")
             f.write(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
@@ -333,8 +339,12 @@ def main():
         logging.getLogger().setLevel(logging.DEBUG)
     
     try:
-        use_parquet = args.parquet_dir is not None
-        engine = OBDQueryEngine(args.db, args.parquet_dir)
+        # Convert paths to absolute
+        db_path = Path(args.db).resolve()
+        parquet_dir = Path(args.parquet_dir).resolve() if args.parquet_dir else None
+        
+        use_parquet = parquet_dir is not None
+        engine = OBDQueryEngine(db_path, parquet_dir)
         
         # Execute query based on parameters
         if args.dtc:
