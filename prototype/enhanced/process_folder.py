@@ -23,7 +23,14 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from segmentation import BubbleSegmenter, MessageUIPreset
 from ocr_backends import get_ocr_backend, get_available_backends
-from embeddings import MessageEmbedder
+
+# Try to import embeddings (optional dependency)
+try:
+    from embeddings import MessageEmbedder
+    EMBEDDINGS_AVAILABLE = True
+except ImportError:
+    EMBEDDINGS_AVAILABLE = False
+    MessageEmbedder = None
 
 
 def process_folder(input_folder: str, output_folder: str, 
@@ -70,8 +77,12 @@ def process_folder(input_folder: str, output_folder: str,
     
     embedder = None
     if store_embeddings:
-        print("Initializing embedder...")
-        embedder = MessageEmbedder(index_path=str(output_path / 'embeddings'))
+        if not EMBEDDINGS_AVAILABLE:
+            print("Warning: Embeddings module not available. Install sentence-transformers and faiss-cpu.")
+            print("Skipping embedding generation.")
+        else:
+            print("Initializing embedder...")
+            embedder = MessageEmbedder(index_path=str(output_path / 'embeddings'))
     
     # Process images
     results = {
