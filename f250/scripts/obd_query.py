@@ -34,8 +34,10 @@ def query_sqlite(db_path, dtc=None, date_range=None, misfire_only=False):
         params = []
         
         if dtc:
+            # Sanitize dtc input to prevent SQL injection and unintended pattern matching
+            sanitized_dtc = dtc.replace('%', '').replace('_', '').replace("'", "").replace('"', '')
             query += " AND dtc_code LIKE ?"
-            params.append(f"%{dtc}%")
+            params.append(f"%{sanitized_dtc}%")
         
         if date_range:
             start_date, end_date = date_range

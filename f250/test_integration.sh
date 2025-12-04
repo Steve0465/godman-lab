@@ -9,14 +9,14 @@ echo "F250 Tooling Integration Test"
 echo "=========================================="
 
 # Setup
-TEST_DIR="f250_test_$(date +%s)"
-mkdir -p "/tmp/${TEST_DIR}/obd_csv"
-DB_PATH="/tmp/${TEST_DIR}/test.db"
-CSV_DIR="/tmp/${TEST_DIR}/obd_csv"
-MAINT_CSV="/tmp/${TEST_DIR}/maintenance.csv"
+TEST_DIR=$(mktemp -d /tmp/f250_test_XXXXXX)
+mkdir -p "${TEST_DIR}/obd_csv"
+DB_PATH="${TEST_DIR}/test.db"
+CSV_DIR="${TEST_DIR}/obd_csv"
+MAINT_CSV="${TEST_DIR}/maintenance.csv"
 
 echo -e "\n1. Creating test CSV data..."
-cat > "/tmp/${TEST_DIR}/obd_csv/test_scan.csv" << 'EOF'
+cat > "${TEST_DIR}/obd_csv/test_scan.csv" << 'EOF'
 timestamp,rpm,speed,engine_load,coolant_temp,fuel_trim_short,fuel_trim_long,dtc_code,dtc_description
 2024-12-04 10:00:00,800,0,12.5,190,2.0,1.5,,
 2024-12-04 10:01:00,1500,30,38.2,192,2.3,1.6,,
@@ -31,7 +31,7 @@ echo -e "\n2. Testing obd_import.py (dry-run)..."
 python3 f250/scripts/obd_import.py \
     --csv-dir "$CSV_DIR" \
     --db-path "$DB_PATH" \
-    --parquet-path "/tmp/${TEST_DIR}/obd.parquet" \
+    --parquet-path "${TEST_DIR}/obd.parquet" \
     --dry-run
 echo "✓ Dry-run successful"
 
@@ -39,7 +39,7 @@ echo -e "\n3. Testing obd_import.py (actual import)..."
 python3 f250/scripts/obd_import.py \
     --csv-dir "$CSV_DIR" \
     --db-path "$DB_PATH" \
-    --parquet-path "/tmp/${TEST_DIR}/obd.parquet" \
+    --parquet-path "${TEST_DIR}/obd.parquet" \
     --run
 echo "✓ Import successful"
 
@@ -88,33 +88,33 @@ echo -e "\n9. Testing diag_report.py (generate report)..."
 python3 f250/scripts/diag_report.py \
     --db-path "$DB_PATH" \
     --dtc P0301 \
-    --output "/tmp/${TEST_DIR}/diagnostic_report.md"
+    --output "${TEST_DIR}/diagnostic_report.md"
 echo "✓ Diagnostic report generated"
 
 echo -e "\n10. Verifying generated files..."
 if [ -f "$DB_PATH" ]; then
     echo "✓ SQLite database created"
 fi
-if [ -f "/tmp/${TEST_DIR}/obd.parquet" ]; then
+if [ -f "${TEST_DIR}/obd.parquet" ]; then
     echo "✓ Parquet file created"
 fi
 if [ -f "$MAINT_CSV" ]; then
     echo "✓ Maintenance CSV created"
 fi
-if [ -f "/tmp/${TEST_DIR}/diagnostic_report.md" ]; then
+if [ -f "${TEST_DIR}/diagnostic_report.md" ]; then
     echo "✓ Diagnostic report created"
 fi
 
 echo -e "\n=========================================="
 echo "All tests passed successfully! ✓"
 echo "=========================================="
-echo -e "\nTest artifacts located in: /tmp/${TEST_DIR}"
+echo -e "\nTest artifacts located in: ${TEST_DIR}"
 echo "You can review:"
 echo "  - Database: $DB_PATH"
-echo "  - Parquet: /tmp/${TEST_DIR}/obd.parquet"
+echo "  - Parquet: ${TEST_DIR}/obd.parquet"
 echo "  - Maintenance CSV: $MAINT_CSV"
-echo "  - Diagnostic Report: /tmp/${TEST_DIR}/diagnostic_report.md"
+echo "  - Diagnostic Report: ${TEST_DIR}/diagnostic_report.md"
 
 # Cleanup prompt
 echo -e "\nTo clean up test data, run:"
-echo "  rm -rf /tmp/${TEST_DIR}"
+echo "  rm -rf ${TEST_DIR}"

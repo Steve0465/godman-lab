@@ -156,7 +156,7 @@ def import_csv_to_sqlite(csv_path, db_path, dry_run=False):
         # Detect misfires based on dtc_code
         if 'dtc_code' in df.columns:
             df['misfire_detected'] = df['dtc_code'].astype(str).str.contains(
-                'P030[0-9]|misfire', case=False, na=False
+                r'P030[0-9]|\bmisfire\b', case=False, na=False
             ).astype(int)
         else:
             df['misfire_detected'] = 0

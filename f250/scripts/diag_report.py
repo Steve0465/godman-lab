@@ -104,7 +104,9 @@ def find_related_photos(photos_dir, dtc=None, job_name=None):
     
     photo_patterns = []
     if dtc:
-        photo_patterns.append(dtc.replace('P', '').lower())
+        # Remove any DTC prefix (P, C, B, U) and convert to lowercase
+        dtc_without_prefix = dtc[1:] if len(dtc) > 1 and dtc[0].upper() in ['P', 'C', 'B', 'U'] else dtc
+        photo_patterns.append(dtc_without_prefix.lower())
     if job_name:
         photo_patterns.append(job_name.lower())
     
