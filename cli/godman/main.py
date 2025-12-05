@@ -142,9 +142,111 @@ def agent(input: str = typer.Argument(..., help="File path or raw text for agent
 
 
 @app.command()
+def queue_enqueue(input: str = typer.Argument(..., help="Task input to enqueue"), priority: int = typer.Option(1, help="Job priority")):
+    """Enqueue a task for background processing."""
+    from godman_ai.queue import JobQueue
+    
+    queue = JobQueue()
+    job_id = queue.enqueue(input, priority=priority)
+    
+    typer.echo(f"✅ Job enqueued: ID={job_id}, Priority={priority}")
+    typer.echo(f"📊 Queue size: {queue.size()} pending jobs")
+
+
+@app.command()
+def queue_worker(poll_interval: float = typer.Option(2.0, help="Polling interval in seconds")):
+    """Run the job worker to process queued tasks."""
+    from godman_ai.queue import JobWorker
+    
+    typer.echo(f"🔄 Starting job worker (poll interval: {poll_interval}s)")
+    typer.echo("Press Ctrl+C to stop\n")
+    
+    worker = JobWorker()
+    
+    try:
+        worker.run_forever(poll_interval=poll_interval)
+    except KeyboardInterrupt:
+        typer.echo("\n👋 Worker stopped")
+
+
+@app.command()
+def queue_status():
+    """Show job queue status."""
+    from godman_ai.queue import JobQueue
+    
+    queue = JobQueue()
+    status = queue.get_status()
+    
+    typer.echo("📊 Job Queue Status")
+    typer.echo("=" * 40)
+    
+    for state, count in status.items():
+        typer.echo(f"  {state.capitalize()}: {count}")
+    
+    total = sum(status.values())
+    typer.echo(f"  Total: {total}")
+
+
+@app.command()
+def schedule_add(cron: str = typer.Argument(..., help="Cron expression"), command: str = typer.Argument(..., help="Command to run")):
+    """Add a scheduled task."""
+    from godman_ai.scheduler import Scheduler
+    
+    scheduler = Scheduler()
+    
+    try:
+        schedule_id = scheduler.add_schedule(cron, command)
+        typer.echo(f"✅ Schedule added: ID={schedule_id}")
+        typer.echo(f"   Cron: {cron}")
+        typer.echo(f"   Command: {command}")
+    except ValueError as e:
+        typer.echo(f"❌ Error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def schedule_list():
+    """List all scheduled tasks."""
+    from godman_ai.scheduler import Scheduler
+    
+    scheduler = Scheduler()
+    schedules = scheduler.get_schedules()
+    
+    typer.echo("📅 Scheduled Tasks")
+    typer.echo("=" * 60)
+    
+    if not schedules:
+        typer.echo("  No schedules found")
+        return
+    
+    for schedule in schedules:
+        status = "✅" if schedule.enabled else "❌"
+        typer.echo(f"\n  {status} ID {schedule.id}: {schedule.cron}")
+        typer.echo(f"     Command: {schedule.command}")
+        if schedule.next_run:
+            typer.echo(f"     Next run: {schedule.next_run}")
+        if schedule.last_run:
+            typer.echo(f"     Last run: {schedule.last_run}")
+
+
+@app.command()
+def schedule_run():
+    """Check and run pending scheduled tasks."""
+    from godman_ai.scheduler import Scheduler
+    
+    scheduler = Scheduler()
+    
+    typer.echo("⏰ Checking for pending scheduled tasks...")
+    scheduler.run_pending()
+    typer.echo("✅ Done")
+
+
+@app.command()
 def status():
     """Show system status and configuration."""
     from godman_ai.orchestrator import Orchestrator
+    from godman_ai.queue import JobQueue
+    from godman_ai.scheduler import Scheduler
     
     typer.echo("🚀 Godman Automation Lab")
     typer.echo("Status: All systems operational")
@@ -164,6 +266,21 @@ def status():
     typer.echo("  • Executor: ✅ Available")
     typer.echo("  • Reviewer: ✅ Available")
     typer.echo("  • AgentLoop: ✅ Available")
+    
+    # Show queue status
+    queue = JobQueue()
+    queue_status = queue.get_status()
+    typer.echo("\n📊 Job Queue:")
+    for state, count in queue_status.items():
+        typer.echo(f"  • {state.capitalize()}: {count}")
+    
+    # Show scheduler status
+    scheduler = Scheduler()
+    schedules = scheduler.get_schedules()
+    enabled_count = sum(1 for s in schedules if s.enabled)
+    typer.echo(f"\n📅 Scheduler:")
+    typer.echo(f"  • Total schedules: {len(schedules)}")
+    typer.echo(f"  • Enabled: {enabled_count}")
     
     typer.echo("\n📦 Available modules:")
     typer.echo("  • receipts - Receipt processing and OCR")
