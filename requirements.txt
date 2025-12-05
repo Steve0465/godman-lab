@@ -1,3 +1,10 @@
 pytesseract
 Pillow
 pandas
+python-dateutil
+python-dotenv
+openai
+streamlit
+pyarrow
+fastparquet
+requests
