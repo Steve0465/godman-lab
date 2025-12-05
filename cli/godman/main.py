@@ -12,6 +12,10 @@ app = typer.Typer(
 # Register command modules
 app.add_typer(receipts.app, name="receipts", help="Receipt processing commands")
 
+# Register organize command
+from godman.commands import organize
+app.add_typer(organize.app, name="organize", help="AI-powered file organization")
+
 
 @app.command()
 def run(input: str = typer.Argument(..., help="File path or raw string to process")):
