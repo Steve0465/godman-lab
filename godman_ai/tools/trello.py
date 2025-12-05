@@ -1,6 +1,7 @@
 """Trello Tool - Trello board integration."""
 from typing import Dict, Any, List, Optional
-from engine import BaseTool
+
+from ..engine import BaseTool
 
 
 class TrelloTool(BaseTool):

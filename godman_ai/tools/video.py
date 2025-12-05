@@ -6,8 +6,10 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 import shutil
 
+from ..engine import BaseTool
 
-class VideoTool:
+
+class VideoTool(BaseTool):
     """Base video processing tool using ffmpeg."""
     
     name = "video"

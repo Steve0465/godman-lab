@@ -21,7 +21,7 @@ logging.basicConfig(
     ]
 )
 
-logger = logging.getLogger("godman-ai")
+logger = logging.getLogger("godman_ai")
 
 
 class BaseTool:
@@ -60,7 +60,7 @@ class AgentEngine:
         Initialize the Agent Engine.
         
         Args:
-            config_path: Path to config.toml (defaults to godman-ai/config/config.toml)
+            config_path: Path to config.toml (defaults to godman_ai/config/config.toml)
         """
         self.base_dir = Path(__file__).parent
         self.config_path = config_path or self.base_dir / "config" / "config.toml"
@@ -111,13 +111,11 @@ class AgentEngine:
             if tool_file.name.startswith("_"):
                 continue
             
-            module_name = f"godman-ai.tools.{tool_file.stem}"
+            module_name = f"godman_ai.tools.{tool_file.stem}"
             
             try:
-                # Import the module
-                spec = importlib.util.spec_from_file_location(module_name, tool_file)
-                module = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(module)
+                # Import the module using importlib
+                module = importlib.import_module(module_name)
                 
                 # Find all tool classes
                 for name, obj in inspect.getmembers(module, inspect.isclass):
@@ -145,13 +143,11 @@ class AgentEngine:
             if workflow_file.name.startswith("_"):
                 continue
             
-            module_name = f"godman-ai.workflows.{workflow_file.stem}"
+            module_name = f"godman_ai.workflows.{workflow_file.stem}"
             
             try:
-                # Import the module
-                spec = importlib.util.spec_from_file_location(module_name, workflow_file)
-                module = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(module)
+                # Import the module using importlib
+                module = importlib.import_module(module_name)
                 
                 # Find all workflow classes
                 for name, obj in inspect.getmembers(module, inspect.isclass):

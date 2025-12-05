@@ -1,7 +1,8 @@
 """Receipts Workflow - End-to-end receipt processing automation."""
 from pathlib import Path
 from typing import Dict, Any
-from engine import BaseWorkflow
+
+from ..engine import BaseWorkflow
 
 
 class ReceiptsWorkflow(BaseWorkflow):

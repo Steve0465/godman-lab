@@ -6,7 +6,7 @@ from typing import Union, Dict, Any
 # Add libs to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "libs"))
 
-from engine import BaseTool
+from ..engine import BaseTool
 
 
 class OCRTool(BaseTool):

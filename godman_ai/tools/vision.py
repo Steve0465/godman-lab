@@ -3,7 +3,8 @@ import os
 from pathlib import Path
 from typing import Union, Dict, Any
 import base64
-from engine import BaseTool
+
+from ..engine import BaseTool
 
 
 class VisionTool(BaseTool):

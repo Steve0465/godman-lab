@@ -2,7 +2,8 @@
 from pathlib import Path
 from typing import Dict, Any, List
 from datetime import datetime
-from engine import BaseWorkflow
+
+from ..engine import BaseWorkflow
 
 
 class VideoOrganizerWorkflow(BaseWorkflow):

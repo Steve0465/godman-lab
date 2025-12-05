@@ -2,7 +2,8 @@
 from pathlib import Path
 from typing import Dict, Any
 from datetime import datetime
-from engine import BaseWorkflow
+
+from ..engine import BaseWorkflow
 
 
 class PoolJobWorkflow(BaseWorkflow):

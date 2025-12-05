@@ -3,11 +3,11 @@
 import sys
 from pathlib import Path
 
-# Add godman-ai to path
-sys.path.insert(0, str(Path(__file__).parent))
+# Add repo root to path so godman_ai can be imported
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from engine import AgentEngine
-from memory.store import MemoryStore
+from godman_ai.engine import AgentEngine
+from godman_ai.memory.store import MemoryStore
 
 
 def main():
