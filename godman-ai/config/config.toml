@@ -1,0 +1,64 @@
+# Godman AI Configuration
+
+[agent]
+name = "Godman AI"
+version = "0.1.0"
+log_level = "INFO"
+
+[openai]
+# OpenAI API configuration
+model = "gpt-4"
+temperature = 0.7
+max_tokens = 2000
+# api_key = "set via OPENAI_API_KEY environment variable"
+
+[tools]
+# Tool-specific configuration
+enabled = ["ocr", "vision", "sheets", "trello", "drive", "reports"]
+
+[tools.ocr]
+default_language = "eng"
+max_pages = 10
+
+[tools.vision]
+use_vision_api = true
+detail_level = "high"
+
+[tools.sheets]
+# spreadsheet_id = "your-spreadsheet-id"
+default_range = "A1:Z1000"
+
+[tools.trello]
+# board_id = "your-board-id"
+# list_ids will be loaded dynamically
+
+[tools.drive]
+# folder_id = "your-folder-id"
+auto_organize = true
+
+[workflows]
+# Workflow-specific configuration
+enabled = ["receipts_workflow", "pooljob_workflow"]
+
+[workflows.receipts]
+use_vision = true
+log_to_sheets = true
+auto_organize = true
+
+[workflows.pooljob]
+generate_job_sheet = true
+send_confirmation = true
+log_to_sheets = true
+
+[memory]
+# Memory and context storage
+store_conversations = true
+max_conversation_history = 1000
+store_automation_history = true
+
+[directories]
+# Directory paths (relative to godman-lab root)
+input_dir = "scans"
+output_dir = "receipts"
+backup_dir = "backups"
+logs_dir = "godman-ai/logs"
