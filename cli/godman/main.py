@@ -20,6 +20,10 @@ app.add_typer(organize.app, name="organize", help="AI-powered file organization"
 from godman.commands import profile
 app.add_typer(profile.app, name="profile", help="Personal AI profile management")
 
+# Register automation commands
+from godman.commands import automation
+app.add_typer(automation.app, name="auto", help="Automation and monitoring")
+
 
 @app.command()
 def run(input: str = typer.Argument(..., help="File path or raw string to process")):
