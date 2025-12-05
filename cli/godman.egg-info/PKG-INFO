@@ -1,0 +1,19 @@
+Metadata-Version: 2.4
+Name: godman
+Version: 0.1.0
+Summary: Godman Automation Lab - Personal automation toolkit
+Author-email: Stephen Godman <godman@example.com>
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: typer>=0.9.0
+Requires-Dist: rich>=13.0.0
+Requires-Dist: python-dotenv>=1.0.0
+Requires-Dist: pandas>=2.0.0
+Requires-Dist: pytesseract>=0.3.10
+Requires-Dist: Pillow>=10.0.0
+Requires-Dist: pdf2image>=1.16.3
+Requires-Dist: python-dateutil>=2.8.2
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0.0; extra == "dev"
+Requires-Dist: black>=23.0.0; extra == "dev"
+Requires-Dist: ruff>=0.1.0; extra == "dev"
