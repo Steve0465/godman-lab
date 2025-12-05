@@ -1,0 +1,16 @@
+[
+  {
+    "name": "ocr-pro",
+    "version": "0.1.0",
+    "description": "Advanced OCR skill for receipts and documents.",
+    "url": "https://example.com/skills/ocr-pro.godmanskill",
+    "tags": ["ocr", "documents", "receipts"]
+  },
+  {
+    "name": "video-analyzer",
+    "version": "0.2.0",
+    "description": "Frame extraction + object detection pipeline.",
+    "url": "https://example.com/skills/video-analyzer.godmanskill",
+    "tags": ["video", "frames", "vision"]
+  }
+]

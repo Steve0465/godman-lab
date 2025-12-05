@@ -646,6 +646,107 @@ def skill_validate(path: str = typer.Argument(..., help="Path to skill directory
         raise typer.Exit(code=1)
 
 
+@app.command()
+def store_list():
+    """List all skills available in the App Store."""
+    from godman_ai.appstore import SkillRegistry
+    
+    registry = SkillRegistry()
+    skills = registry.list()
+    
+    typer.echo("🏪 GodmanAI App Store")
+    typer.echo("=" * 60)
+    
+    if not skills:
+        typer.echo("\n📦 No skills available")
+        typer.echo("\n💡 Check back later or add custom registry at ~/.godman/registry/skills.json")
+        return
+    
+    typer.echo(f"\n📦 Available Skills ({len(skills)}):\n")
+    
+    for skill in skills:
+        typer.echo(f"  📌 {skill['name']} (v{skill['version']})")
+        typer.echo(f"     {skill['description']}")
+        tags = skill.get('tags', [])
+        if tags:
+            typer.echo(f"     Tags: {', '.join(tags)}")
+        typer.echo()
+
+
+@app.command()
+def store_search(query: str = typer.Argument(..., help="Search query (name, description, or tag)")):
+    """Search for skills in the App Store."""
+    from godman_ai.appstore import SkillRegistry
+    
+    registry = SkillRegistry()
+    results = registry.search(query)
+    
+    typer.echo(f"🔍 Search results for '{query}'")
+    typer.echo("=" * 60)
+    
+    if not results:
+        typer.echo("\n❌ No skills found matching your query")
+        typer.echo("\n💡 Try a different search term or browse all skills:")
+        typer.echo("   godman store list")
+        return
+    
+    typer.echo(f"\n✅ Found {len(results)} skill(s):\n")
+    
+    for skill in results:
+        typer.echo(f"  📌 {skill['name']} (v{skill['version']})")
+        typer.echo(f"     {skill['description']}")
+        tags = skill.get('tags', [])
+        if tags:
+            typer.echo(f"     Tags: {', '.join(tags)}")
+        typer.echo()
+
+
+@app.command()
+def store_install(name: str = typer.Argument(..., help="Skill name to install")):
+    """Install a skill from the App Store."""
+    from godman_ai.appstore import SkillRegistry, SkillFetcher
+    
+    registry = SkillRegistry()
+    skill = registry.get(name)
+    
+    if not skill:
+        typer.echo(f"❌ Skill '{name}' not found in registry", err=True)
+        typer.echo("\n💡 Search for available skills:")
+        typer.echo("   godman store list")
+        typer.echo("   godman store search <query>")
+        raise typer.Exit(code=1)
+    
+    typer.echo(f"📥 Installing skill: {skill['name']} (v{skill['version']})")
+    typer.echo(f"   {skill['description']}")
+    
+    # Download the skill
+    fetcher = SkillFetcher()
+    
+    try:
+        url = skill.get('url')
+        if not url:
+            typer.echo("❌ Skill has no download URL", err=True)
+            raise typer.Exit(code=1)
+        
+        typer.echo(f"\n⬇️  Downloading from {url}...")
+        archive_path = fetcher.download(url, skill.get('sha256'))
+        
+        typer.echo(f"✅ Downloaded: {archive_path}")
+        
+        # TODO: Install the skill using SkillStore
+        # For now, just notify user
+        typer.echo("\n⚠️  Note: Automatic installation not yet implemented")
+        typer.echo(f"   Archive saved to: {archive_path}")
+        typer.echo(f"   Manual installation required")
+        
+    except ValueError as e:
+        typer.echo(f"❌ Installation failed: {e}", err=True)
+        raise typer.Exit(code=1)
+    except Exception as e:
+        typer.echo(f"❌ Unexpected error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
 def main():
     """Main entry point."""
     app()
