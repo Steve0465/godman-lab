@@ -1,8 +1,6 @@
 import os
 import json
-import openai
-
-openai.api_key = os.getenv('OPENAI_API_KEY')
+from openai import OpenAI
 
 # Small helper to call OpenAI and request a strict JSON response
 SCHEMA = {
@@ -12,6 +10,7 @@ SCHEMA = {
     "date": {"type":"string","description":"ISO date YYYY-MM-DD"},
     "subtotal": {"type":"number"},
     "tax": {"type":"number"},
+    "total": {"type":"number"},
     "currency": {"type":"string"},
     "category": {"type":"string"},
     "confidence": {"type":"number","minimum":0,"maximum":1},
@@ -24,20 +23,23 @@ PROMPT_SYSTEM = "You are a precise extractor. Given OCR text from a receipt, ret
 
 
 def extract_fields(text: str):
-    if not openai.api_key:
+    api_key = os.getenv('OPENAI_API_KEY')
+    if not api_key or api_key == 'your_openai_api_key_here':
         raise RuntimeError('OPENAI_API_KEY not set in environment')
+    
     try:
+        client = OpenAI(api_key=api_key)
         messages = [
             {"role":"system","content":PROMPT_SYSTEM},
             {"role":"user","content":f"Extract structured fields from this OCR text:\n\n{text}"}
         ]
-        resp = openai.ChatCompletion.create(
+        resp = client.chat.completions.create(
             model=os.getenv('OPENAI_MODEL','gpt-4o-mini'),
             messages=messages,
             temperature=0.0,
             max_tokens=512
         )
-        out = resp['choices'][0]['message']['content']
+        out = resp.choices[0].message.content
         # try to load JSON from the model output
         try:
             parsed = json.loads(out)
