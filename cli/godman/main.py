@@ -400,6 +400,41 @@ def server(
 
 
 @app.command()
+def tunnel(url: str = typer.Option("http://127.0.0.1:8000", help="Local server URL to tunnel")):
+    """
+    Start a Cloudflare tunnel to expose the local server publicly.
+    Requires cloudflared to be installed.
+    
+    Install cloudflared:
+      macOS: brew install cloudflare/cloudflare/cloudflared
+      Linux: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation/
+    """
+    import shutil
+    import subprocess
+    
+    # Check if cloudflared is installed
+    if not shutil.which("cloudflared"):
+        typer.echo("❌ cloudflared not found", err=True)
+        typer.echo("\n📦 Installation instructions:")
+        typer.echo("  macOS:   brew install cloudflare/cloudflare/cloudflared")
+        typer.echo("  Linux:   https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation/")
+        typer.echo("  Windows: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation/")
+        raise typer.Exit(code=1)
+    
+    typer.echo(f"🌐 Starting Cloudflare tunnel to {url}")
+    typer.echo("Press Ctrl+C to stop\n")
+    
+    try:
+        # Run cloudflared tunnel
+        subprocess.run(["cloudflared", "tunnel", "--url", url])
+    except KeyboardInterrupt:
+        typer.echo("\n👋 Tunnel stopped")
+    except Exception as e:
+        typer.echo(f"❌ Error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command()
 def daemon_start():
     """Start the GodmanAI daemon (scheduler + worker)."""
     from godman_ai.service import GodmanDaemon

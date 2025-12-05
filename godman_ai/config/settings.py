@@ -15,6 +15,7 @@ class Settings:
         log_level: str = "INFO",
         scheduler_enabled: bool = True,
         memory_enabled: bool = True,
+        api_token: Optional[str] = None,
         email_host: Optional[str] = None,
         email_port: int = 587,
         email_user: Optional[str] = None,
@@ -27,6 +28,7 @@ class Settings:
         self.log_level = log_level
         self.scheduler_enabled = scheduler_enabled
         self.memory_enabled = memory_enabled
+        self.api_token = api_token
         self.email_host = email_host
         self.email_port = email_port
         self.email_user = email_user
@@ -53,7 +55,7 @@ class Settings:
     def __repr__(self):
         # Mask sensitive fields
         safe_dict = self.to_dict()
-        for key in ['openai_api_key', 'email_password', 'trello_token']:
+        for key in ['openai_api_key', 'email_password', 'trello_token', 'api_token']:
             if key in safe_dict and safe_dict[key]:
                 safe_dict[key] = '***'
         return f"Settings({safe_dict})"
@@ -73,6 +75,7 @@ def create_pydantic_settings():
             log_level: str = Field("INFO", alias="LOG_LEVEL")
             scheduler_enabled: bool = Field(True, alias="SCHEDULER_ENABLED")
             memory_enabled: bool = Field(True, alias="MEMORY_ENABLED")
+            api_token: Optional[str] = Field(None, alias="GODMAN_API_TOKEN")
             email_host: Optional[str] = Field(None, alias="EMAIL_HOST")
             email_port: int = Field(587, alias="EMAIL_PORT")
             email_user: Optional[str] = Field(None, alias="EMAIL_USER")
