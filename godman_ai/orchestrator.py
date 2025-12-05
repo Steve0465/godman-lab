@@ -68,45 +68,20 @@ class Orchestrator:
         Args:
             package_path: Python package path (default: "godman_ai.tools")
         
-        Scans the package directory for .py files, imports them, and registers
-        any classes that inherit from BaseTool.
+        Uses the auto_loader module to discover and register tools.
         """
+        from .tools.auto_loader import discover_tool_classes
+        
         logger.info(f"🔍 Auto-discovering tools from: {package_path}")
         
-        # Convert package path to file system path
-        try:
-            package_module = importlib.import_module(package_path)
-            package_dir = Path(package_module.__file__).parent
-        except (ImportError, AttributeError) as e:
-            logger.error(f"❌ Failed to load package {package_path}: {e}")
-            return
+        # Use auto-loader to discover tools
+        discovered_tools = discover_tool_classes(package_path)
         
-        tool_count = 0
+        # Register all discovered tools
+        for tool_name, tool_cls in discovered_tools.items():
+            self.register_tool(tool_name, tool_cls)
         
-        # Scan for Python files
-        for tool_file in package_dir.glob("*.py"):
-            if tool_file.name.startswith("_"):
-                continue
-            
-            module_name = f"{package_path}.{tool_file.stem}"
-            
-            try:
-                # Import the module
-                module = importlib.import_module(module_name)
-                
-                # Find all BaseTool subclasses
-                for name, obj in inspect.getmembers(module, inspect.isclass):
-                    if (issubclass(obj, BaseTool) and 
-                        obj is not BaseTool and
-                        hasattr(obj, 'name')):
-                        
-                        self.register_tool(obj.name, obj)
-                        tool_count += 1
-                        
-            except Exception as e:
-                logger.warning(f"⚠️  Failed to load {tool_file.name}: {e}", exc_info=True)
-        
-        logger.info(f"✅ Loaded {tool_count} tools from {package_path}")
+        logger.info(f"✅ Loaded {len(discovered_tools)} tools from {package_path}")
     
     def detect_input_type(self, input_obj: Union[str, Path, bytes, dict]) -> str:
         """
