@@ -2,7 +2,10 @@
 __pycache__/
 .venv/
 venv/
-receipts/
+receipts/raw/
+receipts/cleaned/
+receipts/*.csv
+receipts/*.log
 scans/
 *.pyc
 .DS_Store
