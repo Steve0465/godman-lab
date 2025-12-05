@@ -27,11 +27,7 @@ class DiagnosticReportGenerator:
     def __init__(self, db_path: Path, notes_dir: Path, photos_dir: Optional[Path] = None):
         self.db_path = db_path
         self.notes_dir = notes_dir
-        # If photos_dir is not provided, compute relative to notes_dir
-        if photos_dir is None:
-            self.photos_dir = self.notes_dir.parent / 'photos'
-        else:
-            self.photos_dir = photos_dir
+        self.photos_dir = photos_dir or (self.notes_dir.parent / 'photos')
         self.notes_dir.mkdir(parents=True, exist_ok=True)
         
     def get_obd_events(self, dtc: Optional[str] = None, limit: Optional[int] = None) -> pd.DataFrame:

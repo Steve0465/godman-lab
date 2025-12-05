@@ -90,10 +90,6 @@ class OBDImporter:
     def is_file_imported(self, file_path: Path) -> bool:
         """Check if file has already been imported"""
         try:
-            # Check if database exists first
-            if not self.db_path.exists():
-                return False
-                
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             

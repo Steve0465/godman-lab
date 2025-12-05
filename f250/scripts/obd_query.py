@@ -133,7 +133,7 @@ class OBDQueryEngine:
                 bins=[0, 1000, 2000, 3000, 4000, 10000],
                 labels=['idle', 'low', 'mid', 'high', 'very_high']
             )
-            analysis['misfires_by_rpm'] = df.groupby('rpm_range')['misfire_count'].sum().to_dict()
+            analysis['misfires_by_rpm'] = df.groupby('rpm_range', observed=True)['misfire_count'].sum().to_dict()
         
         return analysis
     
