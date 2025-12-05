@@ -137,7 +137,7 @@ class ModelRouter:
 
     def _run_local(self, prompt: str, model: str, **kwargs) -> str:
         """
-        Run prompt using local model.
+        Run prompt using local Ollama model.
         
         Args:
             prompt: The prompt text
@@ -147,8 +147,30 @@ class ModelRouter:
         Returns:
             str: Model response
         """
-        # TODO: Implement local model support
-        raise NotImplementedError("Local model support coming soon")
+        try:
+            import requests
+        except ImportError:
+            raise RuntimeError("requests package required. Run: pip install requests")
+        
+        # Get Ollama host from env or use default
+        ollama_host = os.getenv("GODMAN_OLLAMA_HOST", "http://localhost:11434")
+        model_name = os.getenv("GODMAN_LOCAL_MODEL_NAME", "llama3.2:3b")
+        
+        try:
+            response = requests.post(
+                f"{ollama_host}/api/generate",
+                json={
+                    "model": model_name,
+                    "prompt": prompt,
+                    "stream": False,
+                    **kwargs
+                },
+                timeout=120
+            )
+            response.raise_for_status()
+            return response.json()["response"]
+        except Exception as e:
+            raise RuntimeError(f"Ollama API error: {e}")
 
     def list_available_models(self) -> Dict[str, bool]:
         """
@@ -159,9 +181,22 @@ class ModelRouter:
         """
         has_openai = bool(os.getenv("OPENAI_API_KEY"))
         
+        # Check if Ollama is running
+        has_ollama = self._check_ollama()
+        
         return {
             "gpt-4o": has_openai,
             "gpt-4.1": has_openai,
             "gpt-3.5-turbo": has_openai,
-            "local-llama": False,  # TODO: Check for local model files
+            "local-llama": has_ollama,
         }
+    
+    def _check_ollama(self) -> bool:
+        """Check if Ollama service is available."""
+        try:
+            import requests
+            ollama_host = os.getenv("GODMAN_OLLAMA_HOST", "http://localhost:11434")
+            response = requests.get(f"{ollama_host}/api/tags", timeout=2)
+            return response.status_code == 200
+        except:
+            return False
