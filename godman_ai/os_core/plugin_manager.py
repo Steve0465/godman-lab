@@ -1,7 +1,10 @@
 """Plugin manager for GodmanAI - enables dynamic extension loading."""
 
 import importlib.util
+import json
 import logging
+import shutil
+import zipfile
 from pathlib import Path
 from typing import Dict, List, Any
 import sys
@@ -22,6 +25,11 @@ class PluginManager:
     def __init__(self):
         self.plugin_dir = Path(__file__).parent.parent / "plugins"
         self.plugin_dir.mkdir(exist_ok=True)
+        
+        # Registry for installed skills
+        self.state_dir = Path.home() / ".godman" / "state"
+        self.state_dir.mkdir(parents=True, exist_ok=True)
+        self.registry_file = self.state_dir / "installed_skills.json"
         
         self.loaded_plugins: Dict[str, Any] = {}
         self.registered_tools: List[Any] = []
@@ -169,6 +177,115 @@ class PluginManager:
                 for agent in self.registered_agents
             ],
         }
+
+    def install_skill_archive(self, archive_path: Path) -> bool:
+        """
+        Install a .godmanskill archive.
+        
+        Args:
+            archive_path: Path to .godmanskill file
+            
+        Returns:
+            bool: True if installation succeeded
+        """
+        archive_path = Path(archive_path)
+        
+        if not archive_path.exists():
+            logger.error(f"Archive not found: {archive_path}")
+            return False
+        
+        if not archive_path.name.endswith('.godmanskill'):
+            logger.error(f"Invalid archive format: {archive_path}")
+            return False
+        
+        skill_name = archive_path.stem
+        
+        try:
+            # Extract to temp directory first for validation
+            import tempfile
+            with tempfile.TemporaryDirectory() as temp_dir:
+                temp_path = Path(temp_dir)
+                
+                # Extract archive
+                with zipfile.ZipFile(archive_path, 'r') as zf:
+                    zf.extractall(temp_path)
+                
+                # Validate manifest
+                manifest_path = temp_path / "manifest.yaml"
+                if not manifest_path.exists():
+                    logger.error("Archive missing manifest.yaml")
+                    return False
+                
+                # Parse manifest
+                try:
+                    import yaml
+                    with open(manifest_path) as f:
+                        manifest = yaml.safe_load(f)
+                except ImportError:
+                    logger.error("PyYAML not installed - cannot validate skill")
+                    return False
+                
+                # Get skill name from manifest
+                skill_name = manifest.get('name', skill_name)
+                
+                # Install to plugins directory
+                install_path = self.plugin_dir / skill_name
+                
+                if install_path.exists():
+                    logger.warning(f"Skill already exists, removing: {install_path}")
+                    shutil.rmtree(install_path)
+                
+                # Copy extracted files
+                shutil.copytree(temp_path, install_path)
+                
+                # Update registry
+                self._add_to_registry(skill_name, manifest)
+                
+                logger.info(f"Installed skill: {skill_name} to {install_path}")
+                return True
+        
+        except Exception as e:
+            logger.error(f"Failed to install skill archive: {e}")
+            return False
+    
+    def _add_to_registry(self, skill_name: str, manifest: dict):
+        """Add skill to installed registry."""
+        registry = self._load_registry()
+        
+        registry[skill_name] = {
+            "name": manifest.get("name", skill_name),
+            "version": manifest.get("version", "unknown"),
+            "type": manifest.get("type", "unknown"),
+            "author": manifest.get("author", "unknown"),
+            "installed_at": str(Path.home() / ".godman" / "plugins" / skill_name),
+        }
+        
+        self._save_registry(registry)
+    
+    def _load_registry(self) -> dict:
+        """Load installed skills registry."""
+        if not self.registry_file.exists():
+            return {}
+        
+        try:
+            with open(self.registry_file) as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error(f"Failed to load registry: {e}")
+            return {}
+    
+    def _save_registry(self, registry: dict):
+        """Save installed skills registry."""
+        try:
+            with open(self.registry_file, 'w') as f:
+                json.dump(registry, f, indent=2)
+        except Exception as e:
+            logger.error(f"Failed to save registry: {e}")
+    
+    def list_installed_skills(self) -> List[str]:
+        """Get list of installed skill names."""
+        registry = self._load_registry()
+        return list(registry.keys())
 
     def create_example_plugin(self):
         """Create an example plugin file to help users get started."""

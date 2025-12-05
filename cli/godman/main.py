@@ -530,6 +530,122 @@ def skills_uninstall(name: str = typer.Argument(..., help="Skill name to uninsta
         raise typer.Exit(code=1)
 
 
+@app.command()
+def skill_new(
+    name: str = typer.Argument(..., help="Skill name (hyphenated, e.g., my-custom-tool)"),
+    dest: str = typer.Option(".", help="Destination directory"),
+    author: str = typer.Option("unknown", help="Author name")
+):
+    """
+    Create a new skill from template.
+    
+    This scaffolds a new skill directory with tool.py, agent.py, and manifest.yaml
+    ready for customization.
+    
+    Example:
+        godman skill new my-ocr-tool --author "Your Name"
+    """
+    from godman_ai.sdk import SkillBuilder
+    from pathlib import Path
+    
+    builder = SkillBuilder()
+    dest_path = Path(dest)
+    
+    try:
+        skill_path = builder.create_skill(name, dest_path, author=author)
+        typer.echo(f"✅ Skill created: {skill_path}")
+        typer.echo(f"\n📁 Structure:")
+        typer.echo(f"  {skill_path}/")
+        typer.echo(f"  ├── manifest.yaml")
+        typer.echo(f"  ├── tool.py")
+        typer.echo(f"  ├── agent.py")
+        typer.echo(f"  └── __init__.py")
+        typer.echo(f"\n💡 Next steps:")
+        typer.echo(f"  1. Edit {skill_path}/tool.py to implement your tool")
+        typer.echo(f"  2. Update {skill_path}/manifest.yaml with proper metadata")
+        typer.echo(f"  3. Run: godman skill validate {skill_path}")
+        typer.echo(f"  4. Run: godman skill package {skill_path}")
+    except ValueError as e:
+        typer.echo(f"❌ Error: {e}", err=True)
+        raise typer.Exit(code=1)
+    except Exception as e:
+        typer.echo(f"❌ Unexpected error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def skill_package(
+    path: str = typer.Argument(..., help="Path to skill directory"),
+    output: str = typer.Option(None, help="Output directory for .godmanskill file")
+):
+    """
+    Package a skill into a .godmanskill archive.
+    
+    Creates a distributable .godmanskill file that can be installed
+    using the skill store or shared with others.
+    
+    Example:
+        godman skill package ./my-custom-tool
+    """
+    from godman_ai.sdk import SkillBuilder
+    from pathlib import Path
+    
+    builder = SkillBuilder()
+    skill_path = Path(path)
+    output_dir = Path(output) if output else None
+    
+    try:
+        archive_path = builder.package_skill(skill_path, output_dir)
+        typer.echo(f"✅ Skill packaged: {archive_path}")
+        typer.echo(f"\n📦 Archive created successfully")
+        typer.echo(f"   Size: {archive_path.stat().st_size} bytes")
+        typer.echo(f"\n💡 To install this skill:")
+        typer.echo(f"   godman skills install {archive_path}")
+    except ValueError as e:
+        typer.echo(f"❌ Error: {e}", err=True)
+        raise typer.Exit(code=1)
+    except Exception as e:
+        typer.echo(f"❌ Unexpected error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def skill_validate(path: str = typer.Argument(..., help="Path to skill directory or .godmanskill file")):
+    """
+    Validate a skill's structure and manifest.
+    
+    Checks that:
+    - manifest.yaml exists and is valid
+    - All required fields are present
+    - Entrypoint class exists and is importable
+    - Tool classes have required methods
+    
+    Example:
+        godman skill validate ./my-custom-tool
+    """
+    from godman_ai.sdk import validate_skill
+    from pathlib import Path
+    
+    skill_path = Path(path)
+    
+    typer.echo(f"🔍 Validating skill: {skill_path}")
+    typer.echo("=" * 60)
+    
+    errors = validate_skill(skill_path)
+    
+    if not errors:
+        typer.echo("\n✅ Skill is valid!")
+        typer.echo("   All checks passed")
+        typer.echo("\n💡 Ready to package:")
+        typer.echo(f"   godman skill package {skill_path}")
+    else:
+        typer.echo(f"\n❌ Validation failed with {len(errors)} error(s):\n")
+        for i, error in enumerate(errors, 1):
+            typer.echo(f"  {i}. {error}")
+        typer.echo("\n💡 Fix the errors above and try again")
+        raise typer.Exit(code=1)
+
+
 def main():
     """Main entry point."""
     app()

@@ -1,0 +1,9 @@
+name: my-skill
+version: 0.1.0
+description: Example custom skill for GodmanAI.
+type: tool
+entrypoint: tool:ExampleTool
+author: unknown
+tags:
+  - example
+requires: []
