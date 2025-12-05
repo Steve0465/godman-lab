@@ -1,14 +1,10 @@
 pytesseract
-pillow
-pdf2image
+Pillow
 pandas
 python-dateutil
 python-dotenv
 openai
 streamlit
-<<<<<<< HEAD
 pyarrow
 fastparquet
-=======
 requests
->>>>>>> origin/main
