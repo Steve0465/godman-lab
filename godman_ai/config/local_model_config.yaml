@@ -1,0 +1,30 @@
+# GodmanAI Local Model Configuration
+model_preferences:
+  default_provider: "ollama"
+  
+  # Model routing rules
+  task_routing:
+    planning: "dolphin-mixtral:8x7b"
+    execution: "dolphin-mixtral:8x7b" 
+    review: "dolphin-mixtral:8x7b"
+    general: "dolphin-mixtral:8x7b"
+    
+  # Fallback chain
+  fallback_order:
+    - "ollama"
+    - "openai"
+    
+ollama:
+  base_url: "http://localhost:11434"
+  default_model: "dolphin-mixtral:8x7b"
+  timeout: 120
+  
+openai:
+  api_key: "${OPENAI_API_KEY}"
+  model: "gpt-4"
+  
+# Performance settings
+performance:
+  max_tokens: 4096
+  temperature: 0.7
+  stream: true

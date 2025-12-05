@@ -16,6 +16,10 @@ app.add_typer(receipts.app, name="receipts", help="Receipt processing commands")
 from godman.commands import organize
 app.add_typer(organize.app, name="organize", help="AI-powered file organization")
 
+# Register profile command
+from godman.commands import profile
+app.add_typer(profile.app, name="profile", help="Personal AI profile management")
+
 
 @app.command()
 def run(input: str = typer.Argument(..., help="File path or raw string to process")):
