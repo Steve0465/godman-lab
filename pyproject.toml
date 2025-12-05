@@ -1,0 +1,126 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "godman-lab"
+version = "1.0.0"
+description = "Godman Automation Lab - AI-powered automation toolkit"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Steve Godman", email = "memphis465@hotmail.com"}
+]
+keywords = ["automation", "ai", "ocr", "receipt-processing", "workflow"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "typer>=0.9.0",
+    "openai>=1.0.0",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.0.0",
+    "croniter>=2.0.0",
+]
+
+[project.optional-dependencies]
+# Service layer dependencies
+service = [
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+]
+
+# Vision and OCR dependencies
+vision = [
+    "pillow>=10.0.0",
+    "pytesseract>=0.3.10",
+    "pdf2image>=1.16.3",
+    "pdfplumber>=0.10.0",
+]
+
+# Local AI models
+local-models = [
+    "llama-cpp-python>=0.2.0",
+]
+
+# Vector store and embeddings
+memory = [
+    "faiss-cpu>=1.7.4",
+    "numpy>=1.24.0",
+    "sentence-transformers>=2.2.0",
+]
+
+# Video processing
+video = [
+    "opencv-python>=4.8.0",
+    "moviepy>=1.0.3",
+]
+
+# Audio processing
+audio = [
+    "whisper>=1.0.0",
+    "pydub>=0.25.1",
+]
+
+# Google integrations
+google = [
+    "google-api-python-client>=2.100.0",
+    "google-auth-httplib2>=0.1.1",
+    "google-auth-oauthlib>=1.1.0",
+]
+
+# All dependencies
+all = [
+    "godman-lab[service,vision,memory,video,audio,google]",
+]
+
+# Development dependencies
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.5.0",
+]
+
+[project.scripts]
+godman = "cli.godman.main:main"
+
+[project.urls]
+Homepage = "https://github.com/Steve0465/godman-lab"
+Repository = "https://github.com/Steve0465/godman-lab"
+Issues = "https://github.com/Steve0465/godman-lab/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["godman_ai*", "cli*", "libs*"]
+
+[tool.black]
+line-length = 100
+target-version = ["py39"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = "-v --cov=godman_ai --cov=libs --cov=cli"

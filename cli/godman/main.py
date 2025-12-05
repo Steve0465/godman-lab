@@ -381,6 +381,120 @@ def os_plugins():
         typer.echo("   Run 'godman os-plugins-example' to create a sample plugin")
 
 
+@app.command()
+def server(
+    host: str = typer.Option("127.0.0.1", help="Host to bind to"),
+    port: int = typer.Option(8000, help="Port to bind to"),
+    auto_port: bool = typer.Option(True, help="Auto-find available port")
+):
+    """Start the GodmanAI API server."""
+    from godman_ai.service import run_server
+    
+    try:
+        run_server(host=host, port=port, auto_port=auto_port)
+    except KeyboardInterrupt:
+        typer.echo("\n👋 Server stopped")
+    except Exception as e:
+        typer.echo(f"❌ Error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def daemon_start():
+    """Start the GodmanAI daemon (scheduler + worker)."""
+    from godman_ai.service import GodmanDaemon
+    
+    daemon = GodmanDaemon()
+    
+    try:
+        daemon.start()
+    except Exception as e:
+        typer.echo(f"❌ Error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def daemon_stop():
+    """Stop the GodmanAI daemon."""
+    from godman_ai.service import GodmanDaemon
+    
+    daemon = GodmanDaemon()
+    
+    if not daemon.stop():
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def daemon_status():
+    """Show daemon status."""
+    from godman_ai.service import GodmanDaemon
+    import json
+    
+    daemon = GodmanDaemon()
+    status = daemon.status()
+    
+    typer.echo("🔄 GodmanAI Daemon Status")
+    typer.echo("=" * 60)
+    typer.echo(json.dumps(status, indent=2))
+
+
+@app.command()
+def skills_list():
+    """List available skills in the skill store."""
+    from godman_ai.service import SkillStore
+    
+    store = SkillStore()
+    skills = store.list_available()
+    
+    typer.echo("🏪 GodmanAI Skill Store")
+    typer.echo("=" * 60)
+    typer.echo("\n📦 Available Skills:\n")
+    
+    for skill in skills:
+        typer.echo(f"  • {skill['name']}")
+        typer.echo(f"    {skill['description']}")
+        typer.echo(f"    Type: {skill.get('type', 'unknown')}\n")
+    
+    # Show installed skills
+    installed = store.list_installed()
+    if installed:
+        typer.echo("\n✅ Installed Skills:")
+        for skill_name in installed:
+            typer.echo(f"  • {skill_name}")
+
+
+@app.command()
+def skills_install(name: str = typer.Argument(..., help="Skill name to install")):
+    """Install a skill from the skill store."""
+    from godman_ai.service import SkillStore
+    
+    store = SkillStore()
+    
+    typer.echo(f"📥 Installing skill: {name}")
+    
+    if store.install(name):
+        typer.echo(f"✅ Skill '{name}' installed successfully")
+    else:
+        typer.echo(f"❌ Failed to install skill '{name}'", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def skills_uninstall(name: str = typer.Argument(..., help="Skill name to uninstall")):
+    """Uninstall a skill."""
+    from godman_ai.service import SkillStore
+    
+    store = SkillStore()
+    
+    typer.echo(f"🗑️  Uninstalling skill: {name}")
+    
+    if store.uninstall(name):
+        typer.echo(f"✅ Skill '{name}' uninstalled successfully")
+    else:
+        typer.echo(f"❌ Failed to uninstall skill '{name}'", err=True)
+        raise typer.Exit(code=1)
+
+
 def main():
     """Main entry point."""
     app()
