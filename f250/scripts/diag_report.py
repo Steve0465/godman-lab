@@ -21,6 +21,25 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def get_project_root() -> Path:
+    """
+    Get the project root directory.
+    Searches up from script location for a directory containing 'f250' subdirectory.
+    """
+    script_path = Path(__file__).resolve()
+    # Start from script directory and go up
+    current = script_path.parent
+    
+    # Try to find project root by looking for f250 directory
+    for _ in range(5):  # Limit search depth
+        if (current / 'f250').exists():
+            return current
+        current = current.parent
+    
+    # If not found, assume we're already in f250/scripts and go up two levels
+    return script_path.parent.parent.parent
+
+
 class DiagnosticReportGenerator:
     """Generate diagnostic reports from OBD and maintenance data"""
     
@@ -318,25 +337,28 @@ class DiagnosticReportGenerator:
 
 def main():
     """Main entry point"""
+    # Get project root for robust default paths
+    project_root = get_project_root()
+    
     parser = argparse.ArgumentParser(
         description="Generate diagnostic reports for F250"
     )
     parser.add_argument(
         '--db',
         type=Path,
-        default=Path('f250/data/f250.db'),
+        default=project_root / 'f250/data/f250.db',
         help='Path to SQLite database'
     )
     parser.add_argument(
         '--notes-dir',
         type=Path,
-        default=Path('f250/data/notes'),
+        default=project_root / 'f250/data/notes',
         help='Directory for diagnostic reports'
     )
     parser.add_argument(
         '--photos-dir',
         type=Path,
-        default=Path('f250/data/photos'),
+        default=project_root / 'f250/data/photos',
         help='Directory containing related photos'
     )
     parser.add_argument(

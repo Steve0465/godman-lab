@@ -26,6 +26,25 @@ REQUIRED_COLUMNS = ['timestamp', 'rpm', 'speed', 'coolant_temp']
 DTC_COLUMNS = ['dtc', 'dtc_code', 'trouble_code']
 
 
+def get_project_root() -> Path:
+    """
+    Get the project root directory.
+    Searches up from script location for a directory containing 'f250' subdirectory.
+    """
+    script_path = Path(__file__).resolve()
+    # Start from script directory and go up
+    current = script_path.parent
+    
+    # Try to find project root by looking for f250 directory
+    for _ in range(5):  # Limit search depth
+        if (current / 'f250').exists():
+            return current
+        current = current.parent
+    
+    # If not found, assume we're already in f250/scripts and go up two levels
+    return script_path.parent.parent.parent
+
+
 class OBDImporter:
     """Handles OBD CSV import to SQLite and Parquet"""
     
@@ -239,25 +258,28 @@ class OBDImporter:
 
 def main():
     """Main entry point"""
+    # Get project root for robust default paths
+    project_root = get_project_root()
+    
     parser = argparse.ArgumentParser(
         description="Import OBD CSV files to SQLite and Parquet"
     )
     parser.add_argument(
         '--csv-dir',
         type=Path,
-        default=Path('f250/data/obd_csv'),
+        default=project_root / 'f250/data/obd_csv',
         help='Directory containing CSV files to import'
     )
     parser.add_argument(
         '--db',
         type=Path,
-        default=Path('f250/data/f250.db'),
+        default=project_root / 'f250/data/f250.db',
         help='Path to SQLite database'
     )
     parser.add_argument(
         '--parquet-dir',
         type=Path,
-        default=Path('f250/data/parquet'),
+        default=project_root / 'f250/data/parquet',
         help='Directory for Parquet files'
     )
     parser.add_argument(

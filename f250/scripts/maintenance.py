@@ -22,6 +22,25 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def get_project_root() -> Path:
+    """
+    Get the project root directory.
+    Searches up from script location for a directory containing 'f250' subdirectory.
+    """
+    script_path = Path(__file__).resolve()
+    # Start from script directory and go up
+    current = script_path.parent
+    
+    # Try to find project root by looking for f250 directory
+    for _ in range(5):  # Limit search depth
+        if (current / 'f250').exists():
+            return current
+        current = current.parent
+    
+    # If not found, assume we're already in f250/scripts and go up two levels
+    return script_path.parent.parent.parent
+
+
 class MaintenanceManager:
     """Manage maintenance log in CSV and SQLite"""
     
@@ -222,19 +241,22 @@ class MaintenanceManager:
 
 def main():
     """Main entry point"""
+    # Get project root for robust default paths
+    project_root = get_project_root()
+    
     parser = argparse.ArgumentParser(
         description="Manage F250 maintenance log"
     )
     parser.add_argument(
         '--csv',
         type=Path,
-        default=Path('f250/data/maintenance_log.csv'),
+        default=project_root / 'f250/data/maintenance_log.csv',
         help='Path to maintenance CSV file'
     )
     parser.add_argument(
         '--db',
         type=Path,
-        default=Path('f250/data/f250.db'),
+        default=project_root / 'f250/data/f250.db',
         help='Path to SQLite database'
     )
     

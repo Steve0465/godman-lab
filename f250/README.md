@@ -8,6 +8,7 @@ Robust tooling for managing OBD diagnostics and maintenance logs for the Ford F2
 - **Query Engine**: Query OBD data with DTC filtering, date ranges, and misfire analysis
 - **Maintenance Tracking**: CSV-based maintenance log with SQLite sync
 - **Diagnostic Reports**: Generate comprehensive diagnostic sheets with linked data
+- **Robust Path Handling**: Scripts automatically detect project root and work from any directory
 
 ## Directory Structure
 
@@ -37,6 +38,8 @@ pip install -r requirements.txt
 pip install pandas pyarrow
 ```
 
+**Note**: All scripts automatically detect the project root directory, so they can be run from any location without changing paths.
+
 ## Usage
 
 ### Import OBD Data
@@ -45,10 +48,13 @@ Import CSV files containing OBD data:
 
 ```bash
 # Dry run to validate files
-python f250/scripts/obd_import.py --csv-dir f250/data/obd_csv --dry-run
+python f250/scripts/obd_import.py --dry-run
 
-# Import files
-python f250/scripts/obd_import.py --csv-dir f250/data/obd_csv --run
+# Import files (default paths are automatically detected)
+python f250/scripts/obd_import.py --run
+
+# Or specify custom paths
+python f250/scripts/obd_import.py --csv-dir /path/to/csv --run
 ```
 
 Required CSV columns: `timestamp`, `rpm`, `speed`, `coolant_temp`
