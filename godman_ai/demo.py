@@ -117,7 +117,7 @@ def main():
     print("  • Set up Trello board ID")
     print("  • Run actual workflows with real data")
     print()
-    print("Documentation: godman-ai/README.md")
+    print("Documentation: godman_ai/README.md")
     print()
 
 

@@ -61,4 +61,4 @@ store_automation_history = true
 input_dir = "scans"
 output_dir = "receipts"
 backup_dir = "backups"
-logs_dir = "godman-ai/logs"
+logs_dir = "godman_ai/logs"

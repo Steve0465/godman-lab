@@ -9,7 +9,7 @@ Godman AI is an intelligent agent system that dynamically loads tools and workfl
 ## Architecture
 
 ```
-godman-ai/
+godman_ai/
 ├── engine.py              # Core agent engine
 ├── tools/                 # Pluggable tool modules
 │   ├── ocr.py            # OCR extraction
