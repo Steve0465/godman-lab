@@ -1,0 +1,11 @@
+pyproject.toml
+godman/__init__.py
+godman/main.py
+godman.egg-info/PKG-INFO
+godman.egg-info/SOURCES.txt
+godman.egg-info/dependency_links.txt
+godman.egg-info/entry_points.txt
+godman.egg-info/requires.txt
+godman.egg-info/top_level.txt
+godman/commands/__init__.py
+godman/commands/receipts.py

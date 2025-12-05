@@ -1,0 +1,212 @@
+2025-12-04 22:43:38,498 - godman-ai - INFO - 🚀 Initializing Godman AI Agent Engine
+2025-12-04 22:43:38,498 - godman-ai - INFO - Loading tools...
+2025-12-04 22:43:38,500 - godman-ai - INFO -   ✓ Loaded tool: sheets_receipt_logger
+2025-12-04 22:43:38,500 - godman-ai - INFO -   ✓ Loaded tool: sheets_report
+2025-12-04 22:43:38,500 - godman-ai - INFO -   ✓ Loaded tool: sheets
+2025-12-04 22:43:38,503 - godman-ai - INFO -   ✓ Loaded tool: image_categorizer
+2025-12-04 22:43:38,503 - godman-ai - INFO -   ✓ Loaded tool: receipt_analyzer
+2025-12-04 22:43:38,503 - godman-ai - INFO -   ✓ Loaded tool: vision
+2025-12-04 22:43:38,505 - godman-ai - INFO -   ✓ Loaded tool: ocr_batch
+2025-12-04 22:43:38,505 - godman-ai - INFO -   ✓ Loaded tool: ocr
+2025-12-04 22:43:38,507 - godman-ai - INFO -   ✓ Loaded tool: automation_metrics
+2025-12-04 22:43:38,507 - godman-ai - INFO -   ✓ Loaded tool: expense_analyzer
+2025-12-04 22:43:38,507 - godman-ai - INFO -   ✓ Loaded tool: pool_job_reporter
+2025-12-04 22:43:38,507 - godman-ai - INFO -   ✓ Loaded tool: reports
+2025-12-04 22:43:38,508 - godman-ai - INFO -   ✓ Loaded tool: trello_job_tracker
+2025-12-04 22:43:38,508 - godman-ai - INFO -   ✓ Loaded tool: trello_task_automation
+2025-12-04 22:43:38,508 - godman-ai - INFO -   ✓ Loaded tool: trello
+2025-12-04 22:43:38,510 - godman-ai - INFO -   ✓ Loaded tool: drive_backup
+2025-12-04 22:43:38,510 - godman-ai - INFO -   ✓ Loaded tool: drive_organizer
+2025-12-04 22:43:38,510 - godman-ai - INFO -   ✓ Loaded tool: drive_scanner
+2025-12-04 22:43:38,510 - godman-ai - INFO -   ✓ Loaded tool: drive
+2025-12-04 22:43:38,510 - godman-ai - INFO - Loading workflows...
+2025-12-04 22:43:38,512 - godman-ai - INFO -   ✓ Loaded workflow: quick_receipt
+2025-12-04 22:43:38,512 - godman-ai - INFO -   ✓ Loaded workflow: receipts_workflow
+2025-12-04 22:43:38,514 - godman-ai - INFO -   ✓ Loaded workflow: pooljob_completion
+2025-12-04 22:43:38,514 - godman-ai - INFO -   ✓ Loaded workflow: pooljob_workflow
+2025-12-04 22:43:38,514 - godman-ai - INFO - ✓ Loaded 19 tools and 4 workflows
+2025-12-04 22:43:38,514 - godman-ai - INFO - 📞 Calling tool: ocr
+2025-12-04 22:43:38,984 - godman-ai - ERROR - ✗ Tool ocr failed: File not found: test.pdf
+2025-12-04 22:43:38,984 - godman-ai - INFO - ▶️  Running workflow: receipts_workflow
+2025-12-04 22:43:38,984 - godman-ai - INFO - ✓ Workflow receipts_workflow completed successfully
+2025-12-04 22:43:38,985 - godman-ai - INFO - 🤖 Querying LLM
+2025-12-04 22:43:38,985 - godman-ai - WARNING - OpenAI client not initialized
+2025-12-04 23:04:27,102 - godman-ai - INFO - 🚀 Initializing Godman AI Agent Engine
+2025-12-04 23:04:27,103 - godman-ai - INFO - Loading tools...
+2025-12-04 23:04:27,103 - godman-ai - INFO -   ✓ Loaded tool: sheets_receipt_logger
+2025-12-04 23:04:27,103 - godman-ai - INFO -   ✓ Loaded tool: sheets_report
+2025-12-04 23:04:27,103 - godman-ai - INFO -   ✓ Loaded tool: sheets
+2025-12-04 23:04:27,104 - godman-ai - INFO -   ✓ Loaded tool: image_categorizer
+2025-12-04 23:04:27,104 - godman-ai - INFO -   ✓ Loaded tool: receipt_analyzer
+2025-12-04 23:04:27,104 - godman-ai - INFO -   ✓ Loaded tool: vision
+2025-12-04 23:04:27,104 - godman-ai - INFO -   ✓ Loaded tool: ocr_batch
+2025-12-04 23:04:27,104 - godman-ai - INFO -   ✓ Loaded tool: ocr
+2025-12-04 23:04:27,104 - godman-ai - INFO -   ✓ Loaded tool: automation_metrics
+2025-12-04 23:04:27,104 - godman-ai - INFO -   ✓ Loaded tool: expense_analyzer
+2025-12-04 23:04:27,104 - godman-ai - INFO -   ✓ Loaded tool: pool_job_reporter
+2025-12-04 23:04:27,104 - godman-ai - INFO -   ✓ Loaded tool: reports
+2025-12-04 23:04:27,105 - godman-ai - INFO -   ✓ Loaded tool: trello_job_tracker
+2025-12-04 23:04:27,105 - godman-ai - INFO -   ✓ Loaded tool: trello_task_automation
+2025-12-04 23:04:27,105 - godman-ai - INFO -   ✓ Loaded tool: trello
+2025-12-04 23:04:27,105 - godman-ai - INFO -   ✓ Loaded tool: drive_backup
+2025-12-04 23:04:27,105 - godman-ai - INFO -   ✓ Loaded tool: drive_organizer
+2025-12-04 23:04:27,105 - godman-ai - INFO -   ✓ Loaded tool: drive_scanner
+2025-12-04 23:04:27,105 - godman-ai - INFO -   ✓ Loaded tool: drive
+2025-12-04 23:04:27,112 - godman-ai - INFO - Loading workflows...
+2025-12-04 23:04:27,112 - godman-ai - INFO -   ✓ Loaded workflow: quick_receipt
+2025-12-04 23:04:27,112 - godman-ai - INFO -   ✓ Loaded workflow: receipts_workflow
+2025-12-04 23:04:27,114 - godman-ai - INFO -   ✓ Loaded workflow: video_organizer
+2025-12-04 23:04:27,114 - godman-ai - INFO -   ✓ Loaded workflow: video_to_frames
+2025-12-04 23:04:27,114 - godman-ai - INFO -   ✓ Loaded workflow: pooljob_completion
+2025-12-04 23:04:27,114 - godman-ai - INFO -   ✓ Loaded workflow: pooljob_workflow
+2025-12-04 23:04:27,114 - godman-ai - INFO - ✓ Loaded 19 tools and 6 workflows
+2025-12-04 23:04:27,114 - godman-ai - INFO - 📞 Calling tool: ocr
+2025-12-04 23:04:27,553 - godman-ai - ERROR - ✗ Tool ocr failed: File not found: test.pdf
+2025-12-04 23:04:27,553 - godman-ai - INFO - ▶️  Running workflow: receipts_workflow
+2025-12-04 23:04:27,553 - godman-ai - INFO - ✓ Workflow receipts_workflow completed successfully
+2025-12-04 23:04:27,554 - godman-ai - INFO - 🤖 Querying LLM
+2025-12-04 23:04:27,554 - godman-ai - WARNING - OpenAI client not initialized
+2025-12-04 23:39:58,580 - godman_ai - INFO - 🚀 Initializing Godman AI Agent Engine
+2025-12-04 23:39:58,581 - godman_ai - INFO - Loading tools...
+2025-12-04 23:39:58,581 - godman_ai - ERROR -   ✗ Failed to load sheets.py: No module named 'godman_ai'
+2025-12-04 23:39:58,582 - godman_ai - ERROR -   ✗ Failed to load vision.py: No module named 'godman_ai'
+2025-12-04 23:39:58,582 - godman_ai - ERROR -   ✗ Failed to load ocr.py: No module named 'godman_ai'
+2025-12-04 23:39:58,582 - godman_ai - ERROR -   ✗ Failed to load reports.py: No module named 'godman_ai'
+2025-12-04 23:39:58,582 - godman_ai - ERROR -   ✗ Failed to load trello.py: No module named 'godman_ai'
+2025-12-04 23:39:58,582 - godman_ai - ERROR -   ✗ Failed to load drive.py: No module named 'godman_ai'
+2025-12-04 23:39:58,588 - godman_ai - ERROR -   ✗ Failed to load video.py: No module named 'godman_ai'
+2025-12-04 23:39:58,588 - godman_ai - INFO - Loading workflows...
+2025-12-04 23:39:58,588 - godman_ai - ERROR -   ✗ Failed to load receipts_workflow.py: No module named 'godman_ai'
+2025-12-04 23:39:58,588 - godman_ai - ERROR -   ✗ Failed to load video_workflow.py: No module named 'godman_ai'
+2025-12-04 23:39:58,588 - godman_ai - ERROR -   ✗ Failed to load pooljob_workflow.py: No module named 'godman_ai'
+2025-12-04 23:39:58,588 - godman_ai - INFO - ✓ Loaded 0 tools and 0 workflows
+2025-12-04 23:39:58,588 - godman_ai - INFO - 📞 Calling tool: ocr
+2025-12-04 23:39:58,588 - godman_ai - INFO - ▶️  Running workflow: receipts_workflow
+2025-12-04 23:39:58,590 - godman_ai - INFO - 🤖 Querying LLM
+2025-12-04 23:39:58,590 - godman_ai - WARNING - OpenAI client not initialized
+2025-12-04 23:40:30,783 - godman_ai - INFO - 🚀 Initializing Godman AI Agent Engine
+2025-12-04 23:40:30,783 - godman_ai - INFO - Loading tools...
+2025-12-04 23:40:30,784 - godman_ai - ERROR -   ✗ Failed to load sheets.py: No module named 'godman_ai'
+2025-12-04 23:40:30,784 - godman_ai - ERROR -   ✗ Failed to load vision.py: No module named 'godman_ai'
+2025-12-04 23:40:30,784 - godman_ai - ERROR -   ✗ Failed to load ocr.py: No module named 'godman_ai'
+2025-12-04 23:40:30,784 - godman_ai - ERROR -   ✗ Failed to load reports.py: No module named 'godman_ai'
+2025-12-04 23:40:30,784 - godman_ai - ERROR -   ✗ Failed to load trello.py: No module named 'godman_ai'
+2025-12-04 23:40:30,784 - godman_ai - ERROR -   ✗ Failed to load drive.py: No module named 'godman_ai'
+2025-12-04 23:40:30,784 - godman_ai - ERROR -   ✗ Failed to load video.py: No module named 'godman_ai'
+2025-12-04 23:40:30,784 - godman_ai - INFO - Loading workflows...
+2025-12-04 23:40:30,784 - godman_ai - ERROR -   ✗ Failed to load receipts_workflow.py: No module named 'godman_ai'
+2025-12-04 23:40:30,784 - godman_ai - ERROR -   ✗ Failed to load video_workflow.py: No module named 'godman_ai'
+2025-12-04 23:40:30,784 - godman_ai - ERROR -   ✗ Failed to load pooljob_workflow.py: No module named 'godman_ai'
+2025-12-04 23:40:30,784 - godman_ai - INFO - ✓ Loaded 0 tools and 0 workflows
+2025-12-04 23:40:30,784 - godman_ai - INFO - 📞 Calling tool: ocr
+2025-12-04 23:40:30,784 - godman_ai - INFO - ▶️  Running workflow: receipts_workflow
+2025-12-04 23:40:30,785 - godman_ai - INFO - 🤖 Querying LLM
+2025-12-04 23:40:30,785 - godman_ai - WARNING - OpenAI client not initialized
+2025-12-04 23:40:45,741 - godman_ai - INFO - 🚀 Initializing Godman AI Agent Engine
+2025-12-04 23:40:45,741 - godman_ai - INFO - Loading tools...
+2025-12-04 23:40:45,742 - godman_ai - INFO -   ✓ Loaded tool: sheets_receipt_logger
+2025-12-04 23:40:45,742 - godman_ai - INFO -   ✓ Loaded tool: sheets_report
+2025-12-04 23:40:45,742 - godman_ai - INFO -   ✓ Loaded tool: sheets
+2025-12-04 23:40:45,743 - godman_ai - INFO -   ✓ Loaded tool: image_categorizer
+2025-12-04 23:40:45,743 - godman_ai - INFO -   ✓ Loaded tool: receipt_analyzer
+2025-12-04 23:40:45,743 - godman_ai - INFO -   ✓ Loaded tool: vision
+2025-12-04 23:40:45,743 - godman_ai - INFO -   ✓ Loaded tool: ocr_batch
+2025-12-04 23:40:45,743 - godman_ai - INFO -   ✓ Loaded tool: ocr
+2025-12-04 23:40:45,743 - godman_ai - INFO -   ✓ Loaded tool: automation_metrics
+2025-12-04 23:40:45,743 - godman_ai - INFO -   ✓ Loaded tool: expense_analyzer
+2025-12-04 23:40:45,743 - godman_ai - INFO -   ✓ Loaded tool: pool_job_reporter
+2025-12-04 23:40:45,743 - godman_ai - INFO -   ✓ Loaded tool: reports
+2025-12-04 23:40:45,743 - godman_ai - INFO -   ✓ Loaded tool: trello_job_tracker
+2025-12-04 23:40:45,743 - godman_ai - INFO -   ✓ Loaded tool: trello_task_automation
+2025-12-04 23:40:45,743 - godman_ai - INFO -   ✓ Loaded tool: trello
+2025-12-04 23:40:45,744 - godman_ai - INFO -   ✓ Loaded tool: drive_backup
+2025-12-04 23:40:45,744 - godman_ai - INFO -   ✓ Loaded tool: drive_organizer
+2025-12-04 23:40:45,744 - godman_ai - INFO -   ✓ Loaded tool: drive_scanner
+2025-12-04 23:40:45,744 - godman_ai - INFO -   ✓ Loaded tool: drive
+2025-12-04 23:40:45,752 - godman_ai - INFO -   ✓ Loaded tool: video
+2025-12-04 23:40:45,752 - godman_ai - INFO - Loading workflows...
+2025-12-04 23:40:45,752 - godman_ai - INFO -   ✓ Loaded workflow: quick_receipt
+2025-12-04 23:40:45,752 - godman_ai - INFO -   ✓ Loaded workflow: receipts_workflow
+2025-12-04 23:40:45,752 - godman_ai - INFO -   ✓ Loaded workflow: video_organizer
+2025-12-04 23:40:45,752 - godman_ai - INFO -   ✓ Loaded workflow: video_to_frames
+2025-12-04 23:40:45,753 - godman_ai - INFO -   ✓ Loaded workflow: pooljob_completion
+2025-12-04 23:40:45,753 - godman_ai - INFO -   ✓ Loaded workflow: pooljob_workflow
+2025-12-04 23:40:45,753 - godman_ai - INFO - ✓ Loaded 20 tools and 6 workflows
+2025-12-04 23:40:45,753 - godman_ai - INFO - 📞 Calling tool: ocr
+2025-12-04 23:40:46,101 - godman_ai - ERROR - ✗ Tool ocr failed: File not found: test.pdf
+2025-12-04 23:40:46,102 - godman_ai - INFO - ▶️  Running workflow: receipts_workflow
+2025-12-04 23:40:46,102 - godman_ai - INFO - ✓ Workflow receipts_workflow completed successfully
+2025-12-04 23:40:46,103 - godman_ai - INFO - 🤖 Querying LLM
+2025-12-04 23:40:46,103 - godman_ai - WARNING - OpenAI client not initialized
+2025-12-04 23:40:50,641 - godman_ai - INFO - 🚀 Initializing Godman AI Agent Engine
+2025-12-04 23:40:50,641 - godman_ai - INFO - Loading tools...
+2025-12-04 23:40:50,642 - godman_ai - INFO -   ✓ Loaded tool: sheets_receipt_logger
+2025-12-04 23:40:50,642 - godman_ai - INFO -   ✓ Loaded tool: sheets_report
+2025-12-04 23:40:50,642 - godman_ai - INFO -   ✓ Loaded tool: sheets
+2025-12-04 23:40:50,642 - godman_ai - INFO -   ✓ Loaded tool: image_categorizer
+2025-12-04 23:40:50,642 - godman_ai - INFO -   ✓ Loaded tool: receipt_analyzer
+2025-12-04 23:40:50,642 - godman_ai - INFO -   ✓ Loaded tool: vision
+2025-12-04 23:40:50,642 - godman_ai - INFO -   ✓ Loaded tool: ocr_batch
+2025-12-04 23:40:50,642 - godman_ai - INFO -   ✓ Loaded tool: ocr
+2025-12-04 23:40:50,642 - godman_ai - INFO -   ✓ Loaded tool: automation_metrics
+2025-12-04 23:40:50,643 - godman_ai - INFO -   ✓ Loaded tool: expense_analyzer
+2025-12-04 23:40:50,643 - godman_ai - INFO -   ✓ Loaded tool: pool_job_reporter
+2025-12-04 23:40:50,643 - godman_ai - INFO -   ✓ Loaded tool: reports
+2025-12-04 23:40:50,643 - godman_ai - INFO -   ✓ Loaded tool: trello_job_tracker
+2025-12-04 23:40:50,643 - godman_ai - INFO -   ✓ Loaded tool: trello_task_automation
+2025-12-04 23:40:50,643 - godman_ai - INFO -   ✓ Loaded tool: trello
+2025-12-04 23:40:50,643 - godman_ai - INFO -   ✓ Loaded tool: drive_backup
+2025-12-04 23:40:50,643 - godman_ai - INFO -   ✓ Loaded tool: drive_organizer
+2025-12-04 23:40:50,643 - godman_ai - INFO -   ✓ Loaded tool: drive_scanner
+2025-12-04 23:40:50,643 - godman_ai - INFO -   ✓ Loaded tool: drive
+2025-12-04 23:40:50,648 - godman_ai - INFO -   ✓ Loaded tool: video
+2025-12-04 23:40:50,648 - godman_ai - INFO - Loading workflows...
+2025-12-04 23:40:50,649 - godman_ai - INFO -   ✓ Loaded workflow: quick_receipt
+2025-12-04 23:40:50,649 - godman_ai - INFO -   ✓ Loaded workflow: receipts_workflow
+2025-12-04 23:40:50,649 - godman_ai - INFO -   ✓ Loaded workflow: video_organizer
+2025-12-04 23:40:50,649 - godman_ai - INFO -   ✓ Loaded workflow: video_to_frames
+2025-12-04 23:40:50,649 - godman_ai - INFO -   ✓ Loaded workflow: pooljob_completion
+2025-12-04 23:40:50,649 - godman_ai - INFO -   ✓ Loaded workflow: pooljob_workflow
+2025-12-04 23:40:50,649 - godman_ai - INFO - ✓ Loaded 20 tools and 6 workflows
+2025-12-04 23:40:50,649 - godman_ai - INFO - 📞 Calling tool: ocr
+2025-12-04 23:40:50,814 - godman_ai - ERROR - ✗ Tool ocr failed: File not found: test.pdf
+2025-12-04 23:40:50,814 - godman_ai - INFO - ▶️  Running workflow: receipts_workflow
+2025-12-04 23:40:50,814 - godman_ai - INFO - ✓ Workflow receipts_workflow completed successfully
+2025-12-04 23:40:50,817 - godman_ai - INFO - 🤖 Querying LLM
+2025-12-04 23:40:50,817 - godman_ai - WARNING - OpenAI client not initialized
+2025-12-04 23:42:10,981 - godman_ai - INFO - 🚀 Initializing Godman AI Agent Engine
+2025-12-04 23:42:10,981 - godman_ai - INFO - Loading tools...
+2025-12-04 23:42:10,982 - godman_ai - INFO -   ✓ Loaded tool: sheets_receipt_logger
+2025-12-04 23:42:10,982 - godman_ai - INFO -   ✓ Loaded tool: sheets_report
+2025-12-04 23:42:10,982 - godman_ai - INFO -   ✓ Loaded tool: sheets
+2025-12-04 23:42:10,983 - godman_ai - INFO -   ✓ Loaded tool: image_categorizer
+2025-12-04 23:42:10,983 - godman_ai - INFO -   ✓ Loaded tool: receipt_analyzer
+2025-12-04 23:42:10,983 - godman_ai - INFO -   ✓ Loaded tool: vision
+2025-12-04 23:42:10,983 - godman_ai - INFO -   ✓ Loaded tool: ocr_batch
+2025-12-04 23:42:10,983 - godman_ai - INFO -   ✓ Loaded tool: ocr
+2025-12-04 23:42:10,983 - godman_ai - INFO -   ✓ Loaded tool: automation_metrics
+2025-12-04 23:42:10,983 - godman_ai - INFO -   ✓ Loaded tool: expense_analyzer
+2025-12-04 23:42:10,983 - godman_ai - INFO -   ✓ Loaded tool: pool_job_reporter
+2025-12-04 23:42:10,983 - godman_ai - INFO -   ✓ Loaded tool: reports
+2025-12-04 23:42:10,983 - godman_ai - INFO -   ✓ Loaded tool: trello_job_tracker
+2025-12-04 23:42:10,983 - godman_ai - INFO -   ✓ Loaded tool: trello_task_automation
+2025-12-04 23:42:10,983 - godman_ai - INFO -   ✓ Loaded tool: trello
+2025-12-04 23:42:10,984 - godman_ai - INFO -   ✓ Loaded tool: drive_backup
+2025-12-04 23:42:10,984 - godman_ai - INFO -   ✓ Loaded tool: drive_organizer
+2025-12-04 23:42:10,984 - godman_ai - INFO -   ✓ Loaded tool: drive_scanner
+2025-12-04 23:42:10,984 - godman_ai - INFO -   ✓ Loaded tool: drive
+2025-12-04 23:42:10,993 - godman_ai - INFO -   ✓ Loaded tool: video
+2025-12-04 23:42:10,993 - godman_ai - INFO - Loading workflows...
+2025-12-04 23:42:10,994 - godman_ai - INFO -   ✓ Loaded workflow: quick_receipt
+2025-12-04 23:42:10,994 - godman_ai - INFO -   ✓ Loaded workflow: receipts_workflow
+2025-12-04 23:42:10,994 - godman_ai - INFO -   ✓ Loaded workflow: video_organizer
+2025-12-04 23:42:10,994 - godman_ai - INFO -   ✓ Loaded workflow: video_to_frames
+2025-12-04 23:42:10,994 - godman_ai - INFO -   ✓ Loaded workflow: pooljob_completion
+2025-12-04 23:42:10,994 - godman_ai - INFO -   ✓ Loaded workflow: pooljob_workflow
+2025-12-04 23:42:10,994 - godman_ai - INFO - ✓ Loaded 20 tools and 6 workflows
+2025-12-04 23:42:10,994 - godman_ai - INFO - 📞 Calling tool: ocr
+2025-12-04 23:42:11,350 - godman_ai - ERROR - ✗ Tool ocr failed: File not found: test.pdf
+2025-12-04 23:42:11,350 - godman_ai - INFO - ▶️  Running workflow: receipts_workflow
+2025-12-04 23:42:11,350 - godman_ai - INFO - ✓ Workflow receipts_workflow completed successfully
+2025-12-04 23:42:11,351 - godman_ai - INFO - 🤖 Querying LLM
+2025-12-04 23:42:11,351 - godman_ai - WARNING - OpenAI client not initialized

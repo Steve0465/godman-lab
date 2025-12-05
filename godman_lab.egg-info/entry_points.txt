@@ -1,0 +1,2 @@
+[console_scripts]
+godman = cli.godman.main:main

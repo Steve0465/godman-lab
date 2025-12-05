@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "godman"
+version = "0.1.0"
+description = "Godman Automation Lab - Personal automation toolkit"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    {name = "Stephen Godman", email = "godman@example.com"}
+]
+dependencies = [
+    "typer>=0.9.0",
+    "rich>=13.0.0",
+    "python-dotenv>=1.0.0",
+    "pandas>=2.0.0",
+    "pytesseract>=0.3.10",
+    "Pillow>=10.0.0",
+    "pdf2image>=1.16.3",
+    "python-dateutil>=2.8.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+godman = "godman.main:app"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["godman*"]
+
+[tool.black]
+line-length = 100
+target-version = ["py39"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"

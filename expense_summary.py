@@ -1,4 +1,4 @@
-Send monthly expense summary by email (Gmail SMTP example).
+"""Send monthly expense summary by email (Gmail SMTP example)."""
 import os
 from datetime import datetime
 import pandas as pd

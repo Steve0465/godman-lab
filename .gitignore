@@ -10,3 +10,10 @@ scans/
 *.pyc
 .DS_Store
 .env.local
+
+# F250 data files
+f250/data/*.db
+f250/data/csv/
+f250/data/parquet/
+f250/data/photos/
+f250/data/*.csv
