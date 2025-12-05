@@ -8,3 +8,6 @@ streamlit
 pyarrow
 fastparquet
 requests
+gspread
+google-auth
+pytest

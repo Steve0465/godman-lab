@@ -9,8 +9,7 @@ This workspace provides a comprehensive set of tools for:
 - Querying and analyzing vehicle sensor readings
 - Tracking maintenance history
 - Generating diagnostic reports
-
-> **Note:** Google Sheets synchronization is not yet implemented but can be added using the `gspread` library.
+- Syncing maintenance logs with Google Sheets
 
 ## Directory Structure
 
@@ -20,7 +19,8 @@ f250/
 │   ├── obd_import.py    # Import OBD CSV data to SQLite/Parquet
 │   ├── obd_query.py     # Query and analyze OBD data
 │   ├── maintenance.py   # Manage maintenance log
-│   └── diag_report.py   # Generate diagnostic reports
+│   ├── diag_report.py   # Generate diagnostic reports
+│   └── gsheets_sync.py  # Sync maintenance log with Google Sheets
 ├── data/                # Data storage (gitignored)
 │   ├── f250.db         # SQLite database
 │   ├── csv/            # Raw CSV imports
@@ -249,6 +249,38 @@ mkdir -p f250/data/{csv,parquet,photos,notes}
 ```bash
 ./f250/scripts/maintenance.py sync
 ```
+
+6. **Sync to Google Sheets (optional):**
+```bash
+# Setup: Create service account at https://console.cloud.google.com
+# Enable Google Sheets API and download credentials JSON
+export GOOGLE_SERVICE_ACCOUNT_JSON=~/f250-credentials.json
+./f250/scripts/gsheets_sync.py push --sheet "F250 Maintenance"
+```
+
+## Google Sheets Integration
+
+The `gsheets_sync.py` script allows bidirectional sync with Google Sheets:
+
+**Setup:**
+1. Create Google Cloud project: https://console.cloud.google.com
+2. Enable Google Sheets API
+3. Create service account and download JSON credentials
+4. Share your Google Sheet with the service account email (found in JSON)
+5. Install dependencies: `pip install gspread google-auth`
+
+**Usage:**
+```bash
+# Push local CSV to Google Sheets
+./f250/scripts/gsheets_sync.py push --sheet "F250 Maintenance" \
+  --service-account ~/credentials.json
+
+# Pull from Google Sheets to local CSV
+./f250/scripts/gsheets_sync.py pull --sheet "F250 Maintenance" \
+  --service-account ~/credentials.json
+```
+
+**Security:** Never commit service account credentials to git. Use environment variable or secure storage.
 
 ## Notes
 
