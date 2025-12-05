@@ -8,7 +8,7 @@ import argparse
 import logging
 import sqlite3
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import Dict, Optional
 from datetime import datetime
 import pandas as pd
 import csv
@@ -184,10 +184,10 @@ def sync_to_sqlite(csv_path: Path, db_path: Path) -> int:
     # Find new entries (not already in database)
     if not existing_df.empty:
         # Create composite key for comparison
-        df['key'] = df['date'] + KEY_SEPARATOR + df['type'] + KEY_SEPARATOR + df['description']
-        existing_df['key'] = (existing_df['date'] + KEY_SEPARATOR + 
-                             existing_df['type'] + KEY_SEPARATOR + 
-                             existing_df['description'])
+        df['key'] = df['date'].fillna('') + KEY_SEPARATOR + df['type'].fillna('') + KEY_SEPARATOR + df['description'].fillna('')
+        existing_df['key'] = (existing_df['date'].fillna('') + KEY_SEPARATOR + 
+                             existing_df['type'].fillna('') + KEY_SEPARATOR + 
+                             existing_df['description'].fillna(''))
         
         new_df = df[~df['key'].isin(existing_df['key'])].drop('key', axis=1)
     else:
@@ -274,7 +274,7 @@ def main():
     list_parser.add_argument('--limit', type=int, help='Limit number of results')
     
     # Sync command
-    sync_parser = subparsers.add_parser('sync', help='Sync CSV to SQLite database')
+    subparsers.add_parser('sync', help='Sync CSV to SQLite database')
     
     # Common arguments
     parser.add_argument(

@@ -8,7 +8,7 @@ import argparse
 import logging
 import sqlite3
 from pathlib import Path
-from typing import List, Optional, Dict, Any
+from typing import Optional, Dict, Any
 from datetime import datetime
 import pandas as pd
 
@@ -53,7 +53,8 @@ def query_sqlite(db_path: Path, filters: Dict[str, Any]) -> pd.DataFrame:
         params.append(filters['end_date'])
     
     if filters.get('misfire_only'):
-        query += f" AND (misfire_count > 0 OR dtc_code LIKE '%{MISFIRE_DTC_PATTERN}%')"
+        query += " AND (misfire_count > 0 OR dtc_code LIKE ?)"
+        params.append(f"%{MISFIRE_DTC_PATTERN}%")
     
     query += " ORDER BY timestamp"
     

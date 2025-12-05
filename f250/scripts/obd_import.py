@@ -4,7 +4,6 @@ OBD Import Script - Robust CSV discovery and validation
 Streams imports to parquet and SQLite database (f250/data/f250.db)
 """
 
-import os
 import sys
 import argparse
 import logging
@@ -12,7 +11,6 @@ import sqlite3
 from pathlib import Path
 from typing import List, Optional, Tuple
 import pandas as pd
-import glob
 
 # Setup logging
 logging.basicConfig(
@@ -181,32 +179,38 @@ def import_csv_to_db(csv_path: Path, conn: sqlite3.Connection, dry_run: bool = F
             # Normalize DTC columns
             chunk_df = normalize_dtc_columns(chunk_df)
             
-            # Map columns to database schema
-            db_columns = {
-                'timestamp': chunk_df.get('timestamp', chunk_df.get('device_time')),
-                'device_time': chunk_df.get('device_time', chunk_df.get('timestamp')),
-                'session_id': chunk_df.get('session_id'),
-                'dtc_code': chunk_df.get('dtc_code'),
-                'dtc_description': chunk_df.get('dtc_description'),
-                'engine_rpm': chunk_df.get('engine_rpm', chunk_df.get('rpm')),
-                'vehicle_speed': chunk_df.get('vehicle_speed', chunk_df.get('speed')),
-                'coolant_temp': chunk_df.get('coolant_temp', chunk_df.get('coolant_temperature')),
-                'intake_temp': chunk_df.get('intake_temp', chunk_df.get('intake_air_temp')),
-                'maf': chunk_df.get('maf', chunk_df.get('mass_air_flow')),
-                'throttle_pos': chunk_df.get('throttle_pos', chunk_df.get('throttle_position')),
-                'fuel_pressure': chunk_df.get('fuel_pressure'),
-                'fuel_level': chunk_df.get('fuel_level'),
-                'o2_sensor_1': chunk_df.get('o2_sensor_1', chunk_df.get('o2_b1s1')),
-                'o2_sensor_2': chunk_df.get('o2_sensor_2', chunk_df.get('o2_b1s2')),
-                'stft_bank1': chunk_df.get('stft_bank1', chunk_df.get('short_ft_1')),
-                'ltft_bank1': chunk_df.get('ltft_bank1', chunk_df.get('long_ft_1')),
-                'stft_bank2': chunk_df.get('stft_bank2', chunk_df.get('short_ft_2')),
-                'ltft_bank2': chunk_df.get('ltft_bank2', chunk_df.get('long_ft_2')),
-                'misfire_count': chunk_df.get('misfire_count', chunk_df.get('misfires')),
-            }
+            # Map columns to database schema, checking for existence
+            db_columns = {}
+            column_map = [
+                ('timestamp', ['timestamp', 'device_time']),
+                ('device_time', ['device_time', 'timestamp']),
+                ('session_id', ['session_id']),
+                ('dtc_code', ['dtc_code']),
+                ('dtc_description', ['dtc_description']),
+                ('engine_rpm', ['engine_rpm', 'rpm']),
+                ('vehicle_speed', ['vehicle_speed', 'speed']),
+                ('coolant_temp', ['coolant_temp', 'coolant_temperature']),
+                ('intake_temp', ['intake_temp', 'intake_air_temp']),
+                ('maf', ['maf', 'mass_air_flow']),
+                ('throttle_pos', ['throttle_pos', 'throttle_position']),
+                ('fuel_pressure', ['fuel_pressure']),
+                ('fuel_level', ['fuel_level']),
+                ('o2_sensor_1', ['o2_sensor_1', 'o2_b1s1']),
+                ('o2_sensor_2', ['o2_sensor_2', 'o2_b1s2']),
+                ('stft_bank1', ['stft_bank1', 'short_ft_1']),
+                ('ltft_bank1', ['ltft_bank1', 'long_ft_1']),
+                ('stft_bank2', ['stft_bank2', 'short_ft_2']),
+                ('ltft_bank2', ['ltft_bank2', 'long_ft_2']),
+                ('misfire_count', ['misfire_count', 'misfires']),
+            ]
+            for key, col_names in column_map:
+                for col_name in col_names:
+                    if col_name in chunk_df.columns:
+                        db_columns[key] = chunk_df[col_name]
+                        break
             
             # Create DataFrame for import with only available columns
-            import_df = pd.DataFrame({k: v for k, v in db_columns.items() if v is not None})
+            import_df = pd.DataFrame(db_columns)
             
             if not dry_run:
                 # Import to database
@@ -333,7 +337,7 @@ def main():
     
     if not valid_files:
         logger.error("No valid CSV files to import")
-        sys.exit(1)
+        return 1
     
     logger.info(f"Found {len(valid_files)} valid CSV files")
     
@@ -363,6 +367,7 @@ def main():
             conn.commit()
         
         logger.info(f"Import complete: {total_imported} total rows")
+        return 0
         
     finally:
         if conn:

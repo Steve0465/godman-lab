@@ -8,7 +8,7 @@ import argparse
 import logging
 import sqlite3
 from pathlib import Path
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 from datetime import datetime
 import pandas as pd
 
@@ -150,9 +150,10 @@ def find_related_photos(photo_dir: Path, dtc: Optional[str] = None,
     
     photos = []
     
-    # Search for matching photos
-    for ext in ['*.jpg', '*.jpeg', '*.png', '*.heic']:
-        for photo in photo_dir.glob(f"**/{ext}"):
+    # Search for matching photos (case-insensitive extension match)
+    valid_exts = {'.jpg', '.jpeg', '.png', '.heic'}
+    for photo in photo_dir.glob("**/*"):
+        if photo.is_file() and photo.suffix.lower() in valid_exts:
             filename = photo.name.lower()
             
             # Check if filename contains DTC or job_id
@@ -231,18 +232,18 @@ def generate_report(output_path: Path, dtc: Optional[str] = None,
         
         if 'engine_rpm' in obd_data.columns:
             rpm_stats = obd_data['engine_rpm'].describe()
-            report.append(f"- **Engine RPM**: min={rpm_stats.get('min', 0):.0f}, "
-                         f"avg={rpm_stats.get('mean', 0):.0f}, max={rpm_stats.get('max', 0):.0f}")
+            report.append(f"- **Engine RPM**: min={rpm_stats['min']:.0f}, "
+                         f"avg={rpm_stats['mean']:.0f}, max={rpm_stats['max']:.0f}")
         
         if 'vehicle_speed' in obd_data.columns:
             speed_stats = obd_data['vehicle_speed'].describe()
-            report.append(f"- **Vehicle Speed**: min={speed_stats.get('min', 0):.0f}, "
-                         f"avg={speed_stats.get('mean', 0):.0f}, max={speed_stats.get('max', 0):.0f}")
+            report.append(f"- **Vehicle Speed**: min={speed_stats['min']:.0f}, "
+                         f"avg={speed_stats['mean']:.0f}, max={speed_stats['max']:.0f}")
         
         if 'coolant_temp' in obd_data.columns:
             temp_stats = obd_data['coolant_temp'].describe()
-            report.append(f"- **Coolant Temp**: min={temp_stats.get('min', 0):.0f}, "
-                         f"avg={temp_stats.get('mean', 0):.0f}, max={temp_stats.get('max', 0):.0f}")
+            report.append(f"- **Coolant Temp**: min={temp_stats['min']:.0f}, "
+                         f"avg={temp_stats['mean']:.0f}, max={temp_stats['max']:.0f}")
         
         # Fuel Trim Analysis
         if 'ltft_bank1' in obd_data.columns or 'ltft_bank2' in obd_data.columns:

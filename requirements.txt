@@ -6,5 +6,9 @@ python-dateutil
 python-dotenv
 openai
 streamlit
+<<<<<<< HEAD
 pyarrow
 fastparquet
+=======
+requests
+>>>>>>> origin/main

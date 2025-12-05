@@ -10,6 +10,8 @@ This workspace provides a comprehensive set of tools for:
 - Tracking maintenance history
 - Generating diagnostic reports
 
+> **Note:** Google Sheets synchronization is not yet implemented but can be added using the `gspread` library.
+
 ## Directory Structure
 
 ```
