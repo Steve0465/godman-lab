@@ -27,7 +27,11 @@ class DiagnosticReportGenerator:
     def __init__(self, db_path: Path, notes_dir: Path, photos_dir: Optional[Path] = None):
         self.db_path = db_path
         self.notes_dir = notes_dir
-        self.photos_dir = photos_dir or Path('f250/data/photos')
+        # If photos_dir is not provided, compute relative to notes_dir
+        if photos_dir is None:
+            self.photos_dir = self.notes_dir.parent / 'photos'
+        else:
+            self.photos_dir = photos_dir
         self.notes_dir.mkdir(parents=True, exist_ok=True)
         
     def get_obd_events(self, dtc: Optional[str] = None, limit: Optional[int] = None) -> pd.DataFrame:
@@ -318,25 +322,29 @@ class DiagnosticReportGenerator:
 
 def main():
     """Main entry point"""
+    # Get script directory and compute default paths relative to it
+    script_dir = Path(__file__).parent.resolve()
+    f250_data_dir = script_dir.parent / 'data'
+    
     parser = argparse.ArgumentParser(
         description="Generate diagnostic reports for F250"
     )
     parser.add_argument(
         '--db',
         type=Path,
-        default=Path('f250/data/f250.db'),
+        default=f250_data_dir / 'f250.db',
         help='Path to SQLite database'
     )
     parser.add_argument(
         '--notes-dir',
         type=Path,
-        default=Path('f250/data/notes'),
+        default=f250_data_dir / 'notes',
         help='Directory for diagnostic reports'
     )
     parser.add_argument(
         '--photos-dir',
         type=Path,
-        default=Path('f250/data/photos'),
+        default=f250_data_dir / 'photos',
         help='Directory containing related photos'
     )
     parser.add_argument(

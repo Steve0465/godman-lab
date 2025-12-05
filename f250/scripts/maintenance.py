@@ -222,19 +222,23 @@ class MaintenanceManager:
 
 def main():
     """Main entry point"""
+    # Get script directory and compute default paths relative to it
+    script_dir = Path(__file__).parent.resolve()
+    f250_data_dir = script_dir.parent / 'data'
+    
     parser = argparse.ArgumentParser(
         description="Manage F250 maintenance log"
     )
     parser.add_argument(
         '--csv',
         type=Path,
-        default=Path('f250/data/maintenance_log.csv'),
+        default=f250_data_dir / 'maintenance_log.csv',
         help='Path to maintenance CSV file'
     )
     parser.add_argument(
         '--db',
         type=Path,
-        default=Path('f250/data/f250.db'),
+        default=f250_data_dir / 'f250.db',
         help='Path to SQLite database'
     )
     

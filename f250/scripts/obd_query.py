@@ -280,13 +280,17 @@ class OBDQueryEngine:
 
 def main():
     """Main entry point"""
+    # Get script directory and compute default paths relative to it
+    script_dir = Path(__file__).parent.resolve()
+    f250_data_dir = script_dir.parent / 'data'
+    
     parser = argparse.ArgumentParser(
         description="Query and analyze OBD data"
     )
     parser.add_argument(
         '--db',
         type=Path,
-        default=Path('f250/data/f250.db'),
+        default=f250_data_dir / 'f250.db',
         help='Path to SQLite database'
     )
     parser.add_argument(

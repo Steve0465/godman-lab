@@ -90,8 +90,22 @@ class OBDImporter:
     def is_file_imported(self, file_path: Path) -> bool:
         """Check if file has already been imported"""
         try:
+            # Check if database exists first
+            if not self.db_path.exists():
+                return False
+                
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
+            
+            # Check if the imported_files table exists
+            cursor.execute("""
+                SELECT name FROM sqlite_master 
+                WHERE type='table' AND name='imported_files'
+            """)
+            if not cursor.fetchone():
+                conn.close()
+                return False
+            
             cursor.execute(
                 "SELECT status FROM imported_files WHERE file_path = ?",
                 (str(file_path),)
@@ -239,25 +253,29 @@ class OBDImporter:
 
 def main():
     """Main entry point"""
+    # Get script directory and compute default paths relative to it
+    script_dir = Path(__file__).parent.resolve()
+    f250_data_dir = script_dir.parent / 'data'
+    
     parser = argparse.ArgumentParser(
         description="Import OBD CSV files to SQLite and Parquet"
     )
     parser.add_argument(
         '--csv-dir',
         type=Path,
-        default=Path('f250/data/obd_csv'),
+        default=f250_data_dir / 'obd_csv',
         help='Directory containing CSV files to import'
     )
     parser.add_argument(
         '--db',
         type=Path,
-        default=Path('f250/data/f250.db'),
+        default=f250_data_dir / 'f250.db',
         help='Path to SQLite database'
     )
     parser.add_argument(
         '--parquet-dir',
         type=Path,
-        default=Path('f250/data/parquet'),
+        default=f250_data_dir / 'parquet',
         help='Directory for Parquet files'
     )
     parser.add_argument(
