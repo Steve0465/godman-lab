@@ -1,0 +1,76 @@
+Metadata-Version: 2.4
+Name: godman-lab
+Version: 1.0.0
+Summary: Godman Automation Lab - AI-powered automation toolkit
+Author-email: Steve Godman <memphis465@hotmail.com>
+License: MIT
+Project-URL: Homepage, https://github.com/Steve0465/godman-lab
+Project-URL: Repository, https://github.com/Steve0465/godman-lab
+Project-URL: Issues, https://github.com/Steve0465/godman-lab/issues
+Keywords: automation,ai,ocr,receipt-processing,workflow
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: typer>=0.9.0
+Requires-Dist: openai>=1.0.0
+Requires-Dist: python-dotenv>=1.0.0
+Requires-Dist: pydantic>=2.0.0
+Requires-Dist: croniter>=2.0.0
+Provides-Extra: service
+Requires-Dist: fastapi>=0.104.0; extra == "service"
+Requires-Dist: uvicorn[standard]>=0.24.0; extra == "service"
+Provides-Extra: vision
+Requires-Dist: pillow>=10.0.0; extra == "vision"
+Requires-Dist: pytesseract>=0.3.10; extra == "vision"
+Requires-Dist: pdf2image>=1.16.3; extra == "vision"
+Requires-Dist: pdfplumber>=0.10.0; extra == "vision"
+Provides-Extra: local-models
+Requires-Dist: llama-cpp-python>=0.2.0; extra == "local-models"
+Provides-Extra: memory
+Requires-Dist: faiss-cpu>=1.7.4; extra == "memory"
+Requires-Dist: numpy>=1.24.0; extra == "memory"
+Requires-Dist: sentence-transformers>=2.2.0; extra == "memory"
+Provides-Extra: video
+Requires-Dist: opencv-python>=4.8.0; extra == "video"
+Requires-Dist: moviepy>=1.0.3; extra == "video"
+Provides-Extra: audio
+Requires-Dist: whisper>=1.0.0; extra == "audio"
+Requires-Dist: pydub>=0.25.1; extra == "audio"
+Provides-Extra: google
+Requires-Dist: google-api-python-client>=2.100.0; extra == "google"
+Requires-Dist: google-auth-httplib2>=0.1.1; extra == "google"
+Requires-Dist: google-auth-oauthlib>=1.1.0; extra == "google"
+Provides-Extra: all
+Requires-Dist: godman-lab[audio,google,memory,service,video,vision]; extra == "all"
+Provides-Extra: dev
+Requires-Dist: pytest>=7.4.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.1.0; extra == "dev"
+Requires-Dist: black>=23.0.0; extra == "dev"
+Requires-Dist: ruff>=0.1.0; extra == "dev"
+Requires-Dist: mypy>=1.5.0; extra == "dev"
+
+# godman-lab
+Personal automation lab for scripts, agents, and AI projects. Experiments, tools, and workflow systems.
+
+## Tools
+
+### Receipt Processing
+OCR, parse, categorize, and summarize scanned receipts.
+See [docs/README_receipts.md](docs/README_receipts.md) for details.
+
+### GitHub Code Search
+Search for code and repositories on GitHub from the command line.
+See [docs/README_github_search.md](docs/README_github_search.md) for details.
+
+Quick start:
+```bash
+python github_search.py --code "your search query" --language python
+python github_search.py --repos "repository search" --sort stars
+```

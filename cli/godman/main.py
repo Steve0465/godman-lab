@@ -307,7 +307,7 @@ def os_state():
 @app.command()
 def os_health():
     """Show system health metrics."""
-    from godman_ai.os_core import system_health, tool_stats, model_stats, agent_stats
+    from godman_ai.os_core import system_health, tool_stats, model_stats
     import json
     
     typer.echo("🏥 GodmanAI OS Core - Health Check")
