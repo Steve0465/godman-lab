@@ -183,8 +183,8 @@ def _extract_amounts(text: str) -> Dict[str, Optional[str]]:
     # Split text into lines for line-by-line analysis
     lines = text.split('\n')
     
-    # Pattern to match currency amounts
-    amount_pattern = r'[\$€£]?\s*(\d{1,6}(?:[,]\d{3})*(?:\.\d{2})?)'
+    # Pattern to match currency amounts (1-2 decimal places, or no decimals)
+    amount_pattern = r'[\$€£]?\s*(\d{1,6}(?:[,]\d{3})*(?:\.\d{1,2})?)'
     
     for line in lines:
         lower_line = line.lower()
@@ -233,6 +233,10 @@ def _normalize_amount(amount_str: str) -> Optional[str]:
     Returns:
         Normalized amount as string or None if invalid
     """
+    # Handle None input
+    if amount_str is None:
+        return None
+    
     try:
         # Remove currency symbols and commas
         cleaned = amount_str.replace('$', '').replace('€', '').replace('£', '').replace(',', '').strip()

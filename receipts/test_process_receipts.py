@@ -11,8 +11,10 @@ from pathlib import Path
 import sys
 import os
 
-# Add parent directory to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add parent directory to path for imports if needed
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
 
 from receipts.process_receipts import (
     parse_receipt_text,
@@ -266,6 +268,18 @@ class TestExtractAmounts(unittest.TestCase):
         self.assertIsNone(result['total'])
         self.assertIsNone(result['subtotal'])
         self.assertIsNone(result['tax'])
+    
+    def test_extract_single_decimal(self):
+        """Test extracting amounts with single decimal place."""
+        text = """
+        Subtotal    $12.5
+        Tax         $1.1
+        Total       $13.6
+        """
+        result = _extract_amounts(text)
+        self.assertEqual(result['subtotal'], '12.50')
+        self.assertEqual(result['tax'], '1.10')
+        self.assertEqual(result['total'], '13.60')
 
 
 class TestNormalizeAmount(unittest.TestCase):
