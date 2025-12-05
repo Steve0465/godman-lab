@@ -1,5 +1,5 @@
 pytesseract
-pillow
+Pillow
 pdf2image
 pandas
 python-dateutil
