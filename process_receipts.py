@@ -66,24 +66,21 @@ def extract_date(text):
 
 
 def extract_total(text):
-    amounts = re.findall(r'[\$€£]?\s*\d{1,3}(?:[,
-    amounts = re.findall(r'[
-    amounts = re.findall(r'[\$€£]?\s*\d{1,3}(?:[,
-    amounts = re.findall(r'[
-        if 'total' in text.lower():
+    amounts = re.findall(r'[\$€£]?\s*\d{1,3}(?:[,\s]\d{3})*(?:\.\d{2})?', text)
+    if 'total' in text.lower():
         lines = text.splitlines()
         for l in lines:
             if 'total' in l.lower():
-                a = re.findall(r'[\$€£]?\s*\d{1,3}(?:[,
+                a = re.findall(r'[\$€£]?\s*\d{1,3}(?:[,\s]\d{3})*(?:\.\d{2})?', l)
                 if a:
                     try:
-                        return float(a[-1].replace('$','').replace(',','').strip())
+                        return float(a[-1].replace('$','').replace('€','').replace('£','').replace(',','').replace(' ','').strip())
                     except:
                         pass
     cleaned = []
     for a in amounts:
         try:
-            cleaned.append(float(a.replace('$','').replace(',','').strip()))
+            cleaned.append(float(a.replace('$','').replace('€','').replace('£','').replace(',','').replace(' ','').strip()))
         except:
             pass
     if cleaned:
