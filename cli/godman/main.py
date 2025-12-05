@@ -288,6 +288,99 @@ def status():
     typer.echo("\nRun 'godman --help' for more information")
 
 
+@app.command()
+def os_state():
+    """Show OS Core global state snapshot."""
+    from godman_ai.os_core import GlobalState
+    import json
+    
+    typer.echo("🖥️  GodmanAI OS Core - Global State")
+    typer.echo("=" * 60)
+    
+    state = GlobalState()
+    state.initialize()
+    snapshot = state.snapshot()
+    
+    typer.echo(json.dumps(snapshot, indent=2))
+
+
+@app.command()
+def os_health():
+    """Show system health metrics."""
+    from godman_ai.os_core import system_health, tool_stats, model_stats, agent_stats
+    import json
+    
+    typer.echo("🏥 GodmanAI OS Core - Health Check")
+    typer.echo("=" * 60)
+    
+    health = system_health()
+    
+    # Show overall status
+    status_icon = "✅" if health['status'] == 'healthy' else "⚠️" if health['status'] == 'warning' else "❌"
+    typer.echo(f"\n{status_icon} Overall Status: {health['status'].upper()}")
+    
+    # Show warnings if any
+    if 'warnings' in health:
+        typer.echo("\n⚠️  Warnings:")
+        for warning in health['warnings']:
+            typer.echo(f"  • {warning}")
+    
+    # Show checks
+    typer.echo("\n📊 System Checks:")
+    for check, value in health['checks'].items():
+        check_icon = "✅" if value else "❌"
+        typer.echo(f"  {check_icon} {check}: {value}")
+    
+    # Show tool stats
+    typer.echo("\n🔧 Tool Statistics:")
+    t_stats = tool_stats()
+    typer.echo(f"  • Total tools used: {t_stats.get('total_tools_used', 0)}")
+    typer.echo(f"  • Total invocations: {t_stats.get('total_invocations', 0)}")
+    
+    if t_stats.get('top_tools'):
+        typer.echo("\n  Top Tools:")
+        for tool, count in list(t_stats['top_tools'].items())[:5]:
+            typer.echo(f"    • {tool}: {count}")
+    
+    # Show model stats
+    typer.echo("\n🤖 Model Statistics:")
+    m_stats = model_stats()
+    typer.echo(f"  • Available models: {m_stats.get('total_available', 0)}")
+    if m_stats.get('active_models'):
+        typer.echo(f"  • Active models: {', '.join(m_stats['active_models'])}")
+
+
+@app.command()
+def os_plugins():
+    """Show loaded plugins and available tools."""
+    from godman_ai.os_core import PluginManager
+    import json
+    
+    typer.echo("🔌 GodmanAI OS Core - Plugin Manager")
+    typer.echo("=" * 60)
+    
+    pm = PluginManager()
+    pm.load_plugins()
+    
+    info = pm.get_plugin_info()
+    
+    typer.echo(f"\n📦 Loaded Plugins: {len(info['loaded_plugins'])}")
+    for plugin in info['loaded_plugins']:
+        typer.echo(f"  • {plugin}")
+    
+    typer.echo(f"\n🔧 Plugin Tools: {info['total_tools']}")
+    for tool in info['tools']:
+        typer.echo(f"  • {tool}")
+    
+    typer.echo(f"\n🤖 Plugin Agents: {info['total_agents']}")
+    for agent in info['agents']:
+        typer.echo(f"  • {agent}")
+    
+    if not info['loaded_plugins']:
+        typer.echo("\n💡 Tip: Add plugins to godman_ai/plugins/ directory")
+        typer.echo("   Run 'godman os-plugins-example' to create a sample plugin")
+
+
 def main():
     """Main entry point."""
     app()
