@@ -70,5 +70,17 @@
     "role": "assistant",
     "content": "Hello! How can I help you today?",
     "metadata": {}
+  },
+  {
+    "timestamp": "2025-12-04T23:42:11.351473",
+    "role": "user",
+    "content": "Hello, agent!",
+    "metadata": {}
+  },
+  {
+    "timestamp": "2025-12-04T23:42:11.351604",
+    "role": "assistant",
+    "content": "Hello! How can I help you today?",
+    "metadata": {}
   }
 ]
