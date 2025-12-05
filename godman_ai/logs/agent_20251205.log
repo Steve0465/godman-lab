@@ -1,2 +1,3 @@
 2025-12-05 00:06:12,642 - godman_ai.tools.auto_loader - INFO - ✅ Discovered 20 tools from godman_ai.tools
 2025-12-05 00:54:47,115 - godman_ai.appstore.registry - INFO - Loading bundled registry: /Users/stephengodman/godman-lab/godman_ai/appstore/index.json
+2025-12-05 01:18:30,621 - godman_ai.appstore.registry - INFO - Loading bundled registry: /Users/stephengodman/godman-lab/godman_ai/appstore/index.json
