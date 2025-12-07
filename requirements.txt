@@ -1,0 +1,50 @@
+# Core Framework
+typer
+rich
+pydantic
+pydantic-settings
+fastapi
+uvicorn
+croniter
+
+# Data & Processing
+tqdm
+numpy
+pandas
+
+# LLM & AI
+ollama
+openai
+
+# Vision & OCR
+Pillow
+opencv-python
+pytesseract
+face_recognition
+
+# Vector DB & Memory
+faiss-cpu
+
+# Web & API
+requests
+python-dotenv
+duckduckgo-search
+
+# Google Workspace
+google-auth
+google-auth-oauthlib
+google-api-python-client
+
+# Audio
+pyttsx3
+SpeechRecognition
+
+# File Watching
+watchdog
+
+# Database
+psycopg2-binary
+
+# Config
+tomli
+PyYAML
