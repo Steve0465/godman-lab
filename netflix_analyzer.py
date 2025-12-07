@@ -8,7 +8,14 @@ import pandas as pd
 import numpy as np
 from collections import Counter
 from datetime import datetime
+from pathlib import Path
 import os
+
+from pathlib import Path
+import os
+
+# Default path - can be overridden with environment variable
+DEFAULT_NETFLIX_PATH = Path.home() / "Desktop" / "NetflixViewingHistory.csv"
 
 def load_netflix_data(file_path):
     """Load and parse Netflix viewing history"""
@@ -189,9 +196,26 @@ def main():
     print("=" * 60)
     print("Analyzing what you watch to recommend what's next!\n")
     
-    # Load data
-    file_path = os.path.expanduser("~/Desktop/iCloud_Documents/Entertainment/Netflix/NetflixViewingHistory sg.csv")
-    df = load_netflix_data(file_path)
+    # Get file path from environment or use default
+    file_path = os.getenv("NETFLIX_CSV_PATH")
+    if not file_path:
+        file_path = DEFAULT_NETFLIX_PATH
+    else:
+        file_path = Path(file_path)
+    
+    # Load data with error handling
+    try:
+        df = load_netflix_data(file_path)
+    except FileNotFoundError:
+        print(f"\n❌ ERROR: Netflix viewing history not found at: {file_path}")
+        print("\nTo fix this:")
+        print(f"  1. Download your Netflix viewing history from Netflix account settings")
+        print(f"  2. Save it to: {DEFAULT_NETFLIX_PATH}")
+        print(f"  3. OR set environment variable: export NETFLIX_CSV_PATH=/path/to/your/file.csv")
+        return 1
+    except Exception as e:
+        print(f"\n❌ ERROR loading Netflix data: {e}")
+        return 1
     
     # Run analyses
     df = analyze_viewing_patterns(df)
@@ -203,6 +227,8 @@ def main():
     print("✅ ANALYSIS COMPLETE!")
     print("\nGot the list! Time to find something new to binge! 🍿")
     print("=" * 60)
+    return 0
 
 if __name__ == "__main__":
-    main()
+    import sys
+    sys.exit(main())

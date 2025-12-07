@@ -48,3 +48,10 @@ psycopg2-binary
 # Config
 tomli
 PyYAML
+
+# Pattern Analysis & ML
+pyod
+darts
+prophet
+matplotlib
+seaborn
