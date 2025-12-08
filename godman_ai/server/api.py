@@ -1,8 +1,12 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Dict, Any, Optional
 from godman_ai.config.presets import get_all_presets, get_preset_by_name
 from libs.tool_runner import runner as tool_runner
+
+# Import WebUI router
+from godman_ai.server.webui import router as webui_router, get_static_files_app
 
 # Import to register sample tools
 try:
@@ -10,7 +14,26 @@ try:
 except ImportError:
     pass  # Tools can be registered separately
 
-app = FastAPI()
+app = FastAPI(
+    title="Godman AI API",
+    description="API for WebUI presets, Handler endpoint, and ToolRunner execution",
+    version="1.0.0"
+)
+
+# Add CORS middleware for WebUI
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, specify your WebUI domain
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Mount static files for WebUI
+app.mount("/static", get_static_files_app(), name="static")
+
+# Include WebUI router
+app.include_router(webui_router, tags=["WebUI"])
 
 
 class HandlerRequest(BaseModel):

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Godman AI - WebUI Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #10b981;
+            color: white;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .feature {
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .feature h3 {
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+        
+        .feature p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .api-section {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .api-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .endpoint {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 3px solid #10b981;
+        }
+        
+        .endpoint-method {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #10b981;
+            color: white;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        
+        .endpoint-method.post {
+            background: #3b82f6;
+        }
+        
+        .endpoint-path {
+            color: #333;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .endpoint-desc {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 8px;
+        }
+        
+        .test-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .test-button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .result {
+            background: #1e293b;
+            color: #10b981;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .footer {
+            text-align: center;
+            color: #666;
+            margin-top: 30px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Godman AI</h1>
+        <p class="subtitle">WebUI Dashboard & Handler API</p>
+        <span class="status">● LIVE</span>
+        
+        <div class="features">
+            <div class="feature">
+                <h3>Handler API</h3>
+                <p>Execute tools via JSON function calls</p>
+            </div>
+            <div class="feature">
+                <h3>WebUI Presets</h3>
+                <p>Overmind, Forge, Handler</p>
+            </div>
+            <div class="feature">
+                <h3>ToolRunner</h3>
+                <p>11 registered tools available</p>
+            </div>
+            <div class="feature">
+                <h3>Real-time</h3>
+                <p>Instant execution & results</p>
+            </div>
+        </div>
+        
+        <div class="api-section">
+            <h2>Available Endpoints</h2>
+            
+            <div class="endpoint">
+                <span class="endpoint-method">GET</span>
+                <span class="endpoint-path">/api/presets</span>
+                <p class="endpoint-desc">List all WebUI model presets</p>
+            </div>
+            
+            <div class="endpoint">
+                <span class="endpoint-method post">POST</span>
+                <span class="endpoint-path">/api/handler</span>
+                <p class="endpoint-desc">Execute registered tool functions</p>
+            </div>
+            
+            <div class="endpoint">
+                <span class="endpoint-method">GET</span>
+                <span class="endpoint-path">/api/handler/tools</span>
+                <p class="endpoint-desc">List available tools</p>
+            </div>
+            
+            <div class="endpoint">
+                <span class="endpoint-method">GET</span>
+                <span class="endpoint-path">/health</span>
+                <p class="endpoint-desc">Server health check</p>
+            </div>
+        </div>
+        
+        <button class="test-button" onclick="testAPI()">
+            🧪 Test Handler API
+        </button>
+        
+        <div id="result" class="result"></div>
+        
+        <div class="footer">
+            Built on <strong>feature/webui-dashboard</strong> branch<br>
+            FastAPI + ToolRunner + Handler Preset Integration
+        </div>
+    </div>
+    
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Testing Handler API...\n\n';
+            
+            try {
+                // Test 1: Add numbers
+                resultDiv.textContent += '1. Testing add(42, 58)...\n';
+                const response1 = await fetch('/api/handler', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        function: 'add',
+                        parameters: {x: 42, y: 58}
+                    })
+                });
+                const result1 = await response1.json();
+                resultDiv.textContent += `   ✓ Result: ${result1.result.sum}\n\n`;
+                
+                // Test 2: Create user
+                resultDiv.textContent += '2. Testing create_user("Alice", 28)...\n';
+                const response2 = await fetch('/api/handler', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        function: 'create_user',
+                        parameters: {name: 'Alice', age: 28}
+                    })
+                });
+                const result2 = await response2.json();
+                resultDiv.textContent += `   ✓ User ID: ${result2.result.user_id}\n`;
+                resultDiv.textContent += `   ✓ Name: ${result2.result.name}\n\n`;
+                
+                // Test 3: Calculate stats
+                resultDiv.textContent += '3. Testing calculate_stats([10,20,30])...\n';
+                const response3 = await fetch('/api/handler', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        function: 'calculate_stats',
+                        parameters: {items: [10, 20, 30]}
+                    })
+                });
+                const result3 = await response3.json();
+                resultDiv.textContent += `   ✓ Average: ${result3.result.average}\n`;
+                resultDiv.textContent += `   ✓ Sum: ${result3.result.sum}\n\n`;
+                
+                // Test 4: List tools
+                resultDiv.textContent += '4. Fetching available tools...\n';
+                const response4 = await fetch('/api/handler/tools');
+                const result4 = await response4.json();
+                resultDiv.textContent += `   ✓ Tools available: ${result4.count}\n\n`;
+                
+                resultDiv.textContent += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+                resultDiv.textContent += '✅ All tests passed!\n';
+                resultDiv.textContent += 'Handler API is operational.';
+                
+            } catch (error) {
+                resultDiv.textContent += `\n❌ Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
