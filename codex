@@ -1,0 +1,101 @@
+#!/usr/bin/env python3
+"""
+Codex CLI - Quick AI model interaction tool
+
+Usage:
+    codex "your prompt here"
+    codex --forge "write a python script"
+    codex --overmind "plan a project"
+    codex --handler "add 5 and 3"
+"""
+
+import sys
+import subprocess
+import argparse
+
+# Model presets
+MODELS = {
+    "overmind": "deepseek-r1:14b",
+    "forge": "qwen2.5-coder:7b",
+    "handler": "froehnerel/v2-q5_K_M",
+}
+
+def run_ollama(model: str, prompt: str) -> str:
+    """Run ollama with the specified model and prompt."""
+    try:
+        result = subprocess.run(
+            ["ollama", "run", model],
+            input=prompt.encode(),
+            capture_output=True,
+            timeout=60
+        )
+        return result.stdout.decode()
+    except subprocess.TimeoutExpired:
+        return "Error: Request timed out after 60 seconds"
+    except FileNotFoundError:
+        return "Error: ollama command not found. Please install ollama first."
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Codex CLI - Quick AI model interaction",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  codex "explain quantum computing"
+  codex --forge "create a REST API in Python"
+  codex --overmind "plan a machine learning pipeline"
+  codex --handler "calculate stats for [1,2,3,4,5]"
+  
+Presets:
+  --forge      Use Forge (qwen2.5-coder:7b) for code generation
+  --overmind   Use Overmind (deepseek-r1:14b) for strategic planning
+  --handler    Use Handler (gorilla-openfunctions) for function calls
+  (default)    Use Forge if no preset specified
+        """
+    )
+    
+    parser.add_argument("prompt", help="The prompt to send to the AI model")
+    parser.add_argument("--forge", action="store_true", help="Use Forge preset (code generation)")
+    parser.add_argument("--overmind", action="store_true", help="Use Overmind preset (strategic planning)")
+    parser.add_argument("--handler", action="store_true", help="Use Handler preset (function calls)")
+    parser.add_argument("--model", help="Custom model name")
+    
+    args = parser.parse_args()
+    
+    # Determine which model to use
+    if args.model:
+        model = args.model
+        preset = "custom"
+    elif args.overmind:
+        model = MODELS["overmind"]
+        preset = "overmind"
+    elif args.handler:
+        model = MODELS["handler"]
+        preset = "handler"
+    else:
+        # Default to Forge
+        model = MODELS["forge"]
+        preset = "forge"
+    
+    # Display header
+    print(f"🤖 Codex [{preset.upper()}] → {model}")
+    print("─" * 60)
+    
+    # Run the model
+    response = run_ollama(model, args.prompt)
+    
+    # Display response
+    print(response)
+    print("─" * 60)
+
+
+if __name__ == "__main__":
+    if len(sys.argv) == 1:
+        print("Usage: codex 'your prompt here'")
+        print("Try: codex --help")
+        sys.exit(1)
+    
+    main()
