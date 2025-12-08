@@ -1,12 +1,14 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from typing import Dict, Any, Optional
+from pathlib import Path
 from godman_ai.config.presets import get_all_presets, get_preset_by_name
 from libs.tool_runner import runner as tool_runner
 
-# Import WebUI router
-from godman_ai.server.webui import router as webui_router, get_static_files_app
+# Import WebUI router and static files
+from godman_ai.server.webui import router as webui_router, get_static_files_app, WEBUI_DIR
 
 # Import to register sample tools
 try:
@@ -20,20 +22,43 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Add CORS middleware for WebUI
+# Add CORS middleware for localhost and WebUI access
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify your WebUI domain
+    allow_origins=[
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "http://localhost:3000",  # Common dev port
+        "*"  # Allow all for development
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Mount static files for WebUI
-app.mount("/static", get_static_files_app(), name="static")
+# Mount static files at /webui
+app.mount("/webui", get_static_files_app(), name="webui")
 
 # Include WebUI router
 app.include_router(webui_router, tags=["WebUI"])
+
+
+# Root route - serve index.html
+@app.get("/", include_in_schema=False)
+async def root():
+    """
+    Serve the main WebUI dashboard at root path.
+    
+    Returns:
+        FileResponse: The index.html file from webui folder
+    """
+    index_path = Path(WEBUI_DIR) / "index.html"
+    if not index_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"index.html not found at {index_path}"
+        )
+    return FileResponse(index_path)
 
 
 class HandlerRequest(BaseModel):

@@ -25,10 +25,10 @@ INDEX_FILE = WEBUI_DIR / "index.html"
 WEBUI_DIR.mkdir(parents=True, exist_ok=True)
 
 
-@router.get("/")
-async def get_index():
+@router.get("/dashboard")
+async def get_dashboard():
     """
-    Serve the main index.html file.
+    Serve the dashboard.
     
     Returns:
         FileResponse: The index.html file for the WebUI dashboard
@@ -43,19 +43,8 @@ async def get_index():
             detail=f"WebUI index.html not found. Please create it at {WEBUI_DIR}/index.html"
         )
     
-    logger.info(f"Serving index.html from {INDEX_FILE}")
+    logger.info(f"Serving dashboard from {INDEX_FILE}")
     return FileResponse(INDEX_FILE)
-
-
-@router.get("/dashboard")
-async def get_dashboard():
-    """
-    Serve the dashboard (alias for index).
-    
-    Returns:
-        FileResponse: The index.html file
-    """
-    return await get_index()
 
 
 @router.get("/status")
@@ -70,12 +59,13 @@ async def get_webui_status():
         "status": "operational",
         "webui_dir": str(WEBUI_DIR),
         "index_exists": INDEX_FILE.exists(),
-        "static_files_mounted": True,
+        "static_files_mounted": "/webui",
+        "root_route": "/",
         "routes": [
-            {"path": "/", "description": "Main dashboard"},
-            {"path": "/dashboard", "description": "Dashboard alias"},
-            {"path": "/status", "description": "WebUI status"},
-            {"path": "/static/*", "description": "Static assets"}
+            {"path": "/", "description": "Main dashboard (root)", "method": "GET"},
+            {"path": "/dashboard", "description": "Dashboard endpoint", "method": "GET"},
+            {"path": "/status", "description": "WebUI status", "method": "GET"},
+            {"path": "/webui/*", "description": "Static assets", "method": "GET"}
         ]
     }
 
@@ -85,7 +75,7 @@ def get_static_files_app():
     Create and return the StaticFiles application.
     
     This should be mounted in the main app using:
-    app.mount("/static", get_static_files_app(), name="static")
+    app.mount("/webui", get_static_files_app(), name="webui")
     
     Returns:
         StaticFiles: Configured static files application
