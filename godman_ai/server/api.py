@@ -4,6 +4,12 @@ from typing import Dict, Any, Optional
 from godman_ai.config.presets import get_all_presets, get_preset_by_name
 from libs.tool_runner import runner as tool_runner
 
+# Import to register sample tools
+try:
+    import register_tools
+except ImportError:
+    pass  # Tools can be registered separately
+
 app = FastAPI()
 
 
