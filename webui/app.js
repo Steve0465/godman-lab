@@ -1,19 +1,85 @@
 // Godman AI WebUI - app.js
-// Handles all dashboard interactions and API calls
+// Simple, clean implementation with fetch() only
 
-// Get DOM elements
-const functionNameInput = document.getElementById('functionName');
-const parametersInput = document.getElementById('parameters');
-const outputElement = document.getElementById('output');
-const runToolBtn = document.getElementById('runToolBtn');
-const listToolsBtn = document.getElementById('listToolsBtn');
-const loadPresetsBtn = document.getElementById('loadPresetsBtn');
-const clearBtn = document.getElementById('clearBtn');
-const copyOutputBtn = document.getElementById('copyOutputBtn');
+// ============================================
+// Core API Functions
+// ============================================
 
-// Helper function to display output
-function displayOutput(text, isError = false) {
+/**
+ * Call the Handler API to execute a function
+ * @param {string} functionName - Name of the function to execute
+ * @param {Object} parameters - Function parameters as object
+ * @returns {Promise<Object>} - API response
+ */
+async function callHandler(functionName, parameters) {
+    const response = await fetch('/api/handler', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            function: functionName,
+            parameters: parameters
+        })
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+        throw new Error(JSON.stringify(data, null, 2));
+    }
+    
+    return data;
+}
+
+/**
+ * Get list of all available tools
+ * @returns {Promise<Object>} - Tools data
+ */
+async function listTools() {
+    const response = await fetch('/api/handler/tools');
+    
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    return await response.json();
+}
+
+/**
+ * Load model presets
+ * @returns {Promise<Object>} - Presets data
+ */
+async function loadPresets() {
+    const response = await fetch('/api/presets');
+    
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    return await response.json();
+}
+
+// ============================================
+// UI Helper Functions
+// ============================================
+
+/**
+ * Update the output display
+ * @param {Object|string} content - Content to display
+ * @param {boolean} isError - Whether this is an error message
+ */
+function updateOutput(content, isError = false) {
+    const outputElement = document.getElementById('output');
+    
+    // Format content as JSON if it's an object
+    const text = typeof content === 'string' 
+        ? content 
+        : JSON.stringify(content, null, 2);
+    
     outputElement.textContent = text;
+    
+    // Update colors based on error state
     if (isError) {
         outputElement.classList.remove('text-green-400');
         outputElement.classList.add('text-red-400');
@@ -23,18 +89,46 @@ function displayOutput(text, isError = false) {
     }
 }
 
-// Helper function to format JSON
-function formatJSON(obj) {
-    return JSON.stringify(obj, null, 2);
+/**
+ * Show loading state
+ * @param {string} message - Loading message
+ */
+function showLoading(message) {
+    updateOutput(`⏳ ${message}\n\nPlease wait...`);
 }
 
-// Run Tool - Execute the selected function
-async function runTool() {
-    const functionName = functionNameInput.value.trim();
-    const parametersText = parametersInput.value.trim();
+/**
+ * Display error message
+ * @param {Error} error - Error object
+ * @param {string} context - Context of the error
+ */
+function displayError(error, context) {
+    const errorMessage = {
+        error: context,
+        message: error.message,
+        timestamp: new Date().toISOString()
+    };
     
+    updateOutput(errorMessage, true);
+}
+
+// ============================================
+// Button Handlers
+// ============================================
+
+/**
+ * Handle Run Tool button click
+ */
+async function handleRunTool() {
+    const functionName = document.getElementById('functionName').value.trim();
+    const parametersText = document.getElementById('parameters').value.trim();
+    
+    // Validate function name
     if (!functionName) {
-        displayOutput('❌ Error: Please enter a function name', true);
+        updateOutput({
+            error: 'Validation Error',
+            message: 'Please enter a function name'
+        }, true);
         return;
     }
     
@@ -44,196 +138,127 @@ async function runTool() {
         try {
             parameters = JSON.parse(parametersText);
         } catch (error) {
-            displayOutput(`❌ JSON Parse Error: ${error.message}`, true);
+            updateOutput({
+                error: 'JSON Parse Error',
+                message: error.message,
+                input: parametersText
+            }, true);
             return;
         }
     }
     
-    // Display loading state
-    displayOutput(`⏳ Executing function "${functionName}"...\n\nParameters:\n${formatJSON(parameters)}\n\nPlease wait...`);
+    // Execute function
+    showLoading(`Executing function: ${functionName}`);
     
     try {
-        const response = await fetch('/api/handler', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                function: functionName,
-                parameters: parameters
-            })
-        });
-        
-        const result = await response.json();
-        
-        if (response.ok && result.status === 'success') {
-            const output = `✅ SUCCESS
-
-Function: ${functionName}
-Status: ${result.status}
-Execution Time: ${result.execution_time}s
-Timestamp: ${result.timestamp}
-
-Result:
-${formatJSON(result.result)}`;
-            displayOutput(output);
-        } else {
-            const errorOutput = `❌ ERROR
-
-Function: ${functionName}
-Status: ${result.status || 'error'}
-
-Error Details:
-${formatJSON(result.error || result.detail || result)}`;
-            displayOutput(errorOutput, true);
-        }
-        
+        const result = await callHandler(functionName, parameters);
+        updateOutput(result);
     } catch (error) {
-        displayOutput(`❌ Network Error: ${error.message}`, true);
+        displayError(error, 'Handler API Error');
     }
 }
 
-// List Tools - Get all available tools
-async function listTools() {
-    displayOutput('⏳ Fetching available tools...');
+/**
+ * Handle List Tools button click
+ */
+async function handleListTools() {
+    showLoading('Fetching available tools');
     
     try {
-        const response = await fetch('/api/handler/tools');
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        
-        if (data.count === 0) {
-            displayOutput('ℹ️ No tools registered\n\nRegister tools using the @tool decorator in Python.');
-            return;
-        }
-        
-        let output = `📋 AVAILABLE TOOLS (${data.count})\n\n`;
-        
-        for (const [name, info] of Object.entries(data.tools)) {
-            output += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-            output += `🔧 ${name}\n`;
-            output += `   Description: ${info.description || 'No description'}\n`;
-            
-            if (Object.keys(info.schema).length > 0) {
-                output += `   Parameters:\n`;
-                for (const [param, type] of Object.entries(info.schema)) {
-                    output += `     • ${param}: ${type}\n`;
-                }
-            } else {
-                output += `   Parameters: None\n`;
-            }
-            
-            output += `   Type: ${info.has_command ? 'Command' : 'Function'}\n`;
-        }
-        
-        output += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-        output += `\nTotal: ${data.count} tools available`;
-        
-        displayOutput(output);
-        
+        const result = await listTools();
+        updateOutput(result);
     } catch (error) {
-        displayOutput(`❌ Error fetching tools: ${error.message}`, true);
+        displayError(error, 'List Tools Error');
     }
 }
 
-// Load Presets - Get model presets
-async function loadPresets() {
-    displayOutput('⏳ Loading model presets...');
+/**
+ * Handle Load Presets button click
+ */
+async function handleLoadPresets() {
+    showLoading('Loading model presets');
     
     try {
-        const response = await fetch('/api/presets');
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        
-        if (!data.presets || data.presets.length === 0) {
-            displayOutput('ℹ️ No presets configured');
-            return;
-        }
-        
-        let output = `🎨 MODEL PRESETS (${data.presets.length})\n\n`;
-        
-        for (const preset of data.presets) {
-            output += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-            output += `📦 ${preset.name}\n`;
-            output += `   ID: ${preset.id}\n`;
-            output += `   Model: ${preset.model}\n`;
-            output += `   Prompt:\n`;
-            
-            // Wrap prompt text
-            const promptLines = preset.prompt.match(/.{1,60}/g) || [preset.prompt];
-            promptLines.forEach(line => {
-                output += `     ${line}\n`;
-            });
-            
-            output += `\n`;
-        }
-        
-        output += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-        output += `\nTotal: ${data.presets.length} presets available`;
-        
-        displayOutput(output);
-        
+        const result = await loadPresets();
+        updateOutput(result);
     } catch (error) {
-        displayOutput(`❌ Error loading presets: ${error.message}`, true);
+        displayError(error, 'Load Presets Error');
     }
 }
 
-// Clear - Reset all inputs and output
-function clear() {
-    functionNameInput.value = '';
-    parametersInput.value = '';
-    displayOutput(`✨ Cleared!
-
-Ready for new commands.
-Enter a function name and parameters, then click "Run Tool".
-
-Try clicking "List Tools" to see what's available.`);
+/**
+ * Handle Clear button click
+ */
+function handleClear() {
+    document.getElementById('functionName').value = '';
+    document.getElementById('parameters').value = '';
+    
+    updateOutput({
+        message: 'Cleared!',
+        ready: true,
+        hint: 'Enter a function name and parameters, then click "Run Tool"'
+    });
 }
 
-// Copy Output - Copy output text to clipboard
-async function copyOutput() {
+/**
+ * Handle Copy button click
+ */
+async function handleCopy() {
+    const output = document.getElementById('output').textContent;
+    const copyBtn = document.getElementById('copyOutputBtn');
+    
     try {
-        await navigator.clipboard.writeText(outputElement.textContent);
+        await navigator.clipboard.writeText(output);
         
-        // Show feedback
-        const originalText = copyOutputBtn.textContent;
-        copyOutputBtn.textContent = '✅ Copied!';
-        copyOutputBtn.classList.add('bg-green-500', 'text-white');
-        copyOutputBtn.classList.remove('bg-gray-200', 'text-gray-700');
+        // Show success feedback
+        const originalText = copyBtn.textContent;
+        copyBtn.textContent = '✅ Copied!';
+        copyBtn.classList.add('bg-green-500', 'text-white');
+        copyBtn.classList.remove('bg-gray-200', 'text-gray-700');
         
         setTimeout(() => {
-            copyOutputBtn.textContent = originalText;
-            copyOutputBtn.classList.remove('bg-green-500', 'text-white');
-            copyOutputBtn.classList.add('bg-gray-200', 'text-gray-700');
+            copyBtn.textContent = originalText;
+            copyBtn.classList.remove('bg-green-500', 'text-white');
+            copyBtn.classList.add('bg-gray-200', 'text-gray-700');
         }, 2000);
         
     } catch (error) {
-        displayOutput(`❌ Failed to copy: ${error.message}`, true);
+        displayError(error, 'Copy Failed');
     }
 }
 
-// Event Listeners
-runToolBtn.addEventListener('click', runTool);
-listToolsBtn.addEventListener('click', listTools);
-loadPresetsBtn.addEventListener('click', loadPresets);
-clearBtn.addEventListener('click', clear);
-copyOutputBtn.addEventListener('click', copyOutput);
+// ============================================
+// Event Listeners & Initialization
+// ============================================
 
-// Allow Enter key in function name input to trigger run
-functionNameInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        runTool();
-    }
+// Wait for DOM to load
+document.addEventListener('DOMContentLoaded', () => {
+    // Attach button event listeners
+    document.getElementById('runToolBtn').addEventListener('click', handleRunTool);
+    document.getElementById('listToolsBtn').addEventListener('click', handleListTools);
+    document.getElementById('loadPresetsBtn').addEventListener('click', handleLoadPresets);
+    document.getElementById('clearBtn').addEventListener('click', handleClear);
+    document.getElementById('copyOutputBtn').addEventListener('click', handleCopy);
+    
+    // Allow Enter key to trigger run
+    document.getElementById('functionName').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handleRunTool();
+        }
+    });
+    
+    // Initial welcome message
+    updateOutput({
+        message: 'Welcome to Godman AI WebUI Dashboard!',
+        status: 'ready',
+        available_actions: [
+            'Click "Run Tool" to execute a function',
+            'Click "List Tools" to see available tools',
+            'Click "Load Presets" to view model presets'
+        ],
+        server: 'http://localhost:8000',
+        timestamp: new Date().toISOString()
+    });
+    
+    console.log('🚀 Godman AI WebUI Dashboard Loaded');
 });
-
-// Initialize - Display welcome message on load
-console.log('🚀 Godman AI WebUI Dashboard Loaded');
-console.log('Ready to execute tools via Handler API');
