@@ -130,17 +130,15 @@ def _test_model_speed(model: str) -> Optional[float]:
 def _test_router() -> Optional[str]:
     """Test the tool router."""
     try:
-        sys.path.insert(0, str(Path(__file__).parent.parent))
-        from orchestrator.tool_router import ToolRouter
+        sys.path.insert(0, str(Path.home() / "godman-raw" / "llm"))
+        from router.model_router import route
         
-        router = ToolRouter(enable_logging=False)
-        result = router.route("health check routing test")
+        result = route("health check routing test")
         
-        if result:
-            return result.name
+        if isinstance(result, dict) and "model" in result:
+            return result["model"]
         return None
-    except Exception as e:
-        console.print(f"[yellow]Router test failed: {e}[/yellow]")
+    except Exception:
         return None
 
 
@@ -220,7 +218,7 @@ def run_llm_health_check() -> Dict[str, Any]:
         if router_result:
             console.print(f"[green]✓[/green] Router returned: [cyan]{router_result}[/cyan]\n")
         else:
-            console.print("[yellow]⚠[/yellow] Router test inconclusive\n")
+            console.print("[red]✗[/red] Router test failed\n")
         
         # Final assessment
         all_models_work = all(
