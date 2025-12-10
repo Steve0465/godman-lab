@@ -17,13 +17,11 @@ import json
 
 def load_receipts(csv_path='receipts_tax.csv'):
     """Load receipt data"""
-    try:
-        df = pd.read_csv(csv_path)
-        print(f"✅ Loaded {len(df)} receipts")
-        return df
-    except FileNotFoundError:
-        print("⚠️  No receipts CSV found. Processing PDFs first...")
-        return None
+    if not pd.io.common.file_exists(csv_path):
+        raise FileNotFoundError(f"Receipt CSV not found: {csv_path}")
+    df = pd.read_csv(csv_path)
+    print(f"✅ Loaded {len(df)} receipts")
+    return df
 
 def analyze_spending_patterns(df):
     """Basic statistical analysis"""
@@ -266,12 +264,17 @@ def main():
     print()
     
     # Load data
-    df = load_receipts('receipts_tax.csv')
-    
-    if df is None or len(df) == 0:
+    try:
+        df = load_receipts('receipts_tax.csv')
+    except FileNotFoundError as e:
+        print(f"\n❌ ERROR: {e}")
         print("\n⚠️  No receipt data found!")
         print("Run your receipt processor first to generate receipts_tax.csv")
-        return
+        return 1
+    
+    if len(df) == 0:
+        print("\n⚠️  Receipt CSV is empty!")
+        return 1
     
     # Run analyses
     analyze_spending_patterns(df)
@@ -291,6 +294,8 @@ def main():
     print("  2. Check forecast against budget")
     print("  3. Investigate high-spending categories")
     print("  4. Set up alerts for future anomalies")
+    return 0
 
 if __name__ == "__main__":
-    main()
+    import sys
+    sys.exit(main())

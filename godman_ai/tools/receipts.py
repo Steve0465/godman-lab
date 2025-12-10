@@ -48,12 +48,18 @@ class OCRResult(BaseModel):
 
 def get_default_csv_path() -> Path:
     """
-    Get the default CSV path from Settings.
-    Falls back to receipts_tax.csv in the current directory.
+    Get the default CSV path from environment variable or fallback.
+    
+    Checks GODMAN_RECEIPTS_CSV environment variable first,
+    then falls back to receipts_tax.csv in the current directory.
+    
+    Returns:
+        Path to receipts CSV file
     """
-    # TODO: Implement Settings integration
-    # settings = Settings()
-    # return Path(settings.receipts_csv_path)
+    import os
+    env_path = os.getenv("GODMAN_RECEIPTS_CSV")
+    if env_path:
+        return Path(env_path)
     return Path("receipts_tax.csv")
 
 

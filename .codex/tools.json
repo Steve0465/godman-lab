@@ -1,0 +1,135 @@
+[
+  {
+    "type": "function",
+    "name": "git",
+    "description": "Execute a git command in the repository root",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "command": {"type": "string"},
+        "timeout_sec": {"type": "integer", "minimum": 1, "maximum": 1800}
+      },
+      "required": ["command"]
+    }
+  },
+  {
+    "type": "function",
+    "name": "rg",
+    "description": "Search file contents using ripgrep",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "pattern": {"type": "string"},
+        "path": {"type": "string"}
+      },
+      "required": ["pattern", "path"]
+    }
+  },
+  {
+    "type": "function",
+    "name": "read_file",
+    "description": "Reads a file from disk",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {"type": "string"}
+      },
+      "required": ["path"]
+    }
+  },
+  {
+    "type": "function",
+    "name": "list_dir",
+    "description": "Lists contents of a directory",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {"type": "string"}
+      },
+      "required": ["path"]
+    }
+  },
+  {
+    "type": "function",
+    "name": "shell_command",
+    "description": "Runs a shell command and returns output",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "command": {"type": "string"},
+        "workdir": {"type": "string"},
+        "timeout_ms": {"type": "number"}
+      },
+      "required": ["command"]
+    }
+  },
+  {
+    "type": "function",
+    "name": "glob_file_search",
+    "description": "Find files matching glob patterns like **/*.py or src/**/*.test.js",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "pattern": {"type": "string"},
+        "path": {"type": "string"}
+      },
+      "required": ["pattern"]
+    }
+  },
+  {
+    "type": "function",
+    "name": "web_search",
+    "description": "Search the internet for information",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {"type": "string"},
+        "num_results": {"type": "integer", "minimum": 1, "maximum": 10}
+      },
+      "required": ["query"]
+    }
+  },
+  {
+    "type": "function",
+    "name": "http_request",
+    "description": "Make HTTP requests to test APIs",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "method": {"type": "string", "enum": ["GET", "POST", "PUT", "DELETE", "PATCH"]},
+        "url": {"type": "string"},
+        "headers": {"type": "object"},
+        "body": {"type": "string"},
+        "timeout_sec": {"type": "integer"}
+      },
+      "required": ["method", "url"]
+    }
+  },
+  {
+    "type": "function",
+    "name": "view_image",
+    "description": "View and analyze images",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {"type": "string"}
+      },
+      "required": ["path"]
+    }
+  },
+  {
+    "type": "function",
+    "name": "run_att_status",
+    "description": "Get AT&T account status including network status, outages, repair tickets, and service information. Can filter by 'tickets', 'outages', 'network', 'region', 'case numbers', or 'all'.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "What information to retrieve (e.g., 'tickets', 'outages', 'network status', 'all')"
+        }
+      },
+      "required": ["query"]
+    }
+  }
+]

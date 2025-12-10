@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Godman AI - WebUI Dashboard</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#667eea',
+                        secondary: '#764ba2',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Minimal Custom Styles -->
+    <style>
+        /* Container max-width override for larger screens */
+        .dashboard-container {
+            max-width: 1200px;
+        }
+        
+        /* Smooth scrolling for output */
+        #output {
+            scroll-behavior: smooth;
+        }
+        
+        /* Custom spacing for sections */
+        .section-spacing {
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Button hover lift effect */
+        .btn-lift:hover {
+            transform: translateY(-2px);
+        }
+        
+        /* Focus ring override for better visibility */
+        .focus-ring:focus {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-primary to-secondary min-h-screen py-8 px-4">
+    
+    <!-- Main Container -->
+    <div class="dashboard-container mx-auto">
+        
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-xl p-6 section-spacing">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">🚀 Godman AI</h1>
+            <p class="text-gray-600">WebUI Dashboard & Handler API</p>
+            <div class="mt-4 flex items-center space-x-2">
+                <span class="inline-block w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+                <span class="text-sm font-semibold text-green-600">LIVE</span>
+            </div>
+        </div>
+        
+        <!-- Input Section -->
+        <div class="bg-white rounded-lg shadow-xl p-6 section-spacing">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Execute Tool</h2>
+            
+            <!-- Function Name Input -->
+            <div class="mb-4">
+                <label for="functionName" class="block text-sm font-medium text-gray-700 mb-2">
+                    Function Name
+                </label>
+                <input 
+                    type="text" 
+                    id="functionName" 
+                    placeholder="e.g., add, create_user, calculate_stats"
+                    class="focus-ring w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                />
+            </div>
+            
+            <!-- Parameters Input (JSON) -->
+            <div class="mb-4">
+                <label for="parameters" class="block text-sm font-medium text-gray-700 mb-2">
+                    Parameters (JSON)
+                </label>
+                <textarea 
+                    id="parameters" 
+                    rows="6"
+                    placeholder='{"x": 5, "y": 3}'
+                    class="focus-ring w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition font-mono text-sm"
+                ></textarea>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex flex-wrap gap-3">
+                <button 
+                    id="runToolBtn"
+                    class="btn-lift px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-opacity-90 transition shadow-lg hover:shadow-xl"
+                >
+                    ▶️ Run Tool
+                </button>
+                
+                <button 
+                    id="listToolsBtn"
+                    class="btn-lift px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition shadow-lg hover:shadow-xl"
+                >
+                    📋 List Tools
+                </button>
+                
+                <button 
+                    id="loadPresetsBtn"
+                    class="btn-lift px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition shadow-lg hover:shadow-xl"
+                >
+                    🎨 Load Presets
+                </button>
+                
+                <button 
+                    id="clearBtn"
+                    class="btn-lift px-6 py-3 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition shadow-lg hover:shadow-xl"
+                >
+                    🗑️ Clear
+                </button>
+            </div>
+        </div>
+        
+        <!-- Output Section -->
+        <div class="bg-white rounded-lg shadow-xl p-6 section-spacing">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-gray-800">Output</h2>
+                <button 
+                    id="copyOutputBtn"
+                    class="btn-lift px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300 transition"
+                >
+                    📋 Copy
+                </button>
+            </div>
+            
+            <pre 
+                id="output" 
+                class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto font-mono text-sm min-h-[300px] max-h-[500px] overflow-y-auto"
+            >Welcome to Godman AI WebUI Dashboard!
+
+Available Actions:
+• Click "Run Tool" to execute a function
+• Click "List Tools" to see available tools
+• Click "Load Presets" to view model presets
+• Enter function name and parameters above
+
+Ready to execute...</pre>
+        </div>
+        
+        <!-- Quick Examples -->
+        <div class="bg-white rounded-lg shadow-xl p-6 section-spacing">
+            <h3 class="text-xl font-bold text-gray-800 mb-3">Quick Examples</h3>
+            <div class="space-y-2 text-sm">
+                <div class="flex items-start space-x-2">
+                    <span class="text-primary font-semibold">•</span>
+                    <div>
+                        <code class="bg-gray-100 px-2 py-1 rounded">add</code>
+                        <span class="text-gray-600 ml-2">{"x": 5, "y": 3}</span>
+                    </div>
+                </div>
+                <div class="flex items-start space-x-2">
+                    <span class="text-primary font-semibold">•</span>
+                    <div>
+                        <code class="bg-gray-100 px-2 py-1 rounded">create_user</code>
+                        <span class="text-gray-600 ml-2">{"name": "Alice", "age": 28}</span>
+                    </div>
+                </div>
+                <div class="flex items-start space-x-2">
+                    <span class="text-primary font-semibold">•</span>
+                    <div>
+                        <code class="bg-gray-100 px-2 py-1 rounded">calculate_stats</code>
+                        <span class="text-gray-600 ml-2">{"items": [10, 20, 30, 40]}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="text-center mt-6 text-white text-sm">
+            <p>Built on <span class="font-semibold">feature/webui-dashboard</span></p>
+            <p class="mt-1">FastAPI + ToolRunner + Handler API</p>
+        </div>
+        
+    </div>
+    
+    <!-- Link to app.js -->
+    <script src="/webui/app.js"></script>
+    
+</body>
+</html>

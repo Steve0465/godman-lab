@@ -1,0 +1,1440 @@
+================================================================================
+GODMAN-LAB AUDIT SNAPSHOT
+================================================================================
+
+Generated: 2025-12-10T04:04:01.537135Z
+Repo Root: /Users/stephengodman/Desktop/godman-lab
+
+--------------------------------------------------------------------------------
+GIT INFORMATION
+--------------------------------------------------------------------------------
+Branch: feature/audit-snapshot
+Last Commit: d1a4c2b fix: update router test to use LLM router instead of tool router
+
+Status:
+## feature/audit-snapshot
+ M HANDLER_API_README.md
+ D codex
+ M godman_ai/__pycache__/__init__.cpython-314.pyc
+ M godman_ai/tools/__init__.py
+ M godman_ai/tools/__pycache__/__init__.cpython-314.pyc
+ M godman_ai/tools/__pycache__/receipts.cpython-314.pyc
+ M godman_ai/tools/receipts.py
+?? .DS_Store
+?? .codex/
+?? .prompts/
+?? CONVERT_TO_AUDIO.sh
+?? DRIVE_INTELLIGENCE_OPERATION.md
+?? GOOGLE_DRIVE_ORGANIZATION_PLAN.md
+?? GPT_REVIEW_PROMPT.md
+?? HANDLER_IMPLEMENTATION.md
+?? READ_HANDLER_API.sh
+?? SHIELD_INTEGRATION.md
+?? __pycache__/
+?? apps/
+?? cli/__pycache__/
+?? cli/agent.py
+?? cli/codex_runner.py
+?? cli/godman/__pycache__/
+?? cli/godman/llm_test.py
+?? cli/godman/sync.py
+?? cli/llm.py
+?? codex_old
+?? data/
+?? demo_tool_cli.py
+?? download_jailbreak_datasets.py
+?? godman_ai/agents/__pycache__/
+?? godman_ai/auth/
+?? godman_ai/config/__pycache__/
+?? godman_ai/diagnostics/__pycache__/
+?? godman_ai/llm/
+?? godman_ai/orchestrator/__pycache__/
+?? godman_ai/orchestrator/executor_v1.py
+?? godman_ai/orchestrator/router_v2.py
+?? godman_ai/server/__pycache__/
+?? godman_ai/services/
+?? godman_ai/storage/
+?? godman_ai/sync/
+?? godman_ai/tools/__pycache__/banking.cpython-314.pyc
+?? godman_ai/tools/__pycache__/base.cpython-314.pyc
+?? godman_ai/tools/__pycache__/echo.cpython-314.pyc
+?? godman_ai/tools/__pycache__/loader.cpython-314.pyc
+?? godman_ai/tools/__pycache__/ocr.cpython-314.pyc
+?? godman_ai/tools/__pycache__/patterns.cpython-314.pyc
+?? godman_ai/tools/__pycache__/registry.cpython-314.pyc
+?? godman_ai/tools/__pycache__/runner.cpython-314.pyc
+?? godman_ai/tools/base.py
+?? godman_ai/tools/echo.py
+?? godman_ai/tools/loader.py
+?? godman_ai/tools/registry.py
+?? godman_ai/tools/runner.py
+?? godman_lab.egg-info/
+?? godman_raw.modelfile
+?? godman_raw.modelfile.save
+?? handler_test.txt
+?? knowledge-base/
+?? libs/__pycache__/
+?? ocr/__pycache__/
+?? scans/MFA.pdf
+?? "scans/Maintence report.pdf"
+?? scans/mfa.png
+?? scripts/
+?? setup.py
+?? test_cli_tools.py
+?? test_handler.sh
+?? tests/
+?? workflows/__pycache__/
+
+--------------------------------------------------------------------------------
+DIRECTORY STRUCTURE
+--------------------------------------------------------------------------------
+Top-level directories:
+  .
+  ./.codex
+  ./.prompts
+  ./apps
+  ./apps/panel
+  ./cli
+  ./cli/godman
+  ./data
+  ./data/jailbreak_prompts
+  ./data/kroger
+  ./data/plaid
+  ./docs
+  ./docs/audit
+  ./godman_ai
+  ./godman_ai/agents
+  ./godman_ai/auth
+  ./godman_ai/config
+  ./godman_ai/diagnostics
+  ./godman_ai/llm
+  ./godman_ai/models
+  ./godman_ai/orchestrator
+  ./godman_ai/server
+  ./godman_ai/services
+  ./godman_ai/storage
+  ./godman_ai/sync
+  ./godman_ai/tools
+  ./knowledge-base
+  ./knowledge-base/datasheets
+  ./knowledge-base/guides
+  ./knowledge-base/manuals
+  ./knowledge-base/notes
+  ./knowledge-base/reference
+  ./knowledge-base/specifications
+  ./libs
+  ./logs
+  ./ocr
+  ./scans
+  ./scripts
+  ./tests
+  ./webui
+  ./workflows
+
+Python file counts:
+  cli: 11 files
+  godman_ai: 50 files
+  libs: 2 files
+  workflows: 2 files
+  ocr: 2 files
+
+--------------------------------------------------------------------------------
+KEY FILES
+--------------------------------------------------------------------------------
+
+### cli/codex_runner.py (486 lines) ###
+
+from __future__ import annotations
+
+import glob
+import json
+import os
+import subprocess
+import sys
+import urllib.parse
+import urllib.request
+from pathlib import Path
+from typing import Any, Callable
+
+from openai import OpenAI
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+CODEX_DIR = REPO_ROOT / ".codex"
+AGENTS_PATH = CODEX_DIR / "AGENTS.md"
+TOOLS_PATH = CODEX_DIR / "tools.json"
+
+MODEL = os.getenv("CODEX_MODEL", "gpt-5.1-codex")
+DEBUG = os.getenv("CODEX_DEBUG", "0") == "1"
+MAX_STEPS = int(os.getenv("CODEX_MAX_STEPS", "25"))
+MAX_FILE_CHARS = int(os.getenv("CODEX_MAX_FILE_CHARS", "200000"))  # ~200KB
+
+client = OpenAI()
+
+
+class ToolExecutionError(RuntimeError):
+    pass
+
+
+def _read_text(path: Path) -> str:
+    try:
+        return path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return ""
+    except UnicodeDecodeError:
+        return path.read_text(encoding="utf-8", errors="replace")
+
+
+
+... [446 more lines]
+
+
+### .codex/AGENTS.md (137 lines) ###
+
+You are Codex, based on GPT-5. You are running as a coding agent in the Codex CLI on a user's computer.
+
+# General
+- When searching for text or files, prefer using `rg` or `rg --files` respectively because `rg` is much faster than alternatives like `grep`. (If the `rg` command is not found, then use alternatives.)
+- If a tool exists for an action, prefer to use the tool instead of shell commands (e.g `read_file` over `cat`). Strictly avoid raw `cmd`/terminal when a dedicated tool exists. Default to solver tools: `git` (all git), `rg` (search), `read_file`, `list_dir`, `glob_file_search`, `apply_patch`, `update_plan`. Use `shell_command` only when no listed tool can perform the action.
+- When multiple tool calls can be parallelized (e.g., plan updates with other actions, file searches, reading files), make these tool calls in parallel instead of sequential. Avoid single calls that might not yield a useful result; parallelize instead to ensure you can make progress efficiently.
+- Code chunks that you receive (via tool calls or from user) may include inline line numbers in the form "Lxxx:LINE_CONTENT", e.g. "L123:LINE_CONTENT". Treat the "Lxxx:" prefix as metadata and do NOT treat it as part of the actual code.
+- Default expectation: deliver working code, not just a plan. If some details are missing, make reasonable assumptions and complete a working version of the feature.
+
+# Autonomy and Persistence
+- You are autonomous senior engineer: once the user gives a direction, proactively gather context, plan, implement, test, and refine without waiting for additional prompts at each step.
+- Persist until the task is fully handled end-to-end within the current turn whenever feasible: do not stop at analysis or partial fixes; carry changes through implementation, verification, and a clear explanation of outcomes unless the user explicitly pauses or redirects you.
+- Bias to action: default to implementing with reasonable assumptions; do not end your turn with clarifications unless truly blocked.
+- Avoid excessive looping or repetition; if you find yourself re-reading or re-editing the same files without clear progress, stop and end the turn with a concise summary and any clarifying questions needed.
+
+# Code Implementation
+- Act as a discerning engineer: optimize for correctness, clarity, and reliability over speed; avoid risky shortcuts, speculative changes, and messy hacks just to get the code to work; cover the root cause or core ask, not just a symptom or a narrow slice.
+- Conform to the codebase conventions: follow existing patterns, helpers, naming, formatting, and localization; if you must diverge, state why.
+- Comprehensiveness and completeness: Investigate and ensure you cover and wire between all relevant surfaces so behavior stays consistent across the application.
+- Behavior-safe defaults: Preserve intended behavior and UX; gate or flag intentional changes and add tests when behavior shifts.
+- Tight error handling: No broad catches or silent defaults: do not add broad try/catch blocks or success-shaped fallbacks; propagate or surface errors explicitly rather than swallowing them.
+  - No silent failures: do not early-return on invalid input without logging/notification consistent with repo patterns
+- Efficient, coherent edits: Avoid repeated micro-edits: read enough context before changing a file and batch logical edits together instead of thrashing with many tiny patches.
+- Keep type safety: Changes should always pass build and type-check; avoid unnecessary casts (`as any`, `as unknown as ...`); prefer proper types and guards, and reuse existing helpers (e.g., normalizing identifiers) instead of type-asserting.
+- Reuse: DRY/search first: before adding new helpers or logic, search for prior art and reuse or extract a shared helper instead of duplicating.
+- Bias to action: default to implementing with reasonable assumptions; do not end on clarifications unless truly blocked. Every rollout should conclude with a concrete edit or an explicit blocker plus a targeted question.
+
+# Editing constraints
+- Default to ASCII when editing or creating files. Only introduce non-ASCII or other Unicode characters when there is a clear justification and the file already uses them.
+- Add succinct code comments that explain what is going on if code is not self-explanatory. You should not add comments like "Assigns the value to the variable", but a brief comment might be useful ahead of a complex code block that the user would otherwise have to spend time parsing out. Usage of these comments should be rare.
+- Try to use apply_patch for single file edits, but it is fine to explore other options to make the edit if it does not work well. Do not use apply_patch for changes that are auto-generated (i.e. generating package.json or running a lint or format command like gofmt) or when scripting is more efficient (such as search and replacing a string across a codebase).
+- You may be in a dirty git worktree.
+    * NEVER revert existing changes you did not make unless explicitly requested, since these changes were made by the user.
+    * If asked to make a commit or code edits and there are unrelated changes to your work or changes that you didn't make in those files, don't revert those changes.
+    * If the changes are in files you've touched recently, you should read carefully and understand how you can work with the changes rather than reverting them.
+    * If the changes are in unrelated files, just ignore them and don't revert them.
+- Do not amend a commit unless explicitly requested to do so.
+- While you are working, you might notice unexpected changes that you didn't make. If this happens, STOP IMMEDIATELY and ask the user how they would like to proceed.
+- **NEVER** use destructive commands like `git reset --hard` or `git checkout --` unless specifically requested or approved by the user.
+
+
+... [97 more lines]
+
+
+### .codex/tools.json (120 lines) ###
+
+[
+  {
+    "type": "function",
+    "name": "git",
+    "description": "Execute a git command in the repository root",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "command": {"type": "string"},
+        "timeout_sec": {"type": "integer", "minimum": 1, "maximum": 1800}
+      },
+      "required": ["command"]
+    }
+  },
+  {
+    "type": "function",
+    "name": "rg",
+    "description": "Search file contents using ripgrep",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "pattern": {"type": "string"},
+        "path": {"type": "string"}
+      },
+      "required": ["pattern", "path"]
+    }
+  },
+  {
+    "type": "function",
+    "name": "read_file",
+    "description": "Reads a file from disk",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {"type": "string"}
+      },
+      "required": ["path"]
+    }
+  },
+  {
+
+... [80 more lines]
+
+
+### libs/tool_runner.py (392 lines) ###
+
+"""
+ToolRunner - Function registry and execution framework
+
+Provides decorator-based function registration with schema validation,
+subprocess execution, comprehensive logging, and error handling.
+"""
+
+import json
+import logging
+import subprocess
+import time
+from datetime import datetime
+from functools import wraps
+from pathlib import Path
+from typing import Any, Callable, Dict, Optional, Union
+
+
+class ToolRunner:
+    """
+    Function registry and execution manager.
+    
+    Features:
+    - Decorator-based function registration (@tool)
+    - Parameter schema validation
+    - Subprocess execution for Python scripts and CLI tools
+    - Structured JSON output
+    - Comprehensive logging with timing
+    
+    Example:
+        runner = ToolRunner()
+        
+        @runner.tool(schema={"name": str, "count": int})
+        def greet(name: str, count: int = 1):
+            return {"message": f"Hello {name}!" * count}
+        
+        result = runner.run("greet", {"name": "World", "count": 2})
+    """
+    
+    def __init__(self, log_path: Optional[str] = None):
+        """
+
+... [352 more lines]
+
+
+### godman_ai/orchestrator/executor_v1.py (70 lines) ###
+
+from godman_ai.llm.engine import LLMEngine
+from godman_ai.orchestrator.router_v2 import RouterV2
+from godman_ai.tools.runner import ToolRunner
+
+
+class ExecutorAgent:
+    """
+    ExecutorAgent v1:
+      - Takes a user query
+      - Uses RouterV2 to pick a tool based on keywords
+      - Uses LLMEngine to supply reasoning when needed
+      - Executes the selected tool through ToolRunner
+      - Returns structured output for stability
+    """
+
+    def __init__(self, default_model="deepseek-r1:14b"):
+        self.engine = LLMEngine(default_model)
+        self.router = RouterV2()
+        self.runner = ToolRunner()
+
+    def think(self, query: str) -> str:
+        """
+        Ask the LLM for a short reasoning summary.
+        This is NOT used to pick tools — RouterV2 does that deterministically.
+        """
+        prompt = (
+            "You are the reasoning module of Godman Agent.\n"
+            "User query: " + query + "\n"
+            "Provide a short reasoning summary (1-2 sentences)."
+        )
+        return self.engine.call(prompt)
+
+    def act(self, query: str) -> dict:
+        """
+        Main entry point:
+          1. Router picks highest-scoring tool
+          2. LLM creates transparency reasoning
+          3. If no tool matches (score == 0), return LLM-only answer
+          4. Otherwise execute the tool using ToolRunner
+        """
+
+... [30 more lines]
+
+
+### godman_ai/orchestrator/__init__.py (13 lines) ###
+
+"""
+Orchestrator module for godman_ai.
+
+Provides intelligent routing and orchestration capabilities.
+"""
+
+from .tool_router import ToolRouter, BaseTool, quick_route
+
+__all__ = [
+    'ToolRouter',
+    'BaseTool',
+    'quick_route',
+]
+
+
+### godman_ai/orchestrator/router_v2.py (106 lines) ###
+
+"""
+Router v2: Keyword-scoring tool selector for Godman AI.
+
+Features:
+ - Extract keywords from user query
+ - Score tools based on name + description matching
+ - Pick the highest-confidence tool
+ - Fallback behavior for unknown queries
+ - Prepares for ExecutorAgent (tool + LLM loop)
+"""
+
+import re
+from godman_ai.tools.registry import TOOL_REGISTRY
+
+
+class RoutedTool:
+    """Container for routing result."""
+
+    def __init__(self, name: str, score: float, reason: str):
+        self.name = name
+        self.score = score
+        self.reason = reason
+
+    def to_dict(self):
+        return {
+            "tool": self.name,
+            "score": self.score,
+            "reason": self.reason,
+        }
+
+
+class RouterV2:
+    """
+    Deterministic keyword-based router.
+
+    Steps:
+      1. Normalize the query
+      2. Compare to each tool name + description
+      3. Score:
+           name hit = 2
+
+... [66 more lines]
+
+
+### godman_ai/orchestrator/tool_router.py (378 lines) ###
+
+"""
+Tool Router - Intelligent dispatch system for tools and functions.
+
+The ToolRouter discovers available tools in godman_ai/tools and provides
+keyword-based routing to automatically select the right tool for a given task.
+"""
+
+import logging
+from typing import Optional, Callable, Dict, List, Any
+from dataclasses import dataclass
+import importlib
+import inspect
+
+# Configure logging
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class BaseTool:
+    """
+    Base representation of a callable tool.
+    
+    Attributes:
+        name: Human-readable tool name
+        callable: The actual function/method to call
+        description: Brief description of what the tool does
+        keywords: List of keywords that trigger this tool
+        module: Module path where tool is defined
+    """
+    name: str
+    callable: Callable
+    description: str
+    keywords: List[str]
+    module: str
+
+
+class ToolRouter:
+    """
+    Intelligent router for discovering and dispatching to available tools.
+    
+
+... [338 more lines]
+
+
+### godman_ai/orchestrator/orchestrator.py (1 lines) ###
+
+# Orchestrator
+
+
+### godman_ai/agents/planner.py (136 lines) ###
+
+"""
+Planner Agent - Decomposes user requests into actionable steps.
+
+The PlannerAgent takes a user request and generates a structured plan
+with discrete steps that can be executed by the ExecutorAgent.
+"""
+
+from dataclasses import dataclass, field
+from typing import Dict, List
+
+
+@dataclass
+class AgentResponse:
+    """
+    Standard response format for all agents.
+    
+    Attributes:
+        content: Main response content (text, plan, result, etc.)
+        metadata: Additional context and information about the response
+    """
+    content: str
+    metadata: Dict = field(default_factory=dict)
+
+
+class PlannerAgent:
+    """
+    Planner agent that breaks down user requests into actionable steps.
+    
+    The planner analyzes the user's intent and creates a structured plan
+    with numbered steps that guide execution.
+    """
+    
+    def __init__(self, agent_id: str = "planner-001"):
+        """
+        Initialize the PlannerAgent.
+        
+        Args:
+            agent_id: Unique identifier for this agent instance
+        """
+        self.agent_id = agent_id
+
+... [96 more lines]
+
+
+### godman_ai/agents/__init__.py (16 lines) ###
+
+"""
+Agents module for godman_ai.
+
+Provides the core agent framework for planning, executing, and reviewing tasks.
+"""
+
+from .planner import PlannerAgent, AgentResponse
+from .executor import ExecutorAgent
+from .reviewer import ReviewerAgent
+
+__all__ = [
+    'AgentResponse',
+    'PlannerAgent',
+    'ExecutorAgent',
+    'ReviewerAgent',
+]
+
+
+### godman_ai/agents/reviewer.py (254 lines) ###
+
+"""
+Reviewer Agent - Reviews execution results for quality and correctness.
+
+The ReviewerAgent validates execution outputs, checks for errors,
+and provides approval or feedback for improvement.
+"""
+
+from dataclasses import dataclass, field
+from typing import Dict, List
+import re
+
+
+@dataclass
+class AgentResponse:
+    """
+    Standard response format for all agents.
+    
+    Attributes:
+        content: Main response content (text, plan, result, etc.)
+        metadata: Additional context and information about the response
+    """
+    content: str
+    metadata: Dict = field(default_factory=dict)
+
+
+class ReviewerAgent:
+    """
+    Reviewer agent that validates execution results.
+    
+    The reviewer checks outputs for errors, completeness, and quality,
+    providing approval or requesting revisions.
+    """
+    
+    def __init__(self, agent_id: str = "reviewer-001"):
+        """
+        Initialize the ReviewerAgent.
+        
+        Args:
+            agent_id: Unique identifier for this agent instance
+        """
+
+... [214 more lines]
+
+
+### godman_ai/agents/executor.py (198 lines) ###
+
+"""
+Executor Agent - Executes plans generated by the PlannerAgent.
+
+The ExecutorAgent takes a structured plan and simulates or performs
+the actual execution of each step.
+"""
+
+from dataclasses import dataclass, field
+from typing import Dict
+import time
+
+
+@dataclass
+class AgentResponse:
+    """
+    Standard response format for all agents.
+    
+    Attributes:
+        content: Main response content (text, plan, result, etc.)
+        metadata: Additional context and information about the response
+    """
+    content: str
+    metadata: Dict = field(default_factory=dict)
+
+
+class ExecutorAgent:
+    """
+    Executor agent that carries out plans from the PlannerAgent.
+    
+    The executor processes each step in a plan and simulates execution,
+    returning results and status information.
+    """
+    
+    def __init__(self, agent_id: str = "executor-001"):
+        """
+        Initialize the ExecutorAgent.
+        
+        Args:
+            agent_id: Unique identifier for this agent instance
+        """
+
+... [158 more lines]
+
+
+### godman_ai/llm/registry.py (17 lines) ###
+
+"""Model registry for local LLM configurations."""
+
+from .utils import list_models
+
+MODEL_REGISTRY = {
+    "godman-raw": {"type": "local", "model": "godman-raw"},
+    "deepseek-r1:14b": {"type": "local", "model": "deepseek-r1:14b"},
+    "qwen2.5:7b": {"type": "local", "model": "qwen2.5:7b"},
+}
+
+
+def available_models():
+    """
+    Return registry keys that are also installed locally.
+    """
+    installed = set(list_models())
+    return [name for name in MODEL_REGISTRY if name in installed]
+
+
+### godman_ai/llm/interface.py (52 lines) ###
+
+"""Lightweight interface for invoking configured LLMs."""
+
+import subprocess
+
+from .registry import MODEL_REGISTRY
+
+
+def llm_call(model_name: str, prompt: str, temperature: float = 0.1) -> str:
+    """
+    Invoke an LLM by name using the configured backend.
+
+    Args:
+        model_name: Key in MODEL_REGISTRY.
+        prompt: Text prompt to send to the model.
+        temperature: Sampling temperature forwarded to the backend.
+
+    Returns:
+        The text content returned by the model.
+
+    Raises:
+        ValueError: If the model is unknown or the type is unsupported.
+        RuntimeError: If the subprocess invocation fails.
+    """
+    config = MODEL_REGISTRY.get(model_name)
+    if not config:
+        raise ValueError(f"Unknown model '{model_name}'")
+
+    model_type = config.get("type")
+    if model_type != "local":
+        raise ValueError(f"Unsupported model type '{model_type}' for '{model_name}'")
+
+    model_id = config.get("model")
+    if not model_id:
+        raise ValueError(f"Missing model id for '{model_name}'")
+
+    try:
+        # Older Ollama versions may not support the --temperature flag.
+        # Use minimal invocation: `ollama run MODEL`, pass prompt via stdin.
+        result = subprocess.run(
+            ["ollama", "run", model_id],
+
+... [12 more lines]
+
+
+### godman_ai/llm/engine.py (54 lines) ###
+
+"""LLM engine providing a simple interface over registered models."""
+
+from .interface import llm_call
+from .registry import MODEL_REGISTRY, available_models
+
+
+class LLMEngine:
+    """
+    Thin wrapper for invoking registered LLMs with a configurable default model.
+    """
+
+    def __init__(self, default_model: str = "godman-raw") -> None:
+        self.set_default(default_model)
+
+    def call(self, prompt: str, model: str | None = None, temperature: float = 0.1) -> str:
+        """
+        Invoke an LLM with the given prompt.
+
+        Args:
+            prompt: Input text for the model.
+            model: Optional model name; uses default if not provided.
+            temperature: Sampling temperature forwarded to the backend.
+
+        Returns:
+            The text output from the model.
+
+        Raises:
+            ValueError: If the model is not registered.
+            RuntimeError: If the underlying call fails.
+        """
+        target_model = model or self.default_model
+        if target_model not in MODEL_REGISTRY:
+            raise ValueError(f"Model '{target_model}' is not registered")
+        return llm_call(target_model, prompt, temperature=temperature)
+
+    def list_registered(self) -> list[str]:
+        """Return all registered model names."""
+        return list(MODEL_REGISTRY.keys())
+
+    def list_available(self) -> list[str]:
+
+... [14 more lines]
+
+
+### godman_ai/llm/utils.py (42 lines) ###
+
+"""Utility helpers for local LLM discovery."""
+
+import subprocess
+from typing import List
+
+
+def list_models() -> List[str]:
+    """
+    List locally available Ollama models.
+
+    Returns:
+        A list of model names reported by `ollama list`.
+
+    Raises:
+        RuntimeError: If the ollama binary is missing or the command fails.
+    """
+    try:
+        result = subprocess.run(
+            ["ollama", "list"],
+            text=True,
+            capture_output=True,
+            check=True,
+        )
+    except FileNotFoundError as exc:
+        raise RuntimeError("ollama binary not found on PATH") from exc
+    except subprocess.CalledProcessError as exc:
+        stderr = exc.stderr.strip() if exc.stderr else ""
+        raise RuntimeError(f"'ollama list' failed: {stderr}") from exc
+
+    models = []
+    for line in result.stdout.splitlines():
+        parts = line.split()
+        if not parts:
+            continue
+        # The first column is the model name.
+        name = parts[0]
+        # Skip possible header lines that are not model identifiers.
+        if name.lower() in {"model", "name"}:
+            continue
+        models.append(name)
+
+... [2 more lines]
+
+
+### godman_ai/tools/runner.py (55 lines) ###
+
+"""Tool runner that discovers and executes registered tools."""
+
+import time
+
+from .loader import discover_tools
+from .registry import get_tool
+from .base import ToolExecutionError
+
+
+class ToolRunner:
+    """
+    Discovers tools and provides a simple interface to execute them.
+    """
+
+    def __init__(self) -> None:
+        discover_tools()
+
+    def run(self, tool_name: str, **kwargs) -> dict:
+        """
+        Execute a tool by name with provided parameters.
+
+        Args:
+            tool_name: The registered tool name.
+            **kwargs: Parameters forwarded to the tool's run method.
+
+        Returns:
+            A result dictionary containing success status, tool name,
+            duration, and tool-specific result or error information.
+
+        Raises:
+            ToolExecutionError: If the tool is not registered.
+        """
+        tool_cls = get_tool(tool_name)
+        if not tool_cls:
+            raise ToolExecutionError(f"Unknown tool: {tool_name}")
+
+        tool = tool_cls()
+        start = time.time()
+        try:
+            result = tool.run(**kwargs)
+
+... [15 more lines]
+
+
+### godman_ai/tools/receipts.py (506 lines) ###
+
+"""
+Receipt processing module for godman_ai.
+
+Provides typed models and functions for managing receipt data from CSV files.
+Integrates with OCR results to automatically extract receipt information.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from datetime import date as date_type, datetime
+from decimal import Decimal
+from pathlib import Path
+from typing import Optional
+import csv
+import os
+import re
+
+try:
+    from pydantic import BaseModel, Field, ConfigDict
+except ImportError:  # pragma: no cover - optional dependency
+    BaseModel = None  # type: ignore
+    Field = None  # type: ignore
+    ConfigDict = dict  # type: ignore
+
+# Placeholder for Settings - adjust import path as needed
+# from godman_ai.config import Settings
+
+if BaseModel:
+    class Receipt(BaseModel):
+        """Typed model for a receipt record."""
+        
+        model_config = ConfigDict(
+            json_encoders={
+                Decimal: float,
+                date_type: lambda v: v.isoformat()
+            }
+        )
+        
+        id: str = Field(..., description="Unique identifier for the receipt")
+
+... [466 more lines]
+
+
+### godman_ai/tools/patterns.py (1 lines) ###
+
+# Patterns tool
+
+
+### godman_ai/tools/registry.py (25 lines) ###
+
+"""Registry helpers for tools."""
+
+TOOL_REGISTRY = {}
+
+
+def register_tool(tool_cls):
+    """
+    Register a tool class by its name attribute.
+    """
+    TOOL_REGISTRY[tool_cls.name] = tool_cls
+
+
+def get_tool(name: str):
+    """
+    Retrieve a tool class by name.
+    """
+    return TOOL_REGISTRY.get(name)
+
+
+def list_tools():
+    """
+    List registered tool names.
+    """
+    return list(TOOL_REGISTRY.keys())
+
+
+
+### godman_ai/tools/banking.py (1 lines) ###
+
+# Banking tool
+
+
+### godman_ai/tools/__init__.py (39 lines) ###
+
+"""Tools module for godman_ai.
+
+Exports are lazily loaded so that optional dependencies (like pandas for
+receipts handling) don't break imports for unrelated tools.
+"""
+
+# Map of attributes we expose from the receipts module. Values are looked up
+# dynamically the first time an attribute is accessed.
+_RECEIPT_EXPORTS = {
+    'Receipt',
+    'OCRResult',
+    'load_receipts',
+    'append_receipt',
+    'upsert_receipts',
+    'infer_category',
+    'build_receipt_from_ocr',
+    'add_receipt_from_ocr',
+    'get_receipts_by_category',
+    'get_receipts_by_date_range',
+    'calculate_total',
+}
+
+__all__ = sorted(_RECEIPT_EXPORTS)
+
+
+def __getattr__(name):
+    """
+    Lazily expose receipts helpers to avoid importing heavy dependencies
+    unless they're actually needed.
+    """
+    if name in _RECEIPT_EXPORTS:
+        from . import receipts
+        return getattr(receipts, name)
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
+
+
+def __dir__():
+    # Keep dir() output intuitive even though we lazily import attributes.
+    return sorted(set(__all__) | set(globals().keys()))
+
+
+### godman_ai/tools/ocr.py (15 lines) ###
+
+"""OCR tool placeholder for godman_ai."""
+
+from pathlib import Path
+
+def extract_text_basic(pdf_path: Path) -> str:
+    """
+    Placeholder for OCR text extraction.
+    
+    Args:
+        pdf_path: Path to PDF file
+        
+    Returns:
+        Placeholder message indicating OCR is not yet implemented
+    """
+    return f"[OCR placeholder] No OCR engine implemented yet for: {pdf_path}"
+
+
+### godman_ai/tools/loader.py (48 lines) ###
+
+"""Discovery utilities for tools."""
+
+import importlib
+import pkgutil
+
+from .base import BaseTool
+from .registry import register_tool
+
+
+def discover_tools() -> None:
+    """
+    Import all tool modules and register their BaseTool subclasses.
+
+    Excludes internal modules (base, registry, loader) and registers any class
+    that inherits from BaseTool.
+    """
+    package = __package__ or "godman_ai.tools"
+    try:
+        package_module = importlib.import_module(package)
+    except Exception:
+        return
+
+    package_path = getattr(package_module, "__path__", None)
+    if not package_path:
+        return
+
+    exclude = {"base", "registry", "loader"}
+
+    for module_info in pkgutil.iter_modules(package_path, f"{package}."):
+        module_name = module_info.name
+        short_name = module_name.rsplit(".", 1)[-1]
+        if short_name in exclude:
+            continue
+
+        try:
+            module = importlib.import_module(module_name)
+        except Exception:
+            # Skip modules that fail to import
+            continue
+
+
+... [8 more lines]
+
+
+### godman_ai/tools/echo.py (21 lines) ###
+
+from godman_ai.tools.base import BaseTool, ToolExecutionError
+
+
+class EchoTool(BaseTool):
+    name = "echo"
+    description = "Returns the provided text."
+
+    def run(self, text: str, **kwargs) -> dict:
+        """
+        Return the provided text.
+
+        Args:
+            text: Input text to echo back.
+
+        Returns:
+            dict containing {"text": text}
+        """
+        if not isinstance(text, str):
+            raise ToolExecutionError("Parameter 'text' must be a string.")
+        return {"text": text}
+
+
+
+### godman_ai/tools/base.py (34 lines) ###
+
+"""Base definitions for tools."""
+
+class ToolExecutionError(Exception):
+    """Raised when a tool fails to execute properly."""
+
+
+class BaseTool:
+    """
+    Base interface for tools.
+
+    Attributes:
+        name: Human-readable tool name.
+        description: Short description of tool behavior.
+    """
+
+    name: str
+    description: str
+
+    def run(self, **kwargs) -> dict:
+        """
+        Execute the tool.
+
+        Args:
+            **kwargs: Tool-specific parameters.
+
+        Returns:
+            A dictionary with tool results.
+
+        Raises:
+            ToolExecutionError: When execution fails.
+            NotImplementedError: If not implemented by subclasses.
+        """
+        raise NotImplementedError("Tool must implement run()")
+
+
+
+### workflows/receipt_watcher.py (5 lines) ###
+
+def main():
+    print("Workflow placeholder running. Implement logic later.")
+
+if __name__ == "__main__":
+    main()
+
+
+### workflows/receipt_watcher_tax.py (5 lines) ###
+
+def main():
+    print("Workflow placeholder running. Implement logic later.")
+
+if __name__ == "__main__":
+    main()
+
+
+### ocr/enhanced_extractor.py (260 lines) ###
+
+"""Enhanced receipt data extraction with structured JSON output and item-level parsing."""
+
+import os
+import json
+import re
+from typing import Dict, List, Optional, Any
+from openai import OpenAI
+
+# Strict JSON schema for receipt data
+RECEIPT_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "vendor": {"type": "string", "description": "Store or merchant name"},
+        "date": {"type": "string", "description": "Purchase date in YYYY-MM-DD format"},
+        "time": {"type": "string", "description": "Purchase time if available"},
+        "items": {
+            "type": "array",
+            "description": "Individual line items from receipt",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "price": {"type": "number"},
+                    "quantity": {"type": "number", "default": 1}
+                },
+                "required": ["name", "price"]
+            }
+        },
+        "subtotal": {"type": "number", "description": "Subtotal before tax"},
+        "tax": {"type": "number", "description": "Tax amount"},
+        "total": {"type": "number", "description": "Total amount paid"},
+        "payment_method": {"type": "string", "description": "Cash, Card, Credit, Debit, etc."},
+        "category": {"type": "string", "description": "IRS tax category"},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1, "description": "Extraction confidence score"},
+        "notes": {"type": "string", "description": "Any special notes or flags"}
+    },
+    "required": ["vendor", "date", "total"]
+}
+
+# Enhanced prompt with item-level instructions
+
+... [220 more lines]
+
+
+### ocr/llm_extractor.py (60 lines) ###
+
+import os
+import json
+from openai import OpenAI
+
+# Small helper to call OpenAI and request a strict JSON response
+SCHEMA = {
+  "type": "object",
+  "properties": {
+    "vendor": {"type":"string"},
+    "date": {"type":"string","description":"ISO date YYYY-MM-DD"},
+    "subtotal": {"type":"number"},
+    "tax": {"type":"number"},
+    "total": {"type":"number"},
+    "currency": {"type":"string"},
+    "category": {"type":"string"},
+    "confidence": {"type":"number","minimum":0,"maximum":1},
+    "notes": {"type":"string"}
+  },
+  "required": ["vendor","date","subtotal"]
+}
+
+PROMPT_SYSTEM = "You are a precise extractor. Given OCR text from a receipt, return only JSON matching the schema exactly. If a field is missing, omit it or return null. The date should be ISO YYYY-MM-DD. The subtotal and tax should be numbers."
+
+
+def extract_fields(text: str):
+    api_key = os.getenv('OPENAI_API_KEY')
+    if not api_key or api_key == 'your_openai_api_key_here':
+        raise RuntimeError('OPENAI_API_KEY not set in environment')
+    
+    try:
+        client = OpenAI(api_key=api_key)
+        messages = [
+            {"role":"system","content":PROMPT_SYSTEM},
+            {"role":"user","content":f"Extract structured fields from this OCR text:\n\n{text}"}
+        ]
+        resp = client.chat.completions.create(
+            model=os.getenv('OPENAI_MODEL','gpt-4o-mini'),
+            messages=messages,
+            temperature=0.0,
+            max_tokens=512
+
+... [20 more lines]
+
+--------------------------------------------------------------------------------
+PATTERN SEARCHES
+--------------------------------------------------------------------------------
+
+### CLASS_AGENTS ###
+scripts/audit_snapshot.py:185:            "class_agents": r"class .*Agent",
+godman_ai/orchestrator/executor_v1.py:6:class ExecutorAgent:
+godman_ai/agents/planner.py:13:class AgentResponse:
+godman_ai/agents/planner.py:25:class PlannerAgent:
+godman_ai/agents/reviewer.py:14:class AgentResponse:
+godman_ai/agents/reviewer.py:26:class ReviewerAgent:
+godman_ai/agents/executor.py:14:class AgentResponse:
+godman_ai/agents/executor.py:26:class ExecutorAgent:
+
+
+### TOOL_RUNNER ###
+test_tool_runner.py:3:Test suite for ToolRunner
+test_tool_runner.py:21:from libs.tool_runner import ToolRunner
+test_tool_runner.py:29:    runner = ToolRunner()
+test_tool_runner.py:52:    runner = ToolRunner()
+test_tool_runner.py:76:    runner = ToolRunner()
+test_tool_runner.py:99:    runner = ToolRunner()
+test_tool_runner.py:125:    runner = ToolRunner()
+test_tool_runner.py:148:    runner = ToolRunner()
+test_tool_runner.py:170:    runner = ToolRunner()
+test_tool_runner.py:186:    runner = ToolRunner()
+test_tool_runner.py:217:    runner = ToolRunner()
+test_tool_runner.py:246:    runner = ToolRunner()
+test_tool_runner.py:292:    print("ToolRunner Test Suite")
+scripts/audit_snapshot.py:186:            "tool_runner": "ToolRunner",
+examples_tool_runner.py:3:ToolRunner Usage Examples
+examples_tool_runner.py:5:Demonstrates various usage patterns for the ToolRunner class.
+examples_tool_runner.py:14:from libs.tool_runner import ToolRunner
+examples_tool_runner.py:23:    runner = ToolRunner()
+examples_tool_runner.py:53:    runner = ToolRunner()
+examples_tool_runner.py:83:    runner = ToolRunner()
+examples_tool_runner.py:106:    runner = ToolRunner()
+examples_tool_runner.py:144:    runner = ToolRunner()
+examples_tool_runner.py:172:    runner = ToolRunner()
+examples_tool_runner.py:228:    print("# ToolRunner Usage Examples")
+libs/tool_runner.py:2:ToolRunner - Function registry and execution framework
+libs/tool_runner.py:18:class ToolRunner:
+libs/tool_runner.py:30:        runner = ToolRunner()
+libs/tool_runner.py:41:        Initialize ToolRunner.
+libs/tool_runner.py:54:        self.logger = logging.getLogger("ToolRunner")
+libs/tool_runner.py:72:        self.logger.info("ToolRunner initialized")
+libs/tool_runner.py:391:runner = ToolRunner()
+cli/godman/tools.py:2:CLI commands for ToolRunner execution
+cli/godman/tools.py:21:from libs.tool_runner import ToolRunner, runner as global_runner
+godman_ai/orchestrator/executor_v1.py:3:from godman_ai.tools.runner import ToolRunner
+godman_ai/orchestrator/executor_v1.py:12:      - Executes the selected tool through ToolRunner
+godman_ai/orchestrator/executor_v1.py:19:        self.runner = ToolRunner()
+godman_ai/orchestrator/executor_v1.py:39:          4. Otherwise execute the tool using ToolRunner
+godman_ai/server/api.py:21:    description="API for WebUI presets, Handler endpoint, and ToolRunner execution",
+godman_ai/server/api.py:104:    exists, executes it via ToolRunner, and returns structured output.
+godman_ai/server/api.py:123:                "message": f"Function '{request.function}' is not registered in ToolRunner",
+godman_ai/server/api.py:168:    List all available tools registered in ToolRunner.
+godman_ai/tools/runner.py:10:class ToolRunner:
+
+
+### TOOL_DECORATOR ###
+test_handler_api.py:19:@tool(
+test_handler_api.py:28:@tool(
+test_handler_api.py:36:@tool(
+test_handler_api.py:46:@tool(
+test_handler_api.py:195:    @tool(description="Get current status")
+test_tool_runner.py:25:    """Test @tool decorator registration"""
+godman_tool_cli.py:6:1. Register tools using @tool decorator
+godman_tool_cli.py:22:@tool(
+godman_tool_cli.py:32:@tool(
+godman_tool_cli.py:41:@tool(
+godman_tool_cli.py:50:@tool(
+godman_tool_cli.py:65:@tool(
+godman_tool_cli.py:74:@tool(
+godman_tool_cli.py:84:@tool(
+scripts/audit_snapshot.py:187:            "tool_decorator": "@tool",
+examples_tool_runner.py:216:    @tool(schema={"msg": str}, description="Echo a message")
+demo_tool_cli.py:14:@tool(schema={"name": str, "count": int}, description="Greet someone")
+demo_tool_cli.py:18:@tool(schema={"x": int, "y": int}, description="Add two numbers")
+demo_tool_cli.py:22:@tool(schema={"path": str}, command="ls -la {path}", description="List directory")
+libs/tool_runner.py:23:    - Decorator-based function registration (@tool)
+cli/godman/tools.py:219:   @tool(schema={"name": str, "age": int})
+cli/godman/tools.py:229:   @tool(schema={"path": str}, command="ls -la {path}")
+test_cli_tools.py:15:@tool(
+test_cli_tools.py:24:@tool(
+test_cli_tools.py:32:@tool(
+test_cli_tools.py:46:@tool(
+test_cli_tools.py:55:@tool(
+register_tools.py:10:@tool(schema={"x": int, "y": int}, description="Add two numbers")
+register_tools.py:14:@tool(schema={"x": int, "y": int}, description="Subtract two numbers")
+register_tools.py:18:@tool(schema={"x": int, "y": int}, description="Multiply two numbers")
+register_tools.py:23:@tool(schema={"text": str}, description="Convert text to uppercase")
+register_tools.py:27:@tool(schema={"text": str}, description="Convert text to lowercase")
+register_tools.py:31:@tool(schema={"text": str}, description="Reverse text")
+register_tools.py:36:@tool(schema={"items": list}, description="Calculate list statistics")
+register_tools.py:48:@tool(schema={"text": str}, description="Count words in text")
+register_tools.py:54:@tool(schema={"name": str, "age": int}, description="Create user profile")
+register_tools.py:66:@tool(schema={"path": str}, command="ls -la {path}", description="List files in directory")
+register_tools.py:70:@tool(schema={"text": str}, command='echo "{text}"', description="Echo text to stdout")
+demo_handler_api.py:16:@tool(schema={"x": int, "y": int}, description="Add two numbers")
+demo_handler_api.py:20:@tool(schema={"text": str}, description="Convert to uppercase")
+demo_handler_api.py:24:@tool(schema={"name": str, "age": int}, description="Create user")
+
+
+### TOOL_REGISTRY ###
+scripts/audit_snapshot.py:188:            "tool_registry": "TOOL_REGISTRY",
+godman_ai/orchestrator/router_v2.py:13:from godman_ai.tools.registry import TOOL_REGISTRY
+godman_ai/orchestrator/router_v2.py:47:        self.tools = TOOL_REGISTRY
+godman_ai/tools/registry.py:3:TOOL_REGISTRY = {}
+godman_ai/tools/registry.py:10:    TOOL_REGISTRY[tool_cls.name] = tool_cls
+godman_ai/tools/registry.py:17:    return TOOL_REGISTRY.get(name)
+godman_ai/tools/registry.py:24:    return list(TOOL_REGISTRY.keys())
+
+
+### REGISTER_TOOL ###
+scripts/audit_snapshot.py:189:            "register_tool": "register_tool",
+godman_ai/orchestrator/tool_router.py:129:            self._register_tool(
+godman_ai/orchestrator/tool_router.py:137:    def _register_tool(
+godman_ai/server/api.py:15:    import register_tools
+godman_ai/tools/registry.py:6:def register_tool(tool_cls):
+godman_ai/tools/loader.py:7:from .registry import register_tool
+godman_ai/tools/loader.py:48:            register_tool(attr)
+
+
+### ROUTER_V2 ###
+scripts/audit_snapshot.py:190:            "router_v2": "router_v2",
+godman_ai/orchestrator/executor_v1.py:2:from godman_ai.orchestrator.router_v2 import RouterV2
+
+
+### TOOL_ROUTER ###
+scripts/audit_snapshot.py:191:            "tool_router": "tool_router",
+godman_ai/orchestrator/__init__.py:7:from .tool_router import ToolRouter, BaseTool, quick_route
+
+
+### OLLAMA ###
+scripts/audit_snapshot.py:192:            "ollama": "ollama",
+cli/godman/main.py:54:        console.print(f"  Ollama online: {result['ollama_online']}")
+cli/godman/ai.py:30:def _check_ollama_installed() -> bool:
+cli/godman/ai.py:31:    """Check if ollama is installed and available."""
+cli/godman/ai.py:34:            ["ollama", "--version"],
+cli/godman/ai.py:44:def _run_ollama(prompt: str, system_prompt: Optional[str] = None) -> tuple[bool, str]:
+cli/godman/ai.py:51:    if not _check_ollama_installed():
+cli/godman/ai.py:52:        return False, "Error: ollama is not installed or not in PATH.\nPlease install from: https://ollama.ai"
+cli/godman/ai.py:61:            ["ollama", "run", "godman-raw"],
+cli/godman/ai.py:95:    success, output = _run_ollama(prompt)
+cli/godman/ai.py:142:    success, output = _run_ollama(file_prompt, system_prompt=system_prompt)
+cli/godman/ai.py:162:    if not _check_ollama_installed():
+cli/godman/ai.py:163:        console.print("[red]Error: ollama is not installed or not in PATH.[/red]")
+cli/godman/ai.py:164:        console.print("[red]Please install from: https://ollama.ai[/red]")
+cli/godman/ai.py:182:            success, output = _run_ollama(prompt)
+godman_ai/llm/utils.py:12:        A list of model names reported by `ollama list`.
+godman_ai/llm/utils.py:15:        RuntimeError: If the ollama binary is missing or the command fails.
+godman_ai/llm/utils.py:19:            ["ollama", "list"],
+godman_ai/llm/utils.py:25:        raise RuntimeError("ollama binary not found on PATH") from exc
+godman_ai/llm/utils.py:28:        raise RuntimeError(f"'ollama list' failed: {stderr}") from exc
+godman_ai/diagnostics/llm_health.py:45:def _kill_ollama_processes() -> bool:
+godman_ai/diagnostics/llm_health.py:46:    """Kill all existing ollama processes safely."""
+godman_ai/diagnostics/llm_health.py:48:        # Find ollama processes
+godman_ai/diagnostics/llm_health.py:50:            ["pgrep", "-f", "ollama"],
+godman_ai/diagnostics/llm_health.py:70:        console.print(f"[yellow]Warning: Could not kill ollama processes: {e}[/yellow]")
+godman_ai/diagnostics/llm_health.py:74:def _start_ollama_serve() -> bool:
+godman_ai/diagnostics/llm_health.py:75:    """Start ollama serve as background process."""
+godman_ai/diagnostics/llm_health.py:78:            ["ollama", "serve"],
+godman_ai/diagnostics/llm_health.py:93:        console.print(f"[red]Failed to start ollama: {e}[/red]")
+godman_ai/diagnostics/llm_health.py:151:        - ollama_online: bool
+godman_ai/diagnostics/llm_health.py:160:        "ollama_online": False,
+godman_ai/diagnostics/llm_health.py:168:        # Step 1: Kill existing ollama processes
+godman_ai/diagnostics/llm_health.py:170:        _kill_ollama_processes()
+godman_ai/diagnostics/llm_health.py:173:        # Step 2: Start ollama serve
+godman_ai/diagnostics/llm_health.py:175:        if not _start_ollama_serve():
+godman_ai/diagnostics/llm_health.py:179:        health_status["ollama_online"] = True
+godman_ai/diagnostics/llm_health.py:231:            health_status["ollama_online"] and
+godman_ai/llm/interface.py:38:        # Use minimal invocation: `ollama run MODEL`, pass prompt via stdin.
+godman_ai/llm/interface.py:40:            ["ollama", "run", model_id],
+godman_ai/llm/interface.py:47:        raise RuntimeError("ollama binary not found on PATH") from exc
+godman_ai/llm/interface.py:50:        raise RuntimeError(f"ollama failed for model '{model_name}': {stderr}") from exc
+godman_ai/diagnostics/installer.py:43:            ["ollama", "list"],
+godman_ai/diagnostics/installer.py:60:                    ["ollama", "pull", model],
+godman_ai/diagnostics/installer.py:93:            f"  Ollama online: {result['ollama_online']}\n"
+
+
+### OPENAI ###
+scripts/audit_snapshot.py:193:            "openai": "OPENAI",
+ocr/llm_extractor.py:26:    api_key = os.getenv('OPENAI_API_KEY')
+ocr/llm_extractor.py:28:        raise RuntimeError('OPENAI_API_KEY not set in environment')
+ocr/llm_extractor.py:37:            model=os.getenv('OPENAI_MODEL','gpt-4o-mini'),
+ocr/enhanced_extractor.py:80:        self.api_key = api_key or os.getenv('OPENAI_API_KEY')
+ocr/enhanced_extractor.py:81:        self.model = model or os.getenv('OPENAI_MODEL', 'gpt-4o-mini')
+ocr/enhanced_extractor.py:84:            raise RuntimeError('OPENAI_API_KEY not set in environment')
+
+
+### MODEL_REGISTRY ###
+scripts/audit_snapshot.py:194:            "model_registry": "MODEL_REGISTRY",
+godman_ai/llm/registry.py:5:MODEL_REGISTRY = {
+godman_ai/llm/registry.py:17:    return [name for name in MODEL_REGISTRY if name in installed]
+godman_ai/llm/interface.py:5:from .registry import MODEL_REGISTRY
+godman_ai/llm/interface.py:13:        model_name: Key in MODEL_REGISTRY.
+godman_ai/llm/interface.py:24:    config = MODEL_REGISTRY.get(model_name)
+godman_ai/llm/engine.py:4:from .registry import MODEL_REGISTRY, available_models
+godman_ai/llm/engine.py:32:        if target_model not in MODEL_REGISTRY:
+godman_ai/llm/engine.py:38:        return list(MODEL_REGISTRY.keys())
+godman_ai/llm/engine.py:51:        if model not in MODEL_REGISTRY:
+
+
+### RESPONSES_API ###
+scripts/audit_snapshot.py:195:            "responses_api": "Responses",
+
+
+### CODEX ###
+scripts/audit_snapshot.py:196:            "codex": "CODEX_",
+cli/codex_runner.py:16:CODEX_DIR = REPO_ROOT / ".codex"
+cli/codex_runner.py:17:AGENTS_PATH = CODEX_DIR / "AGENTS.md"
+cli/codex_runner.py:18:TOOLS_PATH = CODEX_DIR / "tools.json"
+cli/codex_runner.py:20:MODEL = os.getenv("CODEX_MODEL", "gpt-5.1-codex")
+cli/codex_runner.py:21:DEBUG = os.getenv("CODEX_DEBUG", "0") == "1"
+cli/codex_runner.py:22:MAX_STEPS = int(os.getenv("CODEX_MAX_STEPS", "25"))
+cli/codex_runner.py:23:MAX_FILE_CHARS = int(os.getenv("CODEX_MAX_FILE_CHARS", "200000"))  # ~200KB
+cli/codex_runner.py:145:    allow_escalation = os.getenv("CODEX_ALLOW_ESCALATION", "0") == "1"
+cli/codex_runner.py:150:            f"Set CODEX_ALLOW_ESCALATION=1 to allow. justification={justification!r}"
+cli/codex_runner.py:472:        f"Exceeded max tool loop steps ({MAX_STEPS}). Set CODEX_MAX_STEPS higher."
+
+================================================================================
+END OF SNAPSHOT
+================================================================================
