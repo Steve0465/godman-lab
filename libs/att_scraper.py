@@ -181,12 +181,28 @@ class ATTClient:
         try:
             self._ensure_logged_in()
             
-            # Navigate to outages page
-            self.page.goto("https://www.att.com/outages/", wait_until="networkidle")
+            # Navigate to outages page (use domcontentloaded instead of networkidle)
+            self.page.goto("https://www.att.com/outages/", wait_until="domcontentloaded", timeout=60000)
             logger.info("Navigated to outages page")
             
-            # Wait for page to fully load
-            self.page.wait_for_load_state("networkidle", timeout=15000)
+            # Wait for page to be interactive
+            self.page.wait_for_load_state("domcontentloaded", timeout=30000)
+            logger.info("Page DOM loaded")
+            
+            # Click "Sign in" button to see account-specific outages
+            try:
+                sign_in_button = self.page.query_selector("a:has-text('Sign in'), button:has-text('Sign in')")
+                if sign_in_button:
+                    logger.info("Clicking Sign in button to view account outages")
+                    sign_in_button.click()
+                    self.page.wait_for_load_state("domcontentloaded", timeout=30000)
+                    logger.info("Signed in to view account outages")
+            except Exception as e:
+                logger.warning(f"Could not click sign in button (may already be authenticated): {e}")
+            
+            # Wait a bit for dynamic content to load
+            import time
+            time.sleep(2)
             
             status_data = {
                 "network_status": "unknown",
@@ -194,17 +210,29 @@ class ATTClient:
                 "repair_tickets": [],
                 "case_numbers": [],
                 "service_region": None,
-                "timestamp": None
+                "timestamp": None,
+                "raw_content": None
             }
+            
+            # Get all text content for analysis
+            try:
+                page_text = self.page.inner_text("body")
+                status_data["raw_content"] = page_text[:500]  # First 500 chars for debugging
+                logger.info(f"Page content preview: {page_text[:200]}")
+            except Exception as e:
+                logger.warning(f"Could not get page text: {e}")
             
             # Scrape network status
             try:
-                status_element = self.page.query_selector("[data-testid='network-status'], .network-status, text=/no outages|service normal/i")
-                if status_element:
-                    status_data["network_status"] = status_element.inner_text().strip()
-                    logger.info(f"Network status: {status_data['network_status']}")
+                # Look for status indicators
+                if "no outages" in self.page.content().lower():
+                    status_data["network_status"] = "No outages detected"
+                elif "outage" in self.page.content().lower():
+                    status_data["network_status"] = "Possible outage detected"
+                    
+                logger.info(f"Network status: {status_data['network_status']}")
             except Exception as e:
-                logger.warning(f"Could not find network status: {e}")
+                logger.warning(f"Could not determine network status: {e}")
             
             # Scrape outages
             try:
@@ -228,13 +256,13 @@ class ATTClient:
             except Exception as e:
                 logger.warning(f"Could not scrape repair tickets: {e}")
             
-            # Scrape case numbers
+            # Scrape case numbers (look for actual case number patterns)
             try:
-                case_pattern = r"(?:Case|Ticket|Reference)\s*#?\s*:?\s*([A-Z0-9\-]+)"
+                case_pattern = r"(?:Case|Ticket|Reference|Repair)\s*#?\s*:?\s*([A-Z]{2,}\d{6,}|\d{10,})"
                 page_content = self.page.content()
                 import re
                 matches = re.findall(case_pattern, page_content, re.IGNORECASE)
-                status_data["case_numbers"] = list(set(matches))
+                status_data["case_numbers"] = list(set(matches)) if matches else []
                 logger.info(f"Found {len(status_data['case_numbers'])} case numbers")
             except Exception as e:
                 logger.warning(f"Could not extract case numbers: {e}")
