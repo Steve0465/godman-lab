@@ -1,8 +1,11 @@
 import json
 import logging
 import os
+import random
+import time
 from pathlib import Path
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, List
+from functools import wraps
 
 from playwright.sync_api import sync_playwright, Browser, BrowserContext, Page, TimeoutError as PlaywrightTimeoutError
 
@@ -12,42 +15,137 @@ from libs.credentials import get_att_credentials
 logger = logging.getLogger(__name__)
 
 
+def retry_on_failure(max_attempts=3, backoff_base=2.0):
+    """Decorator to retry function calls with exponential backoff."""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            for attempt in range(max_attempts):
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    if attempt == max_attempts - 1:
+                        raise
+                    wait_time = backoff_base ** attempt + random.uniform(0, 1)
+                    logger.warning(f"Attempt {attempt + 1} failed: {e}. Retrying in {wait_time:.2f}s...")
+                    time.sleep(wait_time)
+            return None
+        return wrapper
+    return decorator
+
+
 class ATTClient:
     """AT&T web scraper client using Playwright."""
     
-    def __init__(self, headless: bool = True):
+    def __init__(self, headless: bool = True, enable_har: bool = False):
         """
         Initialize the AT&T client.
         
         Args:
             headless: Run browser in headless mode
+            enable_har: Enable network traffic recording (HAR)
         """
         logger.info("Initializing AT&T client")
         self.headless = headless
+        self.enable_har = enable_har
         self.playwright = None
         self.browser: Optional[Browser] = None
         self.context: Optional[BrowserContext] = None
         self.page: Optional[Page] = None
         self.credentials = get_att_credentials()
         self.cookie_file = Path(".cache/att_cookies.json")
+        self.har_file = Path(".cache/att_network.har")
+        self.api_urls_file = Path(".cache/att_api_urls.json")
         self.cookie_file.parent.mkdir(exist_ok=True)
+        self.captured_api_urls: List[str] = []
         
         self._launch_browser()
     
     def _launch_browser(self):
-        """Launch Playwright browser."""
+        """Launch Playwright browser with stealth configuration."""
         try:
             self.playwright = sync_playwright().start()
-            self.browser = self.playwright.chromium.launch(headless=self.headless)
-            self.context = self.browser.new_context(
-                viewport={"width": 1920, "height": 1080},
-                user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            
+            # Launch with stealth settings
+            self.browser = self.playwright.chromium.launch(
+                headless=self.headless,
+                args=[
+                    '--disable-blink-features=AutomationControlled',
+                    '--disable-dev-shm-usage',
+                    '--no-sandbox'
+                ]
             )
+            
+            # Randomize viewport for stealth
+            viewport_width = random.randint(1280, 1920)
+            viewport_height = random.randint(720, 1080)
+            
+            # Context with stealth settings and optional HAR recording
+            context_options = {
+                "viewport": {"width": viewport_width, "height": viewport_height},
+                "user_agent": self._get_random_user_agent(),
+                "locale": "en-US",
+                "timezone_id": "America/New_York",
+                "color_scheme": "light",
+                "extra_http_headers": {
+                    "Accept-Language": "en-US,en;q=0.9",
+                    "Accept-Encoding": "gzip, deflate, br",
+                    "DNT": "1",
+                    "Connection": "keep-alive",
+                    "Upgrade-Insecure-Requests": "1"
+                }
+            }
+            
+            # Enable HAR recording if requested
+            if self.enable_har:
+                context_options["record_har_path"] = str(self.har_file)
+                logger.info(f"HAR recording enabled: {self.har_file}")
+            
+            self.context = self.browser.new_context(**context_options)
+            
+            # Add stealth scripts
+            self.context.add_init_script("""
+                Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+                Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3, 4, 5]});
+                Object.defineProperty(navigator, 'languages', {get: () => ['en-US', 'en']});
+                window.chrome = {runtime: {}};
+            """)
+            
             self.page = self.context.new_page()
-            logger.info("Browser launched successfully")
+            
+            # Setup network request interceptor for API discovery
+            self._setup_network_interceptor()
+            
+            logger.info(f"Browser launched successfully (viewport: {viewport_width}x{viewport_height})")
         except Exception as e:
             logger.error(f"Failed to launch browser: {e}")
             raise
+    
+    def _get_random_user_agent(self) -> str:
+        """Get a randomized realistic user agent."""
+        agents = [
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:121.0) Gecko/20100101 Firefox/121.0"
+        ]
+        return random.choice(agents)
+    
+    def _setup_network_interceptor(self):
+        """Setup network request interceptor to capture API URLs."""
+        def log_request(route, request):
+            url = request.url
+            method = request.method
+            
+            # Capture API endpoints
+            if any(keyword in url.lower() for keyword in ['api', 'graphql', 'account', 'service', 'status', 'outage']):
+                if url not in self.captured_api_urls:
+                    self.captured_api_urls.append(url)
+                    logger.debug(f"Captured API URL: {method} {url}")
+            
+            route.continue_()
+        
+        self.page.route("**/*", log_request)
     
     def load_session(self) -> bool:
         """
@@ -71,6 +169,51 @@ class ATTClient:
             logger.warning(f"Failed to load session cookies: {e}")
             return False
     
+    def validate_session(self) -> bool:
+        """
+        Validate if current session is still active.
+        
+        Returns:
+            True if session is valid, False otherwise
+        """
+        try:
+            logger.info("Validating session...")
+            
+            # Try to access account page
+            response = self.page.goto("https://www.att.com/my/", wait_until="domcontentloaded", timeout=15000)
+            
+            if not response:
+                logger.warning("No response from session validation")
+                return False
+            
+            # Wait a bit for redirects
+            time.sleep(2)
+            
+            current_url = self.page.url
+            page_content = self.page.content().lower()
+            
+            # Check if we're on a login page
+            if "signin.att.com" in current_url or "login" in current_url:
+                logger.info("Session expired - redirected to login page")
+                return False
+            
+            # Check for login form elements
+            if "user id" in page_content and "continue" in page_content:
+                logger.info("Session expired - login form detected")
+                return False
+            
+            # Check for authenticated content
+            if any(keyword in page_content for keyword in ["my account", "account overview", "billing"]):
+                logger.info("Session is valid - authenticated content detected")
+                return True
+            
+            logger.warning("Session validation inconclusive")
+            return False
+            
+        except Exception as e:
+            logger.error(f"Session validation failed: {e}")
+            return False
+    
     def login(self, wait_for_mfa: bool = True):
         """
         Login to AT&T account.
@@ -88,10 +231,13 @@ class ATTClient:
             self.page.goto("https://www.att.com/my/#/login", wait_until="networkidle")
             logger.info("Navigated to login page")
             
-            # Wait for and fill username (User ID field)
+            # Wait for and fill username (User ID field) with realistic typing
             self.page.wait_for_selector("#userID", timeout=15000)
-            self.page.fill("#userID", self.credentials["username"])
+            self._human_type("#userID", self.credentials["username"])
             logger.info("Entered username")
+            
+            # Small delay before clicking
+            time.sleep(random.uniform(0.5, 1.5))
             
             # Click Continue button (first step)
             self.page.click("button:has-text('Continue')")
@@ -99,8 +245,11 @@ class ATTClient:
             
             # Wait for password field to appear (second step)
             self.page.wait_for_selector("#password", timeout=15000)
-            self.page.fill("#password", self.credentials["password"])
+            self._human_type("#password", self.credentials["password"])
             logger.info("Entered password")
+            
+            # Small delay before clicking
+            time.sleep(random.uniform(0.5, 1.5))
             
             # Submit login (Sign in button)
             self.page.click("button:has-text('Sign in')")
@@ -131,6 +280,12 @@ class ATTClient:
             logger.error(f"Login failed: {e}")
             raise
     
+    def _human_type(self, selector: str, text: str):
+        """Type text with human-like delays."""
+        self.page.fill(selector, "")  # Clear first
+        for char in text:
+            self.page.type(selector, char, delay=random.uniform(50, 150))
+    
     def _save_cookies(self):
         """Save session cookies to file."""
         try:
@@ -141,24 +296,140 @@ class ATTClient:
         except Exception as e:
             logger.warning(f"Failed to save cookies: {e}")
     
+    def _save_api_urls(self):
+        """Save captured API URLs to file."""
+        try:
+            if self.captured_api_urls:
+                with open(self.api_urls_file, "w") as f:
+                    json.dump({
+                        "urls": self.captured_api_urls,
+                        "timestamp": time.time()
+                    }, f, indent=2)
+                logger.info(f"Saved {len(self.captured_api_urls)} API URLs to {self.api_urls_file}")
+        except Exception as e:
+            logger.warning(f"Failed to save API URLs: {e}")
+    
+    @retry_on_failure(max_attempts=2, backoff_base=1.5)
     def _ensure_logged_in(self):
-        """Ensure user is logged in, attempt login if not."""
+        """Ensure user is logged in with session validation and auto re-login."""
         # Try loading saved session first
-        if not self.load_session():
+        session_loaded = self.load_session()
+        
+        if not session_loaded:
             logger.info("No saved session, performing fresh login")
             self.login()
-        else:
-            # Verify session is still valid
+            return
+        
+        # Validate the loaded session
+        if self.validate_session():
+            logger.info("Session validated successfully")
+            return
+        
+        # Session invalid, clear cookies and re-login
+        logger.info("Session invalid, clearing cookies and re-authenticating")
+        try:
+            self.context.clear_cookies()
+            if self.cookie_file.exists():
+                self.cookie_file.unlink()
+        except Exception as e:
+            logger.warning(f"Error clearing cookies: {e}")
+        
+        self.login()
+    
+    @retry_on_failure(max_attempts=2, backoff_base=2.0)
+    def get_account_dashboard(self) -> Dict[str, Any]:
+        """
+        Get AT&T account dashboard information.
+        
+        Returns:
+            Dictionary containing account overview, services, and status
+            
+        Raises:
+            Exception: If dashboard retrieval fails
+        """
+        logger.info("Getting AT&T account dashboard")
+        
+        try:
+            self._ensure_logged_in()
+            
+            # Navigate to account overview/dashboard
+            logger.info("Navigating to account dashboard")
+            self.page.goto("https://www.att.com/my/", wait_until="domcontentloaded", timeout=60000)
+            
+            # Wait for dynamic content
+            time.sleep(3)
+            
+            # Try to find and click account or services link
             try:
-                self.page.goto("https://www.att.com/my/", timeout=10000)
-                if "login" in self.page.url.lower():
-                    logger.info("Session expired, performing fresh login")
-                    self.login()
-                else:
-                    logger.info("Session is valid")
+                account_link = self.page.query_selector("a[href*='account'], a[href*='overview'], a:has-text('Account')")
+                if account_link:
+                    logger.info("Clicking account overview link")
+                    account_link.click()
+                    self.page.wait_for_load_state("domcontentloaded", timeout=30000)
+                    time.sleep(2)
             except Exception as e:
-                logger.warning(f"Session validation failed: {e}, performing fresh login")
-                self.login()
+                logger.debug(f"Could not click account link: {e}")
+            
+            dashboard_data = {
+                "account_status": "unknown",
+                "services": [],
+                "alerts": [],
+                "current_url": self.page.url,
+                "timestamp": None
+            }
+            
+            # Get page content
+            try:
+                page_text = self.page.inner_text("body")
+                dashboard_data["page_preview"] = page_text[:1000]
+                logger.debug(f"Dashboard preview: {page_text[:300]}")
+            except Exception as e:
+                logger.warning(f"Could not get page text: {e}")
+            
+            # Look for service status indicators
+            try:
+                if "no issues" in self.page.content().lower() or "service is working" in self.page.content().lower():
+                    dashboard_data["account_status"] = "All services operational"
+                elif "issue" in self.page.content().lower() or "problem" in self.page.content().lower():
+                    dashboard_data["account_status"] = "Service issues detected"
+            except Exception as e:
+                logger.warning(f"Could not determine account status: {e}")
+            
+            # Try to extract service information
+            try:
+                service_elements = self.page.query_selector_all("[class*='service'], [class*='product'], [data-testid*='service']")
+                for elem in service_elements[:10]:
+                    text = elem.inner_text().strip()
+                    if text and len(text) > 10:
+                        dashboard_data["services"].append(text)
+                logger.info(f"Found {len(dashboard_data['services'])} services")
+            except Exception as e:
+                logger.warning(f"Could not extract services: {e}")
+            
+            # Look for alerts or notifications
+            try:
+                alert_elements = self.page.query_selector_all("[class*='alert'], [class*='notification'], [role='alert']")
+                for elem in alert_elements[:5]:
+                    text = elem.inner_text().strip()
+                    if text:
+                        dashboard_data["alerts"].append(text)
+                logger.info(f"Found {len(dashboard_data['alerts'])} alerts")
+            except Exception as e:
+                logger.warning(f"Could not extract alerts: {e}")
+            
+            # Add timestamp
+            from datetime import datetime
+            dashboard_data["timestamp"] = datetime.utcnow().isoformat() + "Z"
+            
+            # Save captured API URLs
+            self._save_api_urls()
+            
+            logger.info("Successfully retrieved account dashboard")
+            return dashboard_data
+            
+        except Exception as e:
+            logger.error(f"Failed to get account dashboard: {e}")
+            raise
     
     def get_status(self) -> Dict[str, Any]:
         """
@@ -292,6 +563,9 @@ class ATTClient:
         logger.info("Closing AT&T client")
         
         try:
+            # Save API URLs before closing
+            self._save_api_urls()
+            
             if self.page:
                 self.page.close()
             if self.context:
