@@ -7,6 +7,7 @@ from cli.godman import sync as sync_cli
 from cli.godman import tools as tools_cli
 from cli.godman import ai as ai_cli
 from cli.godman import health as health_cli
+from cli.godman import att as att_cli
 
 app = typer.Typer(help="Godman Automation Lab CLI.")
 console = Console()
@@ -22,6 +23,9 @@ app.add_typer(ai_cli.ai_app, name="ai")
 
 # Mount the health Typer app under: godman health ...
 app.add_typer(health_cli.app, name="health")
+
+# Mount the att Typer app under: godman att ...
+app.add_typer(att_cli.app, name="att")
 
 
 @app.command()
