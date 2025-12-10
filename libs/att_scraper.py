@@ -88,21 +88,22 @@ class ATTClient:
             self.page.goto("https://www.att.com/my/#/login", wait_until="networkidle")
             logger.info("Navigated to login page")
             
-            # Wait for and fill username
-            self.page.wait_for_selector("#userName", timeout=10000)
-            self.page.fill("#userName", self.credentials["username"])
+            # Wait for and fill username (User ID field)
+            self.page.wait_for_selector("#userID", timeout=15000)
+            self.page.fill("#userID", self.credentials["username"])
             logger.info("Entered username")
             
-            # Click continue or submit
-            self.page.click("button[type='submit']")
+            # Click Continue button (first step)
+            self.page.click("button:has-text('Continue')")
+            logger.info("Clicked Continue button")
             
-            # Wait for password field
-            self.page.wait_for_selector("#password", timeout=10000)
+            # Wait for password field to appear (second step)
+            self.page.wait_for_selector("#password", timeout=15000)
             self.page.fill("#password", self.credentials["password"])
             logger.info("Entered password")
             
-            # Submit login
-            self.page.click("button[type='submit']")
+            # Submit login (Sign in button)
+            self.page.click("button:has-text('Sign in')")
             
             # Check for MFA
             try:
