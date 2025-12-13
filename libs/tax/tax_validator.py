@@ -1,6 +1,19 @@
 """Tax archive validator module.
 
 Validates tax archive structure, detects duplicates, and identifies issues.
+
+Directory Exclusions:
+    Top-level directories in EXCLUDED_TOP_LEVEL_DIRS are completely skipped
+    during scanning. Files under these directories will not appear as orphans,
+    warnings, or in any validation results. This is useful for:
+    - Metadata folders (_metadata, .metadata)
+    - Version control (.git, .svn)
+    - Build artifacts (__pycache__, .pytest_cache)
+    - System folders (.DS_Store parent directories)
+    
+    Excluded directories are checked at the top level of the archive only.
+    Nested directories with similar names are not automatically excluded.
+
 See TAX_VALIDATOR_IMPLEMENTATION.md for specifications.
 """
 
@@ -26,6 +39,22 @@ ALLOWED_CATEGORIES = {
     "personal"
 }
 
+# Top-level directories to exclude from validation
+# Files under these directories are completely ignored and won't appear as orphans
+EXCLUDED_TOP_LEVEL_DIRS = {
+    "_metadata",
+    "metadata",
+    ".git",
+    ".svn",
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".tox",
+    "node_modules",
+    ".venv",
+    "venv"
+}
+
 
 class TaxValidator:
     """Validates tax archive structure and identifies issues.
@@ -36,6 +65,12 @@ class TaxValidator:
     - Orphaned file detection
     - iCloud placeholder detection
     - Misplaced file detection
+    
+    Directory Exclusions:
+    - Top-level directories in EXCLUDED_TOP_LEVEL_DIRS are skipped entirely
+    - Files under excluded directories don't appear in validation results
+    - No orphan warnings generated for excluded files
+    - Useful for metadata, version control, and build artifacts
     
     Uses single directory walk for efficiency and streaming MD5 computation
     for large file safety.
@@ -59,14 +94,21 @@ class TaxValidator:
         - File size from stat
         - MD5 hash computed in streaming fashion
         
+        Files under excluded directories (EXCLUDED_TOP_LEVEL_DIRS) are skipped
+        entirely and will not appear in the results.
+        
         Returns:
-            List of TaxFileRecord objects for all files in archive
+            List of TaxFileRecord objects for all non-excluded files in archive
         """
         records = []
         
         # Single directory walk using rglob
         for file_path in self.root_path.rglob("*"):
             if not file_path.is_file():
+                continue
+            
+            # Skip excluded directories
+            if self._is_excluded(file_path):
                 continue
             
             # Get relative path for cleaner records
@@ -219,6 +261,41 @@ class TaxValidator:
         report.valid = error_count == 0
         
         return report
+    
+    def _is_excluded(self, file_path: Path) -> bool:
+        """Check if a file is under an excluded top-level directory.
+        
+        Files under directories in EXCLUDED_TOP_LEVEL_DIRS are completely
+        skipped during validation. This prevents metadata, version control,
+        and build artifact directories from appearing as orphans.
+        
+        Only checks top-level directories relative to root_path. Nested
+        directories with similar names are not automatically excluded.
+        
+        Args:
+            file_path: Absolute path to file
+            
+        Returns:
+            True if file is under an excluded directory
+        
+        Examples:
+            root/metadata/file.txt -> True (excluded)
+            root/2024/receipts/file.txt -> False (not excluded)
+            root/2024/metadata/file.txt -> False (only top-level excluded)
+        """
+        try:
+            rel_path = file_path.relative_to(self.root_path)
+            
+            # Check if first path component is in excluded set
+            if rel_path.parts:
+                top_level_dir = rel_path.parts[0]
+                return top_level_dir in EXCLUDED_TOP_LEVEL_DIRS
+                
+        except ValueError:
+            # Path is not relative to root_path
+            pass
+        
+        return False
     
     def _infer_year(self, file_path: Path) -> int | None:
         """Infer tax year from file path.
