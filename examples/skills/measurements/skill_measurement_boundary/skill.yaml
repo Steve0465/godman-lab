@@ -1,0 +1,9 @@
+name: skill_measurement_boundary
+version: "0.1.0"
+description: Infer boundary segments from AB points
+entrypoint: examples.skills.measurements.skill_measurement_boundary.main:run
+inputs:
+  - ab_points
+outputs:
+  - boundaries
+permissions: []

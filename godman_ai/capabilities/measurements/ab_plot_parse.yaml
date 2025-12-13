@@ -1,0 +1,10 @@
+id: capability.ab_plot_parse
+type: TOOL
+name: AB Plot Parse
+description: Normalize AB plot data into structured coordinates.
+input_types: ["text"]
+output_types: ["ab_data"]
+tags: ["measurements", "ab_plot"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

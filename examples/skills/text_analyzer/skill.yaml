@@ -1,0 +1,9 @@
+name: text_analyzer
+version: "0.1.0"
+description: Simple text analyzer skill
+entrypoint: examples.skills.text_analyzer.main:analyze
+inputs:
+  - text
+outputs:
+  - summary
+permissions: []

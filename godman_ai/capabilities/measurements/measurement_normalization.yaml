@@ -1,0 +1,10 @@
+id: capability.measurement_normalization
+type: TOOL
+name: Measurement Normalization
+description: Normalize measurement units and labels.
+input_types: ["ab_points"]
+output_types: ["normalized"]
+tags: ["measurements", "normalize"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

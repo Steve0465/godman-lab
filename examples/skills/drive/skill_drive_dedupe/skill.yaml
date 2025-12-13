@@ -1,0 +1,9 @@
+name: skill_drive_dedupe
+version: "0.1.0"
+description: Detect duplicate files by name/hash heuristics
+entrypoint: examples.skills.drive.skill_drive_dedupe.main:run
+inputs:
+  - metadata
+outputs:
+  - duplicate
+permissions: []

@@ -1,0 +1,10 @@
+id: capability.expense_category_mapping
+type: TOOL
+name: Expense Category Mapping
+description: Map vendor or text to expense categories.
+input_types: ["text", "vendor"]
+output_types: ["category"]
+tags: ["receipts", "category"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

@@ -1,0 +1,10 @@
+id: capability.job_next_actions
+type: TOOL
+name: Job Next Actions
+description: Suggest next actions for a job card.
+input_types: ["job_type", "card"]
+output_types: ["actions"]
+tags: ["trello", "planning"]
+permissions: low
+risk_level: low
+related_model_tags: ["high_quality"]

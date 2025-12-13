@@ -1,0 +1,9 @@
+name: skill_receipt_ocr
+version: "0.1.0"
+description: OCR receipt images or PDFs
+entrypoint: examples.skills.receipts.skill_receipt_ocr.main:run
+inputs:
+  - path
+outputs:
+  - text
+permissions: []

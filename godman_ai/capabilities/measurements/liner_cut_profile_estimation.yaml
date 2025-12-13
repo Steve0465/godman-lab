@@ -1,0 +1,10 @@
+id: capability.liner_cut_profile_estimation
+type: TOOL
+name: Liner Cut Profile Estimation
+description: Estimate liner cut profile and tolerances.
+input_types: ["ab_data", "depth_profile"]
+output_types: ["cut_profile"]
+tags: ["measurements", "liner"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

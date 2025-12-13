@@ -1,0 +1,10 @@
+id: capability.drive_metadata_enrichment
+type: TOOL
+name: Drive Metadata Enrichment
+description: Enrich files with inferred metadata.
+input_types: ["file"]
+output_types: ["metadata"]
+tags: ["drive", "metadata"]
+permissions: low
+risk_level: low
+related_model_tags: ["high_quality"]

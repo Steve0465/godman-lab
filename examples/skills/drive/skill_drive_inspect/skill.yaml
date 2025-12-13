@@ -1,0 +1,9 @@
+name: skill_drive_inspect
+version: "0.1.0"
+description: Inspect drive file metadata/content (mock)
+entrypoint: examples.skills.drive.skill_drive_inspect.main:run
+inputs:
+  - file
+outputs:
+  - metadata
+permissions: []

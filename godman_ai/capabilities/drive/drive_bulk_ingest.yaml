@@ -1,0 +1,10 @@
+id: capability.drive_bulk_ingest
+type: TOOL
+name: Drive Bulk Ingest
+description: Ingest batches of files with classification and normalization.
+input_types: ["files"]
+output_types: ["ingest_result"]
+tags: ["drive", "ingest"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

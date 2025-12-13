@@ -1,0 +1,10 @@
+id: capability.manufacturing_readiness
+type: TOOL
+name: Manufacturing Readiness
+description: Decide if measurements are ready for manufacturing.
+input_types: ["risk", "issues"]
+output_types: ["ready"]
+tags: ["measurements", "manufacturing"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

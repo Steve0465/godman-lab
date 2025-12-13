@@ -1,0 +1,5 @@
+steps:
+  - name: fetch
+    action: set:board=mock
+  - name: summarize
+    action: set:summary=ok

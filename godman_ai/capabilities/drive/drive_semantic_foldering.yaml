@@ -1,0 +1,10 @@
+id: capability.drive_semantic_foldering
+type: TOOL
+name: Drive Semantic Foldering
+description: Suggest folders based on content semantics.
+input_types: ["classification", "metadata"]
+output_types: ["folder"]
+tags: ["drive", "folder"]
+permissions: low
+risk_level: low
+related_model_tags: ["high_quality"]

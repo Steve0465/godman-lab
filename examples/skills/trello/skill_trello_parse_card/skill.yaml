@@ -1,0 +1,11 @@
+name: skill_trello_parse_card
+version: "0.1.0"
+description: Parse a Trello card into structured fields
+entrypoint: examples.skills.trello.skill_trello_parse_card.main:run
+inputs:
+  - card
+outputs:
+  - title
+  - description
+  - checklists
+permissions: []

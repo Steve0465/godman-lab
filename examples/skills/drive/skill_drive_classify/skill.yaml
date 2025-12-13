@@ -1,0 +1,9 @@
+name: skill_drive_classify
+version: "0.1.0"
+description: Classify drive files for routing
+entrypoint: examples.skills.drive.skill_drive_classify.main:run
+inputs:
+  - metadata
+outputs:
+  - classification
+permissions: []

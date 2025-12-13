@@ -1,0 +1,10 @@
+id: capability.cover_layout_planning
+type: TOOL
+name: Cover Layout Planning
+description: Plan layout and seams for safety covers.
+input_types: ["ab_data", "shape"]
+output_types: ["layout"]
+tags: ["measurements", "layout"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

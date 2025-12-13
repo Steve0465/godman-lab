@@ -1,0 +1,10 @@
+id: capability.job_address_extraction
+type: TOOL
+name: Job Address Extraction
+description: Extract address/location details from card text.
+input_types: ["description"]
+output_types: ["address"]
+tags: ["trello", "address"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

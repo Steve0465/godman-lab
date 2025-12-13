@@ -1,0 +1,15 @@
+steps:
+  - name: ocr
+    action: set:text=ok
+  - name: parse
+    action: set:table=[]
+  - name: ab_points
+    action: set:ab_points=[]
+  - name: normalize
+    action: set:normalized=[]
+  - name: boundaries
+    action: set:boundaries=[]
+  - name: fitment
+    action: set:fitment=READY
+  - name: summary
+    action: set:summary=ok

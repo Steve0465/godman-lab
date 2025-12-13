@@ -1,0 +1,10 @@
+id: capability.drive_filename_normalization
+type: TOOL
+name: Drive Filename Normalization
+description: Normalize filenames before storage.
+input_types: ["filename"]
+output_types: ["filename"]
+tags: ["drive", "normalize"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

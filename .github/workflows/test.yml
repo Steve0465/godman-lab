@@ -1,0 +1,101 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install .[dev]
+
+      - name: Lint
+        run: |
+          ruff check .
+
+      - name: Run tests (source)
+        env:
+          GODMAN_LOG_DIR: ${{ github.workspace }}/logs
+        run: |
+          mkdir -p "$GODMAN_LOG_DIR"
+          pytest -q
+
+      - name: Build sdist + wheel
+        run: |
+          python -m build --sdist --wheel
+
+      - name: Install wheel and validate (imports/skills/plugins/workflow/orchestrator)
+        env:
+          GODMAN_LOG_DIR: ${{ github.workspace }}/logs
+        run: |
+          python -m venv /tmp/godman_wheel_env
+          source /tmp/godman_wheel_env/bin/activate
+          pip install dist/*.whl
+          python - <<'PY'
+import asyncio
+import pathlib
+from textwrap import dedent
+
+import godman_ai
+from godman_ai.skills import load_all_skills
+from godman_ai.plugins import load_plugins
+from godman_ai.tools import register_function_tool
+from godman_ai.workflows import Context, load_workflow_from_yaml
+from godman_ai.orchestrator import Orchestrator
+
+print("Version:", godman_ai.__version__)
+skills = load_all_skills("examples/skills")
+plugins = load_plugins("examples/plugins")
+tmp = pathlib.Path("wheel_workflow.yaml")
+tmp.write_text(
+    dedent(
+        """
+        steps:
+          - name: set-flag
+            action: "set:flag=ok"
+          - name: check-flag
+            when: flag
+            action: noop
+        """
+    ).strip() + "\n",
+    encoding="utf-8",
+)
+wf = load_workflow_from_yaml(tmp)
+ctx = Context()
+wf.run(ctx)
+assert ctx.get("flag") == "ok"
+
+register_function_tool("echo_tool", lambda text: f"echo:{text}", "echo tool")
+orch = Orchestrator()
+async def _run():
+    result = await orch.run_async("echo this text")
+    assert result["ok"]
+    return result
+asyncio.run(_run())
+tmp.unlink(missing_ok=True)
+print("Wheel import + skills/plugins + workflow/orchestrator smoke: OK")
+PY
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-v1.0.0
+          path: logs

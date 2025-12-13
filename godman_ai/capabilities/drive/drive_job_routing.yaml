@@ -1,0 +1,10 @@
+id: capability.drive_job_routing
+type: TOOL
+name: Drive Job Routing
+description: Route files to job folders based on semantics.
+input_types: ["classification"]
+output_types: ["job_folder"]
+tags: ["drive", "job"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

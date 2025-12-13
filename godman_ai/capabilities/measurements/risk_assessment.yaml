@@ -1,0 +1,10 @@
+id: capability.risk_assessment
+type: TOOL
+name: Measurement Risk Assessment
+description: Assess risks based on measurement quality and gaps.
+input_types: ["ab_points", "boundaries"]
+output_types: ["risk"]
+tags: ["measurements", "risk"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

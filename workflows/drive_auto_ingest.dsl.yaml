@@ -1,0 +1,11 @@
+steps:
+  - name: inspect
+    action: set:metadata={}
+  - name: classify
+    action: set:classification=general
+  - name: normalize
+    action: set:filename=file.txt
+  - name: route
+    action: set:route=Inbox
+  - name: store
+    action: set:stored=ok

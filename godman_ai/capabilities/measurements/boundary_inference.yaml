@@ -1,0 +1,10 @@
+id: capability.boundary_inference
+type: TOOL
+name: Boundary Inference
+description: Infer pool boundary segments from AB points.
+input_types: ["ab_points"]
+output_types: ["boundaries"]
+tags: ["measurements", "boundary"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

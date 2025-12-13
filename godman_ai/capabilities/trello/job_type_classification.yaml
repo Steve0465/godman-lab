@@ -1,0 +1,10 @@
+id: capability.job_type_classification
+type: TOOL
+name: Job Type Classification
+description: Classify Trello job cards into job types.
+input_types: ["title", "description"]
+output_types: ["job_type"]
+tags: ["trello", "classification"]
+permissions: low
+risk_level: low
+related_model_tags: ["high_quality"]

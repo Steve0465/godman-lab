@@ -1,0 +1,10 @@
+id: capability.statement_aggregation
+type: WORKFLOW_TEMPLATE
+name: Statement Aggregation
+description: Aggregate monthly receipts into statements.
+input_types: ["folder"]
+output_types: ["statement"]
+tags: ["receipts", "aggregation"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

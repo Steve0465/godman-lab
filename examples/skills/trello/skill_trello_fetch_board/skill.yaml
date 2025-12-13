@@ -1,0 +1,9 @@
+name: skill_trello_fetch_board
+version: "0.1.0"
+description: Fetch a mock Trello board snapshot
+entrypoint: examples.skills.trello.skill_trello_fetch_board.main:run
+inputs:
+  - board_id
+outputs:
+  - board
+permissions: []

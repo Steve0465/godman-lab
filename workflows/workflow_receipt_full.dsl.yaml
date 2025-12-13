@@ -1,0 +1,9 @@
+steps:
+  - name: ocr
+    action: set:text=ocr_done
+  - name: parse
+    action: set:parsed=yes
+  - name: classify
+    action: set:category=Meals
+  - name: normalize
+    action: set:filename=normalized.pdf

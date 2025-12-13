@@ -1,0 +1,11 @@
+name: skill_receipt_parse
+version: "0.1.0"
+description: Parse receipt text into structured fields
+entrypoint: examples.skills.receipts.skill_receipt_parse.main:run
+inputs:
+  - text
+outputs:
+  - vendor
+  - amount
+  - date
+permissions: []

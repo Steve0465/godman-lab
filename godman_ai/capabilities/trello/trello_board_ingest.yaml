@@ -1,0 +1,10 @@
+id: capability.trello_board_ingest
+type: TOOL
+name: Trello Board Ingest
+description: Fetch and ingest a Trello board snapshot (mock/local).
+input_types: ["board_id"]
+output_types: ["board"]
+tags: ["trello", "ingest", "board"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

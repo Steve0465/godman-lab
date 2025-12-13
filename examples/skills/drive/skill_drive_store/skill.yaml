@@ -1,0 +1,10 @@
+name: skill_drive_store
+version: "0.1.0"
+description: Store file in mock drive
+entrypoint: examples.skills.drive.skill_drive_store.main:run
+inputs:
+  - file
+  - route
+outputs:
+  - stored
+permissions: []

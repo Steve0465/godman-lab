@@ -1,0 +1,10 @@
+id: capability.receipt_date_inference
+type: TOOL
+name: Receipt Date Inference
+description: Infer transaction date from receipt text and filename.
+input_types: ["text", "filename"]
+output_types: ["date"]
+tags: ["receipts", "date"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

@@ -1,0 +1,5 @@
+steps:
+  - name: collect
+    action: set:collected=true
+  - name: aggregate
+    action: set:statement=ready

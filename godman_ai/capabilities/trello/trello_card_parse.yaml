@@ -1,0 +1,10 @@
+id: capability.trello_card_parse
+type: TOOL
+name: Trello Card Parse
+description: Parse Trello card data into structured fields.
+input_types: ["card"]
+output_types: ["title", "description", "checklists"]
+tags: ["trello", "parse"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

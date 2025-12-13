@@ -1,0 +1,10 @@
+id: capability.tax_year_routing
+type: TOOL
+name: Tax Year Routing
+description: Route receipts to the correct tax year based on dates.
+input_types: ["date"]
+output_types: ["tax_year"]
+tags: ["receipts", "tax"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

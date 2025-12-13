@@ -1,0 +1,40 @@
+Generated: 2025-12-10 22:09:12
+======================================================================
+TAX ARCHIVE VALIDATION SUMMARY
+======================================================================
+
+Integrity Score: 94.0/100 ⚠ GOOD
+
+Archive Statistics:
+  Root: /Users/stephengodman/Desktop/TAX_MASTER_ARCHIVE
+  Total files: 63
+    - Data files: 44
+    - Metadata files: 15
+  Total size: 288.5 MB
+
+Files by Year:
+  2023: 13 files
+  2024: 28 files
+  2025: 3 files
+
+✓ No zero-byte files
+
+Manifest Status: ❌ ISSUES
+Hash Index Status: ❌ ISSUES
+
+Problems Found (5):
+  • Extra file not in manifest: Invoice_Stephanie_Wilbanks_02152025.pdf
+  • Extra file not in manifest: UtilityBillingStatement_t0039213_052024.pdf
+  • Extra file not in manifest: Some 2025bank statements.pdf
+  • HASH_INDEX.md found but no hashes parsed
+  • Placeholder suspect: MISSING_FILES.md
+
+======================================================================
+
+Detailed Problem List:
+----------------------------------------------------------------------
+1. Extra file not in manifest: Invoice_Stephanie_Wilbanks_02152025.pdf
+2. Extra file not in manifest: UtilityBillingStatement_t0039213_052024.pdf
+3. Extra file not in manifest: Some 2025bank statements.pdf
+4. HASH_INDEX.md found but no hashes parsed
+5. Placeholder suspect: MISSING_FILES.md

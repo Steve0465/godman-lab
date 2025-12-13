@@ -10,17 +10,32 @@ Trust Boundaries:
     - All operations are wrapped in error handling to prevent exceptions
 
 Classification Strategy:
-    1. Extract text from PDF using pdfplumber (no OCR)
-    2. Scan for date patterns (multiple formats supported)
-    3. Look for category keywords in content
-    4. Calculate confidence based on evidence strength
-    5. Return structured result with evidence trail
+    1. Extract text from first 2 pages of PDF using pdfplumber (no OCR)
+    2. Normalize whitespace and clean text
+    3. Scan for explicit tax year patterns ("Tax Year 2024", "For the year ended...")
+    4. Fall back to dominant year frequency in content
+    5. Reject future years beyond current_year + 1
+    6. Look for known document type keywords (1099, W-2, etc.)
+    7. Calculate confidence based on evidence strength
 
-Confidence Levels:
-    0.0 - 0.3: Low confidence (weak or ambiguous evidence)
-    0.4 - 0.6: Medium confidence (single strong signal)
-    0.7 - 0.9: High confidence (multiple signals agree)
-    1.0:       Maximum confidence (definitive evidence)
+Confidence Scoring:
+    Start at 0.0, add points for:
+    - Explicit year phrase (e.g., "Tax Year 2024"): +0.5
+    - Known document type (e.g., "Form 1099"): +0.3
+    - Filename match: +0.1
+    - Multiple corroborating signals increase confidence
+    - Capped at 1.0
+
+Year Inference:
+    - Prefer explicit "Tax Year" language
+    - Fall back to dominant year in date patterns
+    - Reject years > current_year + 1
+
+Category Inference:
+    - 1099 → taxes
+    - W-2 → taxes
+    - Insurance → insurance
+    - Statement / Ending Balance → bank_statements
 
 Note: Currently only supports PDF files. Other formats return None results.
 """
@@ -56,67 +71,74 @@ class TaxClassificationResult(BaseModel):
     evidence: list[str] = []
 
 
-# Category keywords mapping (keyword -> category, priority weight)
+# Category keywords mapping (keyword -> category, confidence boost)
 CATEGORY_KEYWORDS = {
-    # Receipts
-    'receipt': ('receipts', 2.0),
-    'purchase': ('receipts', 1.5),
-    'transaction': ('receipts', 1.0),
-    'subtotal': ('receipts', 1.5),
-    'total paid': ('receipts', 2.0),
-    'payment received': ('receipts', 2.0),
+    # Tax forms - highest priority
+    'form 1099': ('taxes', 0.3),
+    '1099': ('taxes', 0.3),
+    'form w-2': ('taxes', 0.3),
+    'w-2': ('taxes', 0.3),
+    'form w2': ('taxes', 0.3),
+    'w2': ('taxes', 0.3),
+    'form 1040': ('taxes', 0.3),
+    '1040': ('taxes', 0.3),
+    'tax return': ('taxes', 0.3),
+    'tax form': ('taxes', 0.3),
+    'irs': ('taxes', 0.2),
     
-    # Invoices
-    'invoice': ('invoices', 3.0),
-    'invoice number': ('invoices', 3.5),
-    'invoice date': ('invoices', 3.0),
-    'bill to': ('invoices', 2.5),
-    'remit payment': ('invoices', 2.0),
-    'due date': ('invoices', 1.5),
-    'amount due': ('invoices', 2.0),
+    # Insurance
+    'insurance': ('insurance', 0.3),
+    'insurance policy': ('insurance', 0.3),
+    'policy number': ('insurance', 0.2),
+    'coverage': ('insurance', 0.2),
+    'premium': ('insurance', 0.2),
+    'insured': ('insurance', 0.2),
     
     # Bank statements
-    'bank statement': ('bank_statements', 4.0),
-    'statement period': ('bank_statements', 3.5),
-    'account summary': ('bank_statements', 3.0),
-    'beginning balance': ('bank_statements', 3.0),
-    'ending balance': ('bank_statements', 3.0),
-    'deposits': ('bank_statements', 2.0),
-    'withdrawals': ('bank_statements', 2.0),
-    'checking account': ('bank_statements', 2.5),
-    'savings account': ('bank_statements', 2.5),
+    'bank statement': ('bank_statements', 0.3),
+    'statement period': ('bank_statements', 0.3),
+    'ending balance': ('bank_statements', 0.3),
+    'beginning balance': ('bank_statements', 0.3),
+    'account summary': ('bank_statements', 0.2),
+    'deposits': ('bank_statements', 0.2),
+    'withdrawals': ('bank_statements', 0.2),
+    'checking account': ('bank_statements', 0.2),
+    'savings account': ('bank_statements', 0.2),
     
     # Statements (generic)
-    'statement': ('statements', 1.5),
-    'account statement': ('statements', 2.5),
-    'monthly statement': ('statements', 2.0),
-    'billing statement': ('statements', 2.0),
+    'statement': ('statements', 0.2),
+    'account statement': ('statements', 0.2),
+    'monthly statement': ('statements', 0.2),
+    'billing statement': ('statements', 0.2),
     
-    # Forms
-    'form 1099': ('forms', 4.0),
-    'form w-2': ('forms', 4.0),
-    'form 1040': ('forms', 4.0),
-    'tax form': ('forms', 3.5),
-    'irs': ('forms', 2.0),
+    # Receipts
+    'receipt': ('receipts', 0.3),
+    'purchase': ('receipts', 0.2),
+    'total paid': ('receipts', 0.2),
+    'payment received': ('receipts', 0.2),
+    
+    # Invoices
+    'invoice': ('invoices', 0.3),
+    'invoice number': ('invoices', 0.3),
+    'invoice date': ('invoices', 0.2),
+    'bill to': ('invoices', 0.2),
+    'amount due': ('invoices', 0.2),
     
     # Contracts
-    'contract': ('contracts', 3.0),
-    'agreement': ('contracts', 2.5),
-    'terms and conditions': ('contracts', 2.0),
-    'hereby agree': ('contracts', 2.5),
-    'signatures': ('contracts', 1.5),
+    'contract': ('contracts', 0.3),
+    'agreement': ('contracts', 0.3),
+    'terms and conditions': ('contracts', 0.2),
     
     # Correspondence
-    'dear': ('correspondence', 1.5),
-    'sincerely': ('correspondence', 1.5),
-    'letter': ('correspondence', 2.0),
-    're:': ('correspondence', 2.0),
+    'dear': ('correspondence', 0.2),
+    'sincerely': ('correspondence', 0.2),
+    'letter': ('correspondence', 0.2),
     
     # Reports
-    'report': ('reports', 2.0),
-    'annual report': ('reports', 3.0),
-    'quarterly report': ('reports', 3.0),
-    'financial report': ('reports', 3.0),
+    'annual report': ('reports', 0.3),
+    'quarterly report': ('reports', 0.3),
+    'financial report': ('reports', 0.3),
+    'report': ('reports', 0.2),
 }
 
 
@@ -218,10 +240,10 @@ class TaxClassifier:
         return self._classify_text(rel_path, text, path.name)
     
     def _extract_pdf_text(self, path: Path) -> Optional[str]:
-        """Extract text from PDF file.
+        """Extract text from first 2 pages of PDF file.
         
-        Uses pdfplumber to extract text from all pages. Catches all exceptions
-        to prevent errors from propagating.
+        Uses pdfplumber to extract text. Normalizes whitespace.
+        Catches all exceptions to prevent errors from propagating.
         
         Trust Boundaries:
         - May fail on encrypted PDFs
@@ -233,19 +255,27 @@ class TaxClassifier:
             path: Path to PDF file
             
         Returns:
-            Extracted text or None if extraction failed
+            Extracted and normalized text or None if extraction failed
         """
         try:
             text_parts = []
             
             with pdfplumber.open(path) as pdf:
-                # Extract from first 5 pages max (performance optimization)
-                for page in pdf.pages[:5]:
+                # Extract from first 2 pages only
+                for page in pdf.pages[:2]:
                     page_text = page.extract_text()
                     if page_text:
                         text_parts.append(page_text)
             
-            return "\n".join(text_parts) if text_parts else None
+            if not text_parts:
+                return None
+            
+            # Join and normalize whitespace
+            text = "\n".join(text_parts)
+            text = re.sub(r'\s+', ' ', text)  # Collapse whitespace
+            text = re.sub(r'\n+', '\n', text)  # Collapse newlines
+            
+            return text.strip()
             
         except Exception as e:
             # Catch all exceptions (encrypted, malformed, etc.)
@@ -254,238 +284,216 @@ class TaxClassifier:
     def _classify_text(self, rel_path: str, text: str, filename: str) -> TaxClassificationResult:
         """Classify document based on text content and filename.
         
-        Analyzes text for date patterns and category keywords. Combines
-        multiple signals to determine confidence level.
+        Confidence Scoring:
+        - Start at 0.0
+        - Explicit year phrase: +0.5
+        - Known document type: +0.3
+        - Filename match: +0.1
+        - Multiple corroborating signals increase confidence
         
         Args:
             rel_path: Relative path for result
-            text: Extracted text content
+            text: Extracted and normalized text content
             filename: Original filename
             
         Returns:
             TaxClassificationResult with inferred metadata
         """
         evidence = []
+        confidence = 0.0
         
         # Normalize text for analysis
         text_lower = text.lower()
-        text_sample = text[:3000]  # First ~3000 chars for efficiency
+        filename_lower = filename.lower()
         
         # Infer year
-        year, year_evidence = self._infer_year(text_sample, filename)
+        year, year_evidence, year_conf_boost = self._infer_year(text_lower, filename_lower)
         evidence.extend(year_evidence)
+        confidence += year_conf_boost
         
         # Infer category
-        category, category_evidence, category_score = self._infer_category(text_lower, filename)
+        category, category_evidence, cat_conf_boost = self._infer_category(text_lower, filename_lower)
         evidence.extend(category_evidence)
+        confidence += cat_conf_boost
         
-        # Calculate confidence
-        confidence = self._calculate_confidence(year, year_evidence, category, category_score)
+        # Cap confidence at 1.0
+        confidence = min(confidence, 1.0)
         
         return TaxClassificationResult(
             path=rel_path,
             inferred_year=year,
             inferred_category=category,
-            confidence=confidence,
+            confidence=round(confidence, 2),
             evidence=evidence
         )
     
-    def _infer_year(self, text: str, filename: str) -> tuple[Optional[int], list[str]]:
+    def _infer_year(self, text_lower: str, filename_lower: str) -> tuple[Optional[int], list[str], float]:
         """Infer year from text content and filename.
         
-        Looks for various date patterns and extracts year. Prefers dates that
-        appear to be statement dates, invoice dates, or transaction dates.
+        Detects patterns:
+        - "Tax Year 2024" (explicit - highest priority)
+        - "For the year ended December 31, 2023"
+        - "2022 Form 1099"
+        - Dominant year frequency in dates
         
-        Args:
-            text: Text content to analyze
-            filename: Original filename
-            
-        Returns:
-            Tuple of (year, evidence_list)
-        """
-        evidence = []
-        years_found = []
-        
-        # Pattern 1: Statement period dates (high confidence)
-        period_pattern = r'(?:statement period|period|date range)[:\s]+.*?(\d{4})'
-        for match in re.finditer(period_pattern, text, re.IGNORECASE):
-            year = int(match.group(1))
-            if 2000 <= year <= 2030:
-                years_found.append((year, 3, "statement period"))
-        
-        # Pattern 2: Invoice/Statement dates
-        date_labels = [
-            'invoice date', 'statement date', 'date', 'transaction date',
-            'billing date', 'issue date', 'due date'
-        ]
-        
-        for label in date_labels:
-            # MM/DD/YYYY or MM-DD-YYYY
-            pattern = rf'{label}[:\s]+(\d{{1,2}})[/-](\d{{1,2}})[/-](\d{{4}})'
-            for match in re.finditer(pattern, text, re.IGNORECASE):
-                year = int(match.group(3))
-                if 2000 <= year <= 2030:
-                    years_found.append((year, 2, f"{label}"))
-            
-            # YYYY-MM-DD
-            pattern = rf'{label}[:\s]+(\d{{4}})[/-](\d{{1,2}})[/-](\d{{1,2}})'
-            for match in re.finditer(pattern, text, re.IGNORECASE):
-                year = int(match.group(1))
-                if 2000 <= year <= 2030:
-                    years_found.append((year, 2, f"{label}"))
-        
-        # Pattern 3: Standalone dates anywhere in text
-        # MM/DD/YYYY
-        for match in re.finditer(r'\b(\d{1,2})[/-](\d{1,2})[/-](\d{4})\b', text):
-            year = int(match.group(3))
-            if 2000 <= year <= 2030:
-                years_found.append((year, 1, "date found"))
-        
-        # YYYY-MM-DD
-        for match in re.finditer(r'\b(\d{4})[/-](\d{1,2})[/-](\d{1,2})\b', text):
-            year = int(match.group(1))
-            if 2000 <= year <= 2030:
-                years_found.append((year, 1, "date found"))
-        
-        # Pattern 4: Year in filename
-        filename_year_match = re.search(r'(20\d{2})', filename)
-        if filename_year_match:
-            year = int(filename_year_match.group(1))
-            if 2000 <= year <= 2030:
-                years_found.append((year, 1.5, "filename"))
-        
-        # Pattern 5: Tax year mentions
-        for match in re.finditer(r'tax year[:\s]+(\d{4})', text, re.IGNORECASE):
-            year = int(match.group(1))
-            if 2000 <= year <= 2030:
-                years_found.append((year, 3, "tax year"))
-        
-        if not years_found:
-            evidence.append("No year found in content")
-            return None, evidence
-        
-        # Sort by priority and get most likely year
-        years_found.sort(key=lambda x: x[1], reverse=True)
-        
-        # Use highest priority year
-        best_year, priority, source = years_found[0]
-        
-        # Count occurrences of this year
-        year_count = sum(1 for y, _, _ in years_found if y == best_year)
-        
-        evidence.append(f"Year {best_year} found from {source} ({year_count} occurrence(s))")
-        
-        return best_year, evidence
-    
-    def _infer_category(self, text_lower: str, filename: str) -> tuple[Optional[str], list[str], float]:
-        """Infer category from text content and filename.
-        
-        Scans for category-specific keywords and calculates weighted score
-        for each category. Returns highest scoring category.
+        Rejects future years beyond current_year + 1.
         
         Args:
             text_lower: Lowercase text content
-            filename: Original filename
+            filename_lower: Lowercase filename
             
         Returns:
-            Tuple of (category, evidence_list, score)
+            Tuple of (year, evidence_list, confidence_boost)
         """
         evidence = []
-        category_scores = {}
+        confidence_boost = 0.0
+        current_year = datetime.now().year
+        max_allowed_year = current_year + 1
         
-        # Check filename first
-        filename_lower = filename.lower()
-        for keyword, (category, weight) in CATEGORY_KEYWORDS.items():
+        # Pattern 1: Explicit "Tax Year YYYY" (highest priority)
+        tax_year_match = re.search(r'tax year[:\s]+(\d{4})', text_lower)
+        if tax_year_match:
+            year = int(tax_year_match.group(1))
+            if year <= max_allowed_year:
+                evidence.append(f"Explicit 'Tax Year {year}' found in text")
+                confidence_boost += 0.5  # Explicit year phrase
+                return year, evidence, confidence_boost
+            else:
+                evidence.append(f"Future year {year} rejected (beyond {max_allowed_year})")
+        
+        # Pattern 2: "For the year ended [Month] [Day], YYYY"
+        year_ended_match = re.search(r'for the year ended\s+\w+\s+\d{1,2},?\s+(\d{4})', text_lower)
+        if year_ended_match:
+            year = int(year_ended_match.group(1))
+            if year <= max_allowed_year:
+                evidence.append(f"Year {year} from 'year ended' phrase")
+                confidence_boost += 0.5  # Explicit year phrase
+                return year, evidence, confidence_boost
+        
+        # Pattern 3: "YYYY Form 1099" or "Form 1099-MISC YYYY"
+        form_year_match = re.search(r'(?:(\d{4})\s+form\s+\d{4}|form\s+\d{4}(?:-\w+)?\s+(\d{4}))', text_lower)
+        if form_year_match:
+            year = int(form_year_match.group(1) or form_year_match.group(2))
+            if year <= max_allowed_year:
+                evidence.append(f"Year {year} from tax form header")
+                confidence_boost += 0.4  # Form year is reliable
+                return year, evidence, confidence_boost
+        
+        # Pattern 4: Collect all years from various date patterns
+        year_frequencies = {}
+        
+        # MM/DD/YYYY or MM-DD-YYYY
+        for match in re.finditer(r'\b(\d{1,2})[/-](\d{1,2})[/-](\d{4})\b', text_lower):
+            year = int(match.group(3))
+            if 2000 <= year <= max_allowed_year:
+                year_frequencies[year] = year_frequencies.get(year, 0) + 1
+        
+        # YYYY-MM-DD or YYYY/MM/DD
+        for match in re.finditer(r'\b(\d{4})[/-](\d{1,2})[/-](\d{1,2})\b', text_lower):
+            year = int(match.group(1))
+            if 2000 <= year <= max_allowed_year:
+                year_frequencies[year] = year_frequencies.get(year, 0) + 1
+        
+        # Standalone 4-digit years (be conservative)
+        for match in re.finditer(r'\b(20[0-2]\d)\b', text_lower):
+            year = int(match.group(1))
+            if 2000 <= year <= max_allowed_year:
+                year_frequencies[year] = year_frequencies.get(year, 0) + 0.5  # Lower weight
+        
+        # Pattern 5: Year in filename
+        filename_year_match = re.search(r'(20\d{2})', filename_lower)
+        if filename_year_match:
+            year = int(filename_year_match.group(1))
+            if year <= max_allowed_year:
+                year_frequencies[year] = year_frequencies.get(year, 0) + 2  # Higher weight
+                evidence.append(f"Year {year} in filename")
+                confidence_boost += 0.1  # Filename match
+        
+        # Find dominant year by frequency
+        if year_frequencies:
+            dominant_year = max(year_frequencies, key=year_frequencies.get)
+            count = year_frequencies[dominant_year]
+            evidence.append(f"Year {dominant_year} is dominant (appears {count:.0f} times)")
+            return dominant_year, evidence, confidence_boost
+        
+        evidence.append("No valid year found in content")
+        return None, evidence, 0.0
+    
+    def _infer_category(self, text_lower: str, filename_lower: str) -> tuple[Optional[str], list[str], float]:
+        """Infer category from text content and filename.
+        
+        Category inference rules:
+        - 1099 / W-2 → taxes
+        - Insurance → insurance
+        - Statement / Ending Balance → bank_statements
+        
+        Known document type adds +0.3 confidence boost.
+        Filename match adds +0.1 confidence boost.
+        
+        Args:
+            text_lower: Lowercase text content
+            filename_lower: Lowercase filename
+            
+        Returns:
+            Tuple of (category, evidence_list, confidence_boost)
+        """
+        evidence = []
+        confidence_boost = 0.0
+        matched_keywords = []
+        
+        # Check for known document types first (highest priority)
+        known_types = {
+            '1099': 'taxes',
+            'w-2': 'taxes',
+            'w2': 'taxes',
+            'form 1099': 'taxes',
+            'form w-2': 'taxes',
+            'form w2': 'taxes',
+            '1040': 'taxes',
+            'tax return': 'taxes',
+        }
+        
+        for keyword, category in known_types.items():
+            if keyword in text_lower:
+                evidence.append(f"Known document type '{keyword}' → {category}")
+                confidence_boost += 0.3  # Known document type
+                matched_keywords.append((keyword, category, 0.3))
+        
+        # Check filename for known types
+        for keyword, category in known_types.items():
             if keyword in filename_lower:
-                category_scores[category] = category_scores.get(category, 0.0) + weight * 1.5
+                evidence.append(f"Known type '{keyword}' in filename → {category}")
+                confidence_boost += 0.1  # Filename match (additional)
+                if (keyword, category, 0.3) not in matched_keywords:
+                    matched_keywords.append((keyword, category, 0.3))
+        
+        # If we found known types, use the first one
+        if matched_keywords:
+            _, category, _ = matched_keywords[0]
+            return category, evidence, confidence_boost
+        
+        # Fall back to keyword scanning
+        category_boosts = {}
+        
+        # Check filename for category keywords
+        for keyword, (category, boost) in CATEGORY_KEYWORDS.items():
+            if keyword in filename_lower:
+                category_boosts[category] = category_boosts.get(category, 0.0) + boost + 0.1
                 evidence.append(f"Keyword '{keyword}' in filename → {category}")
         
-        # Scan text for keywords
-        for keyword, (category, weight) in CATEGORY_KEYWORDS.items():
+        # Scan text for category keywords
+        for keyword, (category, boost) in CATEGORY_KEYWORDS.items():
             if keyword in text_lower:
-                category_scores[category] = category_scores.get(category, 0.0) + weight
+                category_boosts[category] = category_boosts.get(category, 0.0) + boost
         
-        if not category_scores:
+        if not category_boosts:
             evidence.append("No category keywords found")
             return None, evidence, 0.0
         
         # Get best category
-        best_category = max(category_scores, key=category_scores.get)
-        best_score = category_scores[best_category]
+        best_category = max(category_boosts, key=category_boosts.get)
+        total_boost = category_boosts[best_category]
         
-        # Normalize score to 0-1 range (scores typically 2-15)
-        normalized_score = min(best_score / 10.0, 1.0)
+        evidence.append(f"Category '{best_category}' (confidence boost: +{total_boost:.2f})")
         
-        evidence.append(f"Category '{best_category}' (score: {best_score:.1f})")
-        
-        # Show other strong contenders
-        other_categories = [cat for cat in category_scores if cat != best_category and category_scores[cat] > 2.0]
-        if other_categories:
-            other_str = ", ".join(f"{cat}({category_scores[cat]:.1f})" for cat in other_categories[:2])
-            evidence.append(f"Other possibilities: {other_str}")
-        
-        return best_category, evidence, normalized_score
-    
-    def _calculate_confidence(
-        self,
-        year: Optional[int],
-        year_evidence: list[str],
-        category: Optional[str],
-        category_score: float
-    ) -> float:
-        """Calculate overall confidence score.
-        
-        Combines year and category confidence into overall score.
-        
-        Confidence Calculation:
-        - No year or category: 0.0
-        - Only year: 0.3-0.5 (depends on evidence)
-        - Only category: 0.3-0.6 (depends on score)
-        - Both: 0.5-0.9 (combined strength)
-        
-        Args:
-            year: Inferred year (or None)
-            year_evidence: Evidence supporting year
-            category: Inferred category (or None)
-            category_score: Normalized category score
-            
-        Returns:
-            Confidence score 0.0-1.0
-        """
-        if year is None and category is None:
-            return 0.0
-        
-        # Year confidence (based on evidence quality)
-        year_conf = 0.0
-        if year is not None:
-            # Check for high-quality evidence
-            has_statement_period = any('statement period' in e for e in year_evidence)
-            has_labeled_date = any('date' in e and 'found' not in e for e in year_evidence)
-            occurrence_count = sum(1 for e in year_evidence if 'occurrence' in e)
-            
-            if has_statement_period:
-                year_conf = 0.8
-            elif has_labeled_date:
-                year_conf = 0.6
-            else:
-                year_conf = 0.4
-            
-            # Boost if multiple occurrences
-            if occurrence_count > 3:
-                year_conf = min(year_conf + 0.1, 0.9)
-        
-        # Category confidence (based on score)
-        category_conf = category_score if category is not None else 0.0
-        
-        # Combined confidence
-        if year is not None and category is not None:
-            # Both found: weighted average, slightly boosted
-            confidence = (year_conf * 0.5 + category_conf * 0.5) * 1.1
-        elif year is not None:
-            # Only year: use year confidence
-            confidence = year_conf * 0.7
-        else:
-            # Only category: use category confidence
-            confidence = category_conf * 0.8
-        
-        return min(confidence, 1.0)
+        return best_category, evidence, min(total_boost, 0.5)  # Cap category boost at 0.5

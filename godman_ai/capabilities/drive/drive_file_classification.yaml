@@ -1,0 +1,10 @@
+id: capability.drive_file_classification
+type: TOOL
+name: Drive File Classification
+description: Classify drive files by type/content for routing.
+input_types: ["file"]
+output_types: ["classification"]
+tags: ["drive", "classification"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

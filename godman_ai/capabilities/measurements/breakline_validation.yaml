@@ -1,0 +1,10 @@
+id: capability.breakline_validation
+type: TOOL
+name: Breakline Validation
+description: Validate breakline and depth consistency.
+input_types: ["ab_data", "depth_profile"]
+output_types: ["issues"]
+tags: ["measurements", "breakline"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

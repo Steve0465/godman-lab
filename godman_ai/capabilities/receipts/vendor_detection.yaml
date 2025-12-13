@@ -1,0 +1,10 @@
+id: capability.vendor_detection
+type: TOOL
+name: Vendor Detection
+description: Identify vendor names from receipt text.
+input_types: ["text"]
+output_types: ["vendor"]
+tags: ["receipts", "vendor", "classification"]
+permissions: low
+risk_level: low
+related_model_tags: ["high_quality"]

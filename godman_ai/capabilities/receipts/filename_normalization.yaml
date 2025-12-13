@@ -1,0 +1,10 @@
+id: capability.filename_normalization
+type: TOOL
+name: Filename Normalization
+description: Normalize receipt filenames to a consistent pattern.
+input_types: ["filename"]
+output_types: ["filename"]
+tags: ["receipts", "normalize"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

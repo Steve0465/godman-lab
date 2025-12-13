@@ -1,0 +1,10 @@
+id: capability.amount_extraction
+type: TOOL
+name: Amount Extraction
+description: Extract total amounts from receipt text.
+input_types: ["text"]
+output_types: ["amount"]
+tags: ["receipts", "amount"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

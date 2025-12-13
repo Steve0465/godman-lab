@@ -1,0 +1,9 @@
+name: skill_receipt_normalize
+version: "0.1.0"
+description: Normalize receipt filenames
+entrypoint: examples.skills.receipts.skill_receipt_normalize.main:run
+inputs:
+  - filename
+outputs:
+  - filename
+permissions: []

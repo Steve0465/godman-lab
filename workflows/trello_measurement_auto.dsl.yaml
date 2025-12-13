@@ -1,0 +1,5 @@
+steps:
+  - name: fetch_card
+    action: set:card=mock
+  - name: analyze
+    action: set:summary=ok

@@ -1,0 +1,9 @@
+name: skill_measurement_normalize
+version: "0.1.0"
+description: Normalize measurement units and labels
+entrypoint: examples.skills.measurements.skill_measurement_normalize.main:run
+inputs:
+  - ab_points
+outputs:
+  - normalized
+permissions: []

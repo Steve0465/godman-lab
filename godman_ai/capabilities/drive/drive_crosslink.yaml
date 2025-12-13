@@ -1,0 +1,10 @@
+id: capability.drive_crosslink
+type: TOOL
+name: Drive Crosslink
+description: Crosslink drive files with Trello or other systems.
+input_types: ["file", "card"]
+output_types: ["link"]
+tags: ["drive", "crosslink"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

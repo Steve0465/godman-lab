@@ -1,0 +1,10 @@
+id: capability.fitment_check
+type: TOOL
+name: Fitment Check
+description: Check fitment readiness for cover/liner manufacturing.
+input_types: ["normalized", "boundaries"]
+output_types: ["fitment"]
+tags: ["measurements", "fitment"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

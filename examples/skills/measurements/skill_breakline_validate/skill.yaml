@@ -1,0 +1,9 @@
+name: skill_breakline_validate
+version: "0.1.0"
+description: Validate breaklines from boundaries and slope
+entrypoint: examples.skills.measurements.skill_breakline_validate.main:run
+inputs:
+  - boundaries
+outputs:
+  - issues
+permissions: []

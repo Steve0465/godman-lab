@@ -1,0 +1,10 @@
+id: capability.drive_tax_year_routing
+type: TOOL
+name: Drive Tax Year Routing
+description: Route files to correct tax year folders.
+input_types: ["metadata"]
+output_types: ["tax_year"]
+tags: ["drive", "tax"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

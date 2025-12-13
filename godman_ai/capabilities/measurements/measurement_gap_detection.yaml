@@ -1,0 +1,10 @@
+id: capability.measurement_gap_detection
+type: TOOL
+name: Measurement Gap Detection
+description: Detect gaps or missing points in AB measurements.
+input_types: ["ab_data"]
+output_types: ["gaps"]
+tags: ["measurements", "gaps"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

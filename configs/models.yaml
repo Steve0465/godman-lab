@@ -1,0 +1,14 @@
+- id: deepseek-r1:latest
+  provider: local
+  type: chat
+  tags: ["reasoning", "high_quality"]
+  cost_hint: 1.0
+  latency_hint: 1.0
+  enabled: true
+- id: phi4-14b:latest
+  provider: local
+  type: code
+  tags: ["fast", "cheap"]
+  cost_hint: 0.5
+  latency_hint: 0.5
+  enabled: true

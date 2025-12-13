@@ -1,0 +1,11 @@
+name: skill_pool_shape_analyzer
+version: "0.1.0"
+description: Analyze pool shape from AB and depth data
+entrypoint: examples.skills.measurements.skill_pool_shape_analyzer.main:run
+inputs:
+  - ab_data
+  - depth_profile
+outputs:
+  - shape
+  - notes
+permissions: []

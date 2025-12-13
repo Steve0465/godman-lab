@@ -1,0 +1,9 @@
+name: skill_measurement_ocr
+version: "0.1.0"
+description: OCR measurement sheets for safety covers and liners
+entrypoint: examples.skills.measurements.skill_measurement_ocr.main:run
+inputs:
+  - path
+outputs:
+  - text
+permissions: []

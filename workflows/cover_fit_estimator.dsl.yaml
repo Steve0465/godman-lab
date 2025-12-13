@@ -1,0 +1,7 @@
+steps:
+  - name: normalize
+    action: set:normalized=[]
+  - name: boundaries
+    action: set:boundaries=[]
+  - name: fitment
+    action: set:fitment=READY

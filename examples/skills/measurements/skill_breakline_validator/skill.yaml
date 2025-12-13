@@ -1,0 +1,10 @@
+name: skill_breakline_validator
+version: "0.1.0"
+description: Validate breaklines and measurement gaps
+entrypoint: examples.skills.measurements.skill_breakline_validator.main:run
+inputs:
+  - ab_data
+  - shape
+outputs:
+  - issues
+permissions: []

@@ -1,0 +1,10 @@
+name: skill_job_classify
+version: "0.1.0"
+description: Classify Trello job cards
+entrypoint: examples.skills.trello.skill_job_classify.main:run
+inputs:
+  - title
+  - description
+outputs:
+  - job_type
+permissions: []

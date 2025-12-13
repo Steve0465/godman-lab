@@ -1,0 +1,12 @@
+name: skill_manufacturing_risk_assessor
+version: "0.1.0"
+description: Assess manufacturing risk for covers/liners based on measurements
+entrypoint: examples.skills.measurements.skill_manufacturing_risk_assessor.main:run
+inputs:
+  - ab_data
+  - shape
+  - issues
+outputs:
+  - risk_level
+  - reasons
+permissions: []

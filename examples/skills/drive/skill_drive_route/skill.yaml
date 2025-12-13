@@ -1,0 +1,9 @@
+name: skill_drive_route
+version: "0.1.0"
+description: Route drive files to folders
+entrypoint: examples.skills.drive.skill_drive_route.main:run
+inputs:
+  - classification
+outputs:
+  - route
+permissions: []

@@ -1,0 +1,10 @@
+name: skill_measurement_fitment
+version: "0.1.0"
+description: Determine fitment readiness from normalized and boundary data
+entrypoint: examples.skills.measurements.skill_measurement_fitment.main:run
+inputs:
+  - normalized
+  - boundaries
+outputs:
+  - fitment
+permissions: []

@@ -1,0 +1,3 @@
+steps:
+  - name: link
+    action: set:link=ok

@@ -1,0 +1,10 @@
+id: capability.job_duration_estimation
+type: TOOL
+name: Job Duration Estimation
+description: Estimate duration for a job card.
+input_types: ["job_type", "description"]
+output_types: ["duration_hours"]
+tags: ["trello", "duration"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

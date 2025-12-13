@@ -1,0 +1,7 @@
+steps:
+  - name: parse
+    action: set:parsed=true
+  - name: classify
+    action: set:job_type=General
+  - name: materials
+    action: set:materials=list

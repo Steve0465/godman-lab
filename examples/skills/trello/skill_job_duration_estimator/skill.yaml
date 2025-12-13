@@ -1,0 +1,10 @@
+name: skill_job_duration_estimator
+version: "0.1.0"
+description: Estimate job duration from card info
+entrypoint: examples.skills.trello.skill_job_duration_estimator.main:run
+inputs:
+  - job_type
+  - description
+outputs:
+  - duration_hours
+permissions: []

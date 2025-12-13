@@ -1,0 +1,10 @@
+id: capability.slope_estimation
+type: TOOL
+name: Slope Estimation
+description: Estimate slopes/grades from measurement data.
+input_types: ["ab_points", "depth_profile"]
+output_types: ["slope"]
+tags: ["measurements", "slope"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

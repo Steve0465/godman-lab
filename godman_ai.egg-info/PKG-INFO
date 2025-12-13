@@ -1,0 +1,26 @@
+Metadata-Version: 2.4
+Name: godman-ai
+Version: 1.0.0
+Summary: Godman-Lab orchestration, workflows, skills, and plugins.
+Author-email: Godman Lab <dev@godman.ai>
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Classifier: License :: OSI Approved :: MIT License
+Requires-Python: >=3.12
+Description-Content-Type: text/markdown
+Requires-Dist: pyyaml>=6.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.4; extra == "dev"
+Requires-Dist: ruff>=0.1; extra == "dev"
+Requires-Dist: build>=1.0.0; extra == "dev"
+Requires-Dist: fastapi>=0.110; extra == "dev"
+Requires-Dist: httpx>=0.27; extra == "dev"
+Requires-Dist: pandas>=2.0; extra == "dev"
+Provides-Extra: docs
+Requires-Dist: pyyaml>=6.0; extra == "docs"
+Provides-Extra: plugins
+
+# Godman Lab Platform
+
+Async orchestrator, workflow engine, tool runner, skill packaging, and plugin scaffolding for the Godman-Lab stack. See `docs/index.md` for the full documentation set.

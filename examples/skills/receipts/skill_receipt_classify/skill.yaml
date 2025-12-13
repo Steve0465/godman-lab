@@ -1,0 +1,10 @@
+name: skill_receipt_classify
+version: "0.1.0"
+description: Classify receipts into expense categories
+entrypoint: examples.skills.receipts.skill_receipt_classify.main:run
+inputs:
+  - vendor
+  - amount
+outputs:
+  - category
+permissions: []

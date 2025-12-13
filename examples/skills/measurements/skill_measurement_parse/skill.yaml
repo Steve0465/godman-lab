@@ -1,0 +1,9 @@
+name: skill_measurement_parse
+version: "0.1.0"
+description: Parse measurement tables into structured rows
+entrypoint: examples.skills.measurements.skill_measurement_parse.main:run
+inputs:
+  - text
+outputs:
+  - table
+permissions: []

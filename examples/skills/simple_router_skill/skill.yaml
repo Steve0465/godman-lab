@@ -1,0 +1,9 @@
+name: simple_router_skill
+version: "0.1.0"
+description: Demonstrates routing metadata
+entrypoint: examples.skills.simple_router_skill.main:route
+inputs:
+  - query
+outputs:
+  - route
+permissions: []

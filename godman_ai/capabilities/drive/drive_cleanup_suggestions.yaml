@@ -1,0 +1,10 @@
+id: capability.drive_cleanup_suggestions
+type: TOOL
+name: Drive Cleanup Suggestions
+description: Suggest cleanup actions for drive folders.
+input_types: ["folder"]
+output_types: ["actions"]
+tags: ["drive", "cleanup"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

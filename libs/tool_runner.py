@@ -7,12 +7,14 @@ subprocess execution, comprehensive logging, and error handling.
 
 import json
 import logging
-import subprocess
+import os
 import time
 from datetime import datetime
 from functools import wraps
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Union
+
+from libs.security import ProcessSafetyError, run_safe
 
 
 class ToolRunner:
@@ -47,9 +49,11 @@ class ToolRunner:
         
         # Setup logging
         if log_path is None:
-            log_path = str(Path.home() / "godman-lab" / "logs" / "tool_runner.log")
+            base_dir = Path(os.getenv("GODMAN_LOG_DIR", Path(__file__).resolve().parents[1] / "logs"))
+            log_path = base_dir / "tool_runner.log"
         
-        Path(log_path).parent.mkdir(parents=True, exist_ok=True)
+        log_path = Path(log_path)
+        log_path.parent.mkdir(parents=True, exist_ok=True)
         
         self.logger = logging.getLogger("ToolRunner")
         self.logger.setLevel(logging.INFO)
@@ -177,33 +181,17 @@ class ToolRunner:
             
             self.logger.info(f"Executing command: {formatted_command}")
             
-            # Execute command
-            result = subprocess.run(
-                formatted_command,
-                shell=True,
-                capture_output=True,
-                text=True,
-                timeout=timeout
-            )
+            result = run_safe(formatted_command, timeout=timeout)
             
             return {
-                "stdout": result.stdout,
-                "stderr": result.stderr,
-                "returncode": result.returncode,
-                "success": result.returncode == 0
+                "stdout": result.get("stdout", ""),
+                "stderr": result.get("stderr", ""),
+                "returncode": result.get("returncode", -1),
+                "success": result.get("success", False)
             }
         
-        except subprocess.TimeoutExpired as e:
-            self.logger.error(f"Command timeout: {e}")
-            return {
-                "stdout": "",
-                "stderr": f"Command timed out after {timeout} seconds",
-                "returncode": -1,
-                "success": False
-            }
-        
-        except Exception as e:
-            self.logger.error(f"Command execution error: {e}")
+        except ProcessSafetyError as e:
+            self.logger.error(f"Command blocked: {e}")
             return {
                 "stdout": "",
                 "stderr": str(e),

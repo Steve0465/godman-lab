@@ -8,6 +8,17 @@ from cli.godman import tools as tools_cli
 from cli.godman import ai as ai_cli
 from cli.godman import health as health_cli
 from cli.godman import att as att_cli
+from cli.godman import workflows as workflows_cli
+from cli.godman import agents as agents_cli
+from cli.godman import memory as memory_cli
+from cli.godman import models as models_cli
+from cli.godman import capabilities as capabilities_cli
+from cli.godman import receipts as receipts_cli
+from cli.godman import trello as trello_cli
+from cli.godman import trello_analyze as trello_analyze_cli
+from cli.godman import measurements as measurements_cli
+from cli.godman import passwords as passwords_cli
+from cli.godman import drive as drive_cli
 
 app = typer.Typer(help="Godman Automation Lab CLI.")
 console = Console()
@@ -26,6 +37,28 @@ app.add_typer(health_cli.app, name="health")
 
 # Mount the att Typer app under: godman att ...
 app.add_typer(att_cli.app, name="att")
+# Distributed workflows
+app.add_typer(workflows_cli.app, name="workflow")
+# Agents
+app.add_typer(agents_cli.app, name="agent")
+# Memory
+app.add_typer(memory_cli.app, name="memory")
+# Models
+app.add_typer(models_cli.app, name="models")
+# Capabilities
+app.add_typer(capabilities_cli.app, name="capabilities")
+# Receipts
+app.add_typer(receipts_cli.app, name="receipts")
+# Trello
+app.add_typer(trello_cli.app, name="trello")
+# Trello Analysis
+trello_cli.app.add_typer(trello_analyze_cli.app, name="analyze")
+# Measurements
+app.add_typer(measurements_cli.app, name="measures")
+# Drive
+app.add_typer(drive_cli.app, name="drive")
+# Password ingestion
+app.add_typer(passwords_cli.app, name="passwords")
 
 
 @app.command()

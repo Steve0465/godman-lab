@@ -1,0 +1,10 @@
+name: skill_ab_plot_parse
+version: "0.1.0"
+description: Parse AB plot text into normalized coordinates
+entrypoint: examples.skills.measurements.skill_ab_plot_parse.main:run
+inputs:
+  - text
+outputs:
+  - ab_data
+  - gaps
+permissions: []

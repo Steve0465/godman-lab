@@ -1,0 +1,10 @@
+id: capability.manufacturing_risk_assessment
+type: TOOL
+name: Manufacturing Risk Assessment
+description: Assess manufacturing risk based on measurements and tolerances.
+input_types: ["ab_data", "shape", "breaklines"]
+output_types: ["risk"]
+tags: ["measurements", "risk"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

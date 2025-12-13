@@ -1,0 +1,10 @@
+id: capability.job_priority_scoring
+type: TOOL
+name: Job Priority Scoring
+description: Score priority for a job card.
+input_types: ["job_type", "actions", "due_date"]
+output_types: ["priority"]
+tags: ["trello", "priority"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

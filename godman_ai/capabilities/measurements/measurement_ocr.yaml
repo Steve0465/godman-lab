@@ -1,0 +1,10 @@
+id: capability.measurement_ocr
+type: TOOL
+name: Measurement OCR
+description: Extract measurement text from safety cover or liner forms.
+input_types: ["image", "pdf"]
+output_types: ["text"]
+tags: ["measurements", "ocr"]
+permissions: low
+risk_level: low
+related_model_tags: ["vision"]

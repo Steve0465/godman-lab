@@ -1,0 +1,10 @@
+id: capability.depth_profile_analysis
+type: TOOL
+name: Depth Profile Analysis
+description: Analyze depth and breakline profiles for hopper/non-hopper shapes.
+input_types: ["depth_profile"]
+output_types: ["depth_analysis"]
+tags: ["measurements", "depth"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

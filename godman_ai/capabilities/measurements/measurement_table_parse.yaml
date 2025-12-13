@@ -1,0 +1,10 @@
+id: capability.measurement_table_parse
+type: TOOL
+name: Measurement Table Parse
+description: Parse measurement tables into structured rows.
+input_types: ["text"]
+output_types: ["table"]
+tags: ["measurements", "table"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

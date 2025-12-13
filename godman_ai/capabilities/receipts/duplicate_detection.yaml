@@ -1,0 +1,10 @@
+id: capability.duplicate_detection
+type: TOOL
+name: Duplicate Detection
+description: Detect duplicate receipts by filename and amount/date heuristics.
+input_types: ["filename", "amount", "date"]
+output_types: ["duplicate"]
+tags: ["receipts", "duplicate"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

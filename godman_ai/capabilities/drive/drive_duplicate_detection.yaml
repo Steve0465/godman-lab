@@ -1,0 +1,10 @@
+id: capability.drive_duplicate_detection
+type: TOOL
+name: Drive Duplicate Detection
+description: Detect duplicate files by name/hash heuristics.
+input_types: ["file", "metadata"]
+output_types: ["duplicate"]
+tags: ["drive", "dedupe"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

@@ -1,0 +1,13 @@
+steps:
+  - name: ocr
+    action: set:text=measurements
+  - name: ab_parse
+    action: set:ab_data=parsed
+  - name: shape
+    action: set:shape=Rectangle
+  - name: validate
+    action: set:issues=[]
+  - name: risk
+    action: set:risk_level=LOW
+  - name: summary
+    action: set:summary=ok

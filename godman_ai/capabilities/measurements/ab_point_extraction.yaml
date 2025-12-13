@@ -1,0 +1,10 @@
+id: capability.ab_point_extraction
+type: TOOL
+name: AB Point Extraction
+description: Extract AB points from parsed measurement tables.
+input_types: ["table"]
+output_types: ["ab_points"]
+tags: ["measurements", "ab_points"]
+permissions: low
+risk_level: low
+related_model_tags: ["fast"]

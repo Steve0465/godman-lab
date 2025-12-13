@@ -1,0 +1,9 @@
+name: image_metadata_extractor
+version: "0.1.0"
+description: Extracts basic image metadata (stub)
+entrypoint: examples.skills.image_metadata_extractor.main:extract
+inputs:
+  - path
+outputs:
+  - metadata
+permissions: []

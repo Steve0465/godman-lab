@@ -8,9 +8,11 @@ Integrates with OCR results to automatically extract receipt information.
 from datetime import date as date_type
 from decimal import Decimal
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict, Any
 import re
 import csv
+import os
+import shutil
 
 import pandas as pd
 from pydantic import BaseModel, Field, ConfigDict
@@ -373,6 +375,148 @@ def get_receipts_by_date_range(
 def calculate_total(receipts: list[Receipt]) -> Decimal:
     """Calculate total amount across receipts."""
     return sum((r.amount for r in receipts), Decimal('0.00'))
+
+
+def receipt_ingest(
+    pdf_path: Path,
+    ocr_text: str,
+    base_archive: Optional[Path] = None
+) -> Dict[str, Any]:
+    """
+    Ingest a receipt PDF with OCR text into the TAX_MASTER_ARCHIVE structure.
+    
+    Workflow:
+    1. Extract tax year from OCR text
+    2. Build dynamic output paths based on year
+    3. Create necessary directories
+    4. Save OCR text to archive
+    5. Move processed PDF to archive
+    6. Extract receipt data and append to CSV
+    7. Return workflow result with routing info
+    
+    Args:
+        pdf_path: Path to the receipt PDF file
+        ocr_text: OCR extracted text content
+        base_archive: Base path for TAX_MASTER_ARCHIVE (defaults to ~/Desktop/TAX_MASTER_ARCHIVE)
+        
+    Returns:
+        Dictionary with workflow results:
+            - success: bool
+            - year: int (extracted tax year)
+            - paths: dict (all generated paths)
+            - receipt: Receipt object
+            - message: str
+    """
+    # Import extract_tax_year from tax_receipts_processor
+    try:
+        from libs.tax_receipts_processor import extract_tax_year
+    except ImportError:
+        # Fallback if import fails
+        from datetime import datetime
+        def extract_tax_year(text: str) -> int:
+            return datetime.now().year
+    
+    # Step 1: Extract tax year from OCR text
+    year = extract_tax_year(ocr_text)
+    
+    # Step 2: Build dynamic output paths
+    if base_archive is None:
+        base_archive = Path.home() / "Desktop" / "TAX_MASTER_ARCHIVE"
+    
+    year_base = base_archive / str(year)
+    receipts_csv = year_base / "receipts_tax.csv"
+    receipts_processed_dir = year_base / "Receipts" / "processed"
+    ocr_dir = year_base / "OCR_TEXT" / "receipts"
+    
+    paths = {
+        "year_base": year_base,
+        "receipts_csv": receipts_csv,
+        "receipts_processed_dir": receipts_processed_dir,
+        "ocr_dir": ocr_dir
+    }
+    
+    # Step 3: Auto-create folders if they don't exist
+    try:
+        receipts_processed_dir.mkdir(parents=True, exist_ok=True)
+        ocr_dir.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        return {
+            "success": False,
+            "year": year,
+            "paths": paths,
+            "receipt": None,
+            "message": f"Failed to create directories: {str(e)}"
+        }
+    
+    # Step 4: Save OCR text to archive
+    pdf_filename = pdf_path.name
+    ocr_filename = pdf_filename.replace('.pdf', '.txt').replace('.PDF', '.txt')
+    ocr_output_path = ocr_dir / ocr_filename
+    
+    try:
+        ocr_output_path.write_text(ocr_text, encoding='utf-8')
+    except Exception as e:
+        return {
+            "success": False,
+            "year": year,
+            "paths": paths,
+            "receipt": None,
+            "message": f"Failed to save OCR text: {str(e)}"
+        }
+    
+    # Step 5: Move processed PDF to archive
+    pdf_destination = receipts_processed_dir / pdf_filename
+    try:
+        if pdf_path.exists():
+            shutil.move(str(pdf_path), str(pdf_destination))
+        else:
+            # If file doesn't exist, just copy (might already be moved)
+            if not pdf_destination.exists():
+                return {
+                    "success": False,
+                    "year": year,
+                    "paths": paths,
+                    "receipt": None,
+                    "message": f"PDF file not found: {pdf_path}"
+                }
+    except Exception as e:
+        return {
+            "success": False,
+            "year": year,
+            "paths": paths,
+            "receipt": None,
+            "message": f"Failed to move PDF: {str(e)}"
+        }
+    
+    # Step 6: Extract receipt data and append to CSV
+    try:
+        ocr_result = OCRResult(
+            raw_text=ocr_text,
+            confidence=1.0,
+            metadata={'source_file': str(pdf_destination)}
+        )
+        receipt = build_receipt_from_ocr(ocr_result)
+        
+        # Append to year-specific CSV
+        append_receipt(receipts_csv, receipt)
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "year": year,
+            "paths": paths,
+            "receipt": None,
+            "message": f"Failed to process receipt data: {str(e)}"
+        }
+    
+    # Step 7: Return success result
+    return {
+        "success": True,
+        "year": year,
+        "paths": {k: str(v) for k, v in paths.items()},
+        "receipt": receipt,
+        "message": f"Receipt ingested successfully to {year} archive"
+    }
 
 
 if __name__ == '__main__':

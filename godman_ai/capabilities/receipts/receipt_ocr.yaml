@@ -1,0 +1,10 @@
+id: capability.receipt_ocr
+type: TOOL
+name: Receipt OCR
+description: Extract raw text from receipt images or PDFs.
+input_types: ["image", "pdf"]
+output_types: ["text"]
+tags: ["receipts", "ocr", "extraction"]
+permissions: low
+risk_level: low
+related_model_tags: ["vision"]
