@@ -86,16 +86,22 @@ def sync(
     # Display plan summary
     console.print(Panel.fit(
         f"[bold]Sync Plan Summary[/bold]\n\n"
-        f"  Files to copy:   {len(plan.to_copy)}\n"
-        f"  Files to update: {len(plan.to_update)}\n"
-        f"  Files to delete: {len(plan.to_delete)}\n"
-        f"  Total changes:   {len(plan.to_copy) + len(plan.to_update) + len(plan.to_delete)}",
+        f"  Duplicates to move: {len(plan.duplicate_moves)}\n"
+        f"  Files to copy:      {len(plan.to_copy)}\n"
+        f"  Files to update:    {len(plan.to_update)}\n"
+        f"  Files to delete:    {len(plan.to_delete)}\n"
+        f"  Total changes:      {len(plan.duplicate_moves) + len(plan.to_copy) + len(plan.to_update) + len(plan.to_delete)}",
         title="📋 Plan",
         border_style="cyan"
     ))
     
-    if plan.to_copy or plan.to_update or plan.to_delete:
+    if plan.duplicate_moves or plan.to_copy or plan.to_update or plan.to_delete:
         # Show sample operations
+        if plan.duplicate_moves:
+            console.print("\n[bold]Sample Duplicate Move Operations (automatic):[/bold]")
+            for op in plan.duplicate_moves[:5]:
+                console.print(f"  [magenta]⇄[/magenta] {op.source} → {op.destination}")
+        
         if plan.to_copy:
             console.print("\n[bold]Sample Copy Operations:[/bold]")
             for op in plan.to_copy[:5]:
@@ -128,9 +134,13 @@ def sync(
     # Display results
     console.print(Panel.fit(
         f"[bold]Sync Results[/bold]\n\n"
-        f"  Successful:   {result.successful}\n"
-        f"  Failed:       {result.failed}\n"
-        f"  Total:        {result.successful + result.failed}",
+        f"  Duplicates moved: {result.duplicates_moved}\n"
+        f"  Copied:           {result.copied}\n"
+        f"  Updated:          {result.updated}\n"
+        f"  Deleted:          {result.deleted}\n"
+        f"  Successful:       {result.successful}\n"
+        f"  Failed:           {result.failed}\n"
+        f"  Total:            {result.successful + result.failed}",
         title="✓ Complete" if result.failed == 0 else "⚠ Complete with Errors",
         border_style="green" if result.failed == 0 else "yellow"
     ))

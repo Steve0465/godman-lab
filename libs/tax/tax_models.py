@@ -104,10 +104,12 @@ class SyncPlan(BaseModel):
         to_copy: Files that exist in source but not in destination
         to_delete: Paths in destination that should be removed (not in source)
         to_update: Files that exist in both but differ (by size or hash)
+        duplicate_moves: Duplicate files to move to _metadata/duplicates/
     """
     to_copy: list[SyncOperation] = Field(default_factory=list)
     to_delete: list[SyncOperation] = Field(default_factory=list)
     to_update: list[SyncOperation] = Field(default_factory=list)
+    duplicate_moves: list[SyncOperation] = Field(default_factory=list)
 
     def is_empty(self) -> bool:
         """Check if the sync plan contains any actions.
@@ -119,6 +121,7 @@ class SyncPlan(BaseModel):
             len(self.to_copy) == 0 
             and len(self.to_delete) == 0 
             and len(self.to_update) == 0
+            and len(self.duplicate_moves) == 0
         )
 
 
@@ -132,17 +135,19 @@ class SyncResult(BaseModel):
         copied: Number of files successfully copied
         deleted: Number of files/directories successfully deleted
         updated: Number of files successfully updated
+        duplicates_moved: Number of duplicate files moved to _metadata/duplicates/
         errors: List of error messages encountered during sync
     """
     copied: int = Field(ge=0, default=0)
     deleted: int = Field(ge=0, default=0)
     updated: int = Field(ge=0, default=0)
+    duplicates_moved: int = Field(ge=0, default=0)
     errors: list[str] = Field(default_factory=list)
     
     @property
     def successful(self) -> int:
         """Total successful operations."""
-        return self.copied + self.deleted + self.updated
+        return self.copied + self.deleted + self.updated + self.duplicates_moved
     
     @property
     def failed(self) -> int:

@@ -2,7 +2,20 @@
 
 Synchronizes tax archive structure by moving files to canonical locations.
 Detects duplicates and prepares safe sync plans.
-See TAX_SYNC_IMPLEMENTATION.md for specifications.
+
+Duplicate Resolution Policy:
+    - Files with identical MD5 hashes are considered duplicates
+    - Canonical winner is chosen automatically based on priority:
+        1. File already in canonical YYYY/category path
+        2. Newest modification time
+        3. Largest file size
+    - Non-winning duplicates are MOVED (not deleted) to:
+        _metadata/duplicates/<md5>/
+    - Original filenames are preserved
+    - If filename collision occurs, short hash suffix is appended
+    - No user confirmation required for duplicate moves
+
+See TAX_SYNC_IMPLEMENTATION.md for complete specifications.
 """
 
 from pathlib import Path
@@ -147,26 +160,32 @@ class TaxSync:
                     ))
                     canonical_locations[canonical_path] = record
         
-        # Handle duplicates (same MD5)
-        if self.safe_delete:
-            for md5_hash, duplicate_records in md5_to_records.items():
-                if len(duplicate_records) > 1:
-                    # Multiple files with same content
-                    
-                    # Choose canonical winner
-                    winner = self._choose_duplicate_winner(duplicate_records)
-                    
-                    # Mark losers for deletion
-                    for record in duplicate_records:
-                        if record.path != winner.path:
-                            # Only delete if not already in to_copy or to_update
-                            if not any(op.source == record.path for op in plan.to_copy):
-                                if not any(op.source == record.path for op in plan.to_update):
-                                    plan.to_delete.append(SyncOperation(
-                                        source=record.path,
-                                        destination="",
-                                        operation="delete"
-                                    ))
+        # Handle duplicates (same MD5) - automatic resolution
+        # Duplicates are MOVED to _metadata/duplicates/<md5>/ (never deleted)
+        for md5_hash, duplicate_records in md5_to_records.items():
+            if len(duplicate_records) > 1:
+                # Multiple files with same content
+                
+                # Choose canonical winner
+                winner = self._choose_duplicate_winner(duplicate_records)
+                
+                # Move non-winners to _metadata/duplicates/<md5>/
+                for record in duplicate_records:
+                    if record.path != winner.path:
+                        # Skip if already being moved/updated
+                        if any(op.source == record.path for op in plan.to_copy):
+                            continue
+                        if any(op.source == record.path for op in plan.to_update):
+                            continue
+                        
+                        # Compute destination in _metadata/duplicates/
+                        dest = self._get_duplicate_destination(record.path, md5_hash)
+                        
+                        plan.duplicate_moves.append(SyncOperation(
+                            source=record.path,
+                            destination=dest,
+                            operation="move"
+                        ))
         
         return plan
     
@@ -175,10 +194,18 @@ class TaxSync:
         
         Executes planned operations to move files into canonical structure.
         
-        Operations performed:
-            1. to_copy: Move files to canonical locations
-            2. to_update: Replace files at canonical locations
-            3. to_delete: Remove duplicate/orphan files (if safe_delete enabled)
+        Operations performed (in order):
+            1. duplicate_moves: Move duplicate files to _metadata/duplicates/ (automatic, no prompts)
+            2. to_copy: Move files to canonical locations
+            3. to_update: Replace files at canonical locations
+            4. to_delete: Remove duplicate/orphan files (if safe_delete enabled)
+        
+        Duplicate resolution:
+            - Executed first before other sync actions
+            - Duplicates moved to _metadata/duplicates/<md5>/
+            - Original filenames preserved (with collision handling)
+            - MD5 recomputed only for canonical winner
+            - No user confirmation required
         
         Safety features:
             - Dry-run by default (must explicitly set dry_run=False)
@@ -201,6 +228,28 @@ class TaxSync:
             SyncResult with operation counts and any errors encountered
         """
         result = SyncResult()
+        
+        # Process duplicate_moves first (automatic resolution, no prompts)
+        for operation in plan.duplicate_moves:
+            try:
+                source_path = self.root_path / operation.source
+                dest_path = self.root_path / operation.destination
+                
+                if dry_run:
+                    # Simulate operation
+                    result.duplicates_moved += 1
+                else:
+                    # Ensure _metadata/duplicates directory exists
+                    dest_path.parent.mkdir(parents=True, exist_ok=True)
+                    
+                    # Move duplicate to _metadata/duplicates/
+                    shutil.move(str(source_path), str(dest_path))
+                    
+                    result.duplicates_moved += 1
+                    
+            except (OSError, IOError, PermissionError, shutil.Error) as e:
+                error_msg = f"Failed to move duplicate {operation.source}: {str(e)}"
+                result.errors.append(error_msg)
         
         # Process to_copy operations
         for operation in plan.to_copy:
@@ -467,6 +516,35 @@ class TaxSync:
                 return year
         
         return None
+    
+    def _get_duplicate_destination(self, source_path: str, md5_hash: str) -> str:
+        """Compute destination path for a duplicate file.
+        
+        Duplicates are moved to: _metadata/duplicates/<md5>/filename.ext
+        If filename collision occurs, appends short hash suffix.
+        
+        Args:
+            source_path: Original file path
+            md5_hash: MD5 hash of the file content
+            
+        Returns:
+            Destination path relative to root: _metadata/duplicates/<md5>/filename
+        """
+        filename = Path(source_path).name
+        base_dest = f"_metadata/duplicates/{md5_hash}/{filename}"
+        
+        # Check if destination already exists
+        dest_full_path = self.root_path / base_dest
+        if not dest_full_path.exists():
+            return base_dest
+        
+        # Handle filename collision by appending short hash
+        stem = Path(filename).stem
+        suffix = Path(filename).suffix
+        short_hash = md5_hash[:8]
+        collision_filename = f"{stem}_{short_hash}{suffix}"
+        
+        return f"_metadata/duplicates/{md5_hash}/{collision_filename}"
     
     def _recompute_md5(self, file_path: Path) -> Optional[str]:
         """Recompute MD5 hash of a file after move/update.
