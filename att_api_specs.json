@@ -1,0 +1,104 @@
+{
+  "billing_endpoints": [
+    {
+      "endpoint": "/v2/notifications/info",
+      "method": "POST",
+      "payload": {
+        "ban": "337058163",
+        "billingSystemId": "LS",
+        "divisionId": "5T0",
+        "billerId": "ENBLR",
+        "accountStatus": "ACTIVE",
+        "customerType": "CONSUMER"
+      },
+      "status": 200
+    },
+    {
+      "endpoint": "/v2/currentbalance",
+      "method": "POST",
+      "payload": {
+        "accountNumber": "337058163",
+        "accountType": "UVERSE",
+        "billerId": "ENBLR",
+        "systemId": "LS",
+        "divisionId": "5T0",
+        "accountStatus": "ACTIVE",
+        "payAllFlag": false
+      },
+      "status": 200
+    },
+    {
+      "endpoint": "/v2/activityhistory",
+      "method": "POST",
+      "payload": {
+        "accountNumber": "337058163",
+        "accountType": "ENBLR",
+        "pageType": "bill"
+      },
+      "status": 200
+    },
+    {
+      "endpoint": "/v3/billOrchestrator/getactivepromotiondetails",
+      "method": "POST",
+      "payload": {
+        "accountNumber": "337058163",
+        "accountType": "uverse"
+      },
+      "status": 200
+    },
+    {
+      "endpoint": "/v2/settings/getbillsettings",
+      "method": "POST",
+      "payload": {
+        "ban": "337058163",
+        "billingSystemId": "LS",
+        "divisionId": "5T0",
+        "billerId": "TITAN"
+      },
+      "status": 200
+    },
+    {
+      "endpoint": "/v2/highlights/info",
+      "method": "POST",
+      "payload": {
+        "ban": "337058163",
+        "billerId": "ENBLR",
+        "billingSystemId": "LS",
+        "divisionId": "5T0"
+      },
+      "status": 200
+    },
+    {
+      "endpoint": "/v2/billdetails",
+      "method": "POST",
+      "payload": {
+        "accountNumber": "337058163",
+        "accountType": "ENBLR"
+      },
+      "status": 200
+    },
+    {
+      "endpoint": "/v2/billhistory/graphsummary",
+      "method": "POST",
+      "payload": {
+        "account": "337058163",
+        "accounttype": "ENBLR",
+        "cvgWirelessBAN": "545134238301"
+      },
+      "status": 200
+    },
+    {
+      "endpoint": "/v2/activityhistory",
+      "method": "POST",
+      "payload": {
+        "accountNumber": "337058163",
+        "accountType": "ENBLR",
+        "pageType": "bill",
+        "systemId": "LS",
+        "divisionId": "5T0",
+        "cvgWirelessBAN": "545134238301"
+      },
+      "status": 200
+    }
+  ]
+}

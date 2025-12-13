@@ -1,1 +1,33 @@
 .env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs and cache
+*.log
+.cache/
+logs/
+
+# Sensitive data
+*cookies*.json
+*.har
+fresh_*.json

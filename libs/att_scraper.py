@@ -113,6 +113,10 @@ class ATTClient:
             
             self.page = self.context.new_page()
             
+            # Set extended timeouts for user interaction
+            self.page.set_default_timeout(120000)
+            self.page.set_default_navigation_timeout(120000)
+            
             # Setup network request interceptor for API discovery
             self._setup_network_interceptor()
             
@@ -146,6 +150,20 @@ class ATTClient:
             route.continue_()
         
         self.page.route("**/*", log_request)
+    
+    def _start_keep_alive(self):
+        """Start keep-alive mechanism to maintain session activity."""
+        logger.info("Session keep-alive active — waiting for user interaction")
+        self.page.evaluate("""
+            setInterval(() => {
+                const event = new MouseEvent('mousemove', {
+                    bubbles: true,
+                    cancelable: true,
+                    view: window
+                });
+                document.dispatchEvent(event);
+            }, 10000);
+        """)
     
     def load_session(self) -> bool:
         """
@@ -181,6 +199,7 @@ class ATTClient:
             
             # Try to access account page
             response = self.page.goto("https://www.att.com/my/", wait_until="domcontentloaded", timeout=15000)
+            self.page.wait_for_timeout(3000)
             
             if not response:
                 logger.warning("No response from session validation")
@@ -228,7 +247,8 @@ class ATTClient:
         
         try:
             # Navigate to login page
-            self.page.goto("https://www.att.com/my/#/login", wait_until="networkidle")
+            self.page.goto("https://www.att.com/my/#/login", wait_until="domcontentloaded")
+            self.page.wait_for_timeout(3000)
             logger.info("Navigated to login page")
             
             # Wait for and fill username (User ID field) with realistic typing
@@ -276,6 +296,9 @@ class ATTClient:
             self._save_cookies()
             logger.info("Login successful")
             
+            # Start keep-alive mechanism
+            self._start_keep_alive()
+            
         except Exception as e:
             logger.error(f"Login failed: {e}")
             raise
@@ -309,7 +332,6 @@ class ATTClient:
         except Exception as e:
             logger.warning(f"Failed to save API URLs: {e}")
     
-    @retry_on_failure(max_attempts=2, backoff_base=1.5)
     def _ensure_logged_in(self):
         """Ensure user is logged in with session validation and auto re-login."""
         # Try loading saved session first
@@ -355,6 +377,7 @@ class ATTClient:
             # Navigate to account overview/dashboard
             logger.info("Navigating to account dashboard")
             self.page.goto("https://www.att.com/my/", wait_until="domcontentloaded", timeout=60000)
+            self.page.wait_for_timeout(3000)
             
             # Wait for dynamic content
             time.sleep(3)
@@ -424,6 +447,9 @@ class ATTClient:
             # Save captured API URLs
             self._save_api_urls()
             
+            # Start keep-alive mechanism for extended user interaction
+            self._start_keep_alive()
+            
             logger.info("Successfully retrieved account dashboard")
             return dashboard_data
             
@@ -454,6 +480,7 @@ class ATTClient:
             
             # Navigate to outages page (use domcontentloaded instead of networkidle)
             self.page.goto("https://www.att.com/outages/", wait_until="domcontentloaded", timeout=60000)
+            self.page.wait_for_timeout(3000)
             logger.info("Navigated to outages page")
             
             # Wait for page to be interactive
