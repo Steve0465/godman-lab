@@ -50,11 +50,9 @@ def validate(
     if verbose and report.issues:
         console.print("\n[bold]Detailed Issues:[/bold]")
         for issue in report.issues[:50]:  # Limit to first 50
-            color = "yellow" if issue.severity == "warning" else "red"
-            console.print(f"  [{color}]{issue.severity.upper()}[/{color}]: {issue.message}")
-            if issue.affected_files:
-                for f in issue.affected_files[:3]:
-                    console.print(f"    - {f}")
+            color = "yellow" if issue.level == "warning" else "red"
+            console.print(f"  [{color}]{issue.level.upper()}[/{color}]: {issue.message}")
+            console.print(f"    Path: {issue.path}")
     
     # Exit with error code if validation failed
     if not report.valid:
