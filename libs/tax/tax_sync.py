@@ -10,7 +10,7 @@ from typing import Dict, List, Set, Optional
 import shutil
 import hashlib
 
-from .tax_models import TaxFileRecord, SyncPlan, SyncResult
+from .tax_models import TaxFileRecord, SyncPlan, SyncResult, SyncOperation
 from .tax_validator import TaxValidator
 
 
@@ -131,12 +131,20 @@ class TaxSync:
                     # Compare files to decide which to keep
                     if self._should_replace(record, existing):
                         # New file should replace existing
-                        plan.to_update.append(record)
+                        plan.to_update.append(SyncOperation(
+                            source=record.path,
+                            destination=canonical_path,
+                            operation="update"
+                        ))
                         canonical_locations[canonical_path] = record
                     # else: existing file is better, ignore new file
                 else:
                     # No conflict, plan to copy file to canonical location
-                    plan.to_copy.append(record)
+                    plan.to_copy.append(SyncOperation(
+                        source=record.path,
+                        destination=canonical_path,
+                        operation="move"
+                    ))
                     canonical_locations[canonical_path] = record
         
         # Handle duplicates (same MD5)
@@ -152,9 +160,13 @@ class TaxSync:
                     for record in duplicate_records:
                         if record.path != winner.path:
                             # Only delete if not already in to_copy or to_update
-                            if not any(r.path == record.path for r in plan.to_copy):
-                                if not any(r.path == record.path for r in plan.to_update):
-                                    plan.to_delete.append(record.path)
+                            if not any(op.source == record.path for op in plan.to_copy):
+                                if not any(op.source == record.path for op in plan.to_update):
+                                    plan.to_delete.append(SyncOperation(
+                                        source=record.path,
+                                        destination="",
+                                        operation="delete"
+                                    ))
         
         return plan
     
@@ -191,11 +203,10 @@ class TaxSync:
         result = SyncResult()
         
         # Process to_copy operations
-        for record in plan.to_copy:
+        for operation in plan.to_copy:
             try:
-                source_path = self.root_path / record.path
-                canonical_path = self._get_canonical_path(record)
-                dest_path = self.root_path / canonical_path
+                source_path = self.root_path / operation.source
+                dest_path = self.root_path / operation.destination
                 
                 if dry_run:
                     # Simulate operation
@@ -213,15 +224,14 @@ class TaxSync:
                     result.copied += 1
                     
             except (OSError, IOError, PermissionError, shutil.Error) as e:
-                error_msg = f"Failed to copy {record.path}: {str(e)}"
+                error_msg = f"Failed to copy {operation.source}: {str(e)}"
                 result.errors.append(error_msg)
         
         # Process to_update operations
-        for record in plan.to_update:
+        for operation in plan.to_update:
             try:
-                source_path = self.root_path / record.path
-                canonical_path = self._get_canonical_path(record)
-                dest_path = self.root_path / canonical_path
+                source_path = self.root_path / operation.source
+                dest_path = self.root_path / operation.destination
                 
                 if dry_run:
                     # Simulate operation
@@ -255,13 +265,13 @@ class TaxSync:
                         raise
                     
             except (OSError, IOError, PermissionError, shutil.Error) as e:
-                error_msg = f"Failed to update {record.path}: {str(e)}"
+                error_msg = f"Failed to update {operation.source}: {str(e)}"
                 result.errors.append(error_msg)
         
         # Process to_delete operations
-        for path_str in plan.to_delete:
+        for operation in plan.to_delete:
             try:
-                file_path = self.root_path / path_str
+                file_path = self.root_path / operation.source
                 
                 if dry_run:
                     # Simulate operation
@@ -273,11 +283,11 @@ class TaxSync:
                             file_path.unlink()
                             result.deleted += 1
                     else:
-                        error_msg = f"Skipped deletion (safe_delete disabled): {path_str}"
+                        error_msg = f"Skipped deletion (safe_delete disabled): {operation.source}"
                         result.errors.append(error_msg)
                     
             except (OSError, IOError, PermissionError) as e:
-                error_msg = f"Failed to delete {path_str}: {str(e)}"
+                error_msg = f"Failed to delete {operation.source}: {str(e)}"
                 result.errors.append(error_msg)
         
         return result

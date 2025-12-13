@@ -3136,3 +3136,13 @@ manual-test
 2025-12-11 15:42:10 - ToolRunner - INFO - Success: function=sum_three, time=0.000s, result={"total": 60}
 2025-12-12 18:14:13 - ToolRunner - INFO - ToolRunner initialized
 2025-12-12 18:14:21 - ToolRunner - INFO - ToolRunner initialized
+2025-12-12 22:19:52 - ToolRunner - INFO - ToolRunner initialized
+2025-12-12 22:19:52 - ToolRunner - INFO - Registered tool: greet
+2025-12-12 22:19:52 - ToolRunner - INFO - Registered tool: add
+2025-12-12 22:19:52 - ToolRunner - INFO - Registered tool: multiply
+2025-12-12 22:19:52 - ToolRunner - INFO - Registered tool: stats
+2025-12-12 22:19:52 - ToolRunner - INFO - Registered tool: uppercase
+2025-12-12 22:19:52 - ToolRunner - INFO - Registered tool: list_files
+2025-12-12 22:19:52 - ToolRunner - INFO - Registered tool: find_files
+2025-12-12 22:20:47 - ToolRunner - INFO - ToolRunner initialized
+2025-12-12 22:22:23 - ToolRunner - INFO - ToolRunner initialized

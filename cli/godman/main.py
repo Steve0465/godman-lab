@@ -19,6 +19,7 @@ from cli.godman import trello_analyze as trello_analyze_cli
 from cli.godman import measurements as measurements_cli
 from cli.godman import passwords as passwords_cli
 from cli.godman import drive as drive_cli
+from cli.godman import tax as tax_cli
 
 app = typer.Typer(help="Godman Automation Lab CLI.")
 console = Console()
@@ -59,6 +60,8 @@ app.add_typer(measurements_cli.app, name="measures")
 app.add_typer(drive_cli.app, name="drive")
 # Password ingestion
 app.add_typer(passwords_cli.app, name="passwords")
+# Tax archive management
+app.add_typer(tax_cli.app, name="tax")
 
 
 @app.command()

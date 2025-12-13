@@ -81,6 +81,19 @@ class ValidationReport(BaseModel):
         return "\n".join(lines)
 
 
+class SyncOperation(BaseModel):
+    """Represents a single file operation in a sync plan.
+    
+    Attributes:
+        source: Source file path (relative to archive root)
+        destination: Destination file path (relative to archive root)
+        operation: Type of operation (copy, move, update, delete)
+    """
+    source: str
+    destination: str
+    operation: Literal["copy", "move", "update", "delete"] = "move"
+
+
 class SyncPlan(BaseModel):
     """Plan for synchronizing tax archives between source and destination.
     
@@ -92,9 +105,9 @@ class SyncPlan(BaseModel):
         to_delete: Paths in destination that should be removed (not in source)
         to_update: Files that exist in both but differ (by size or hash)
     """
-    to_copy: list[TaxFileRecord] = Field(default_factory=list)
-    to_delete: list[str] = Field(default_factory=list)
-    to_update: list[TaxFileRecord] = Field(default_factory=list)
+    to_copy: list[SyncOperation] = Field(default_factory=list)
+    to_delete: list[SyncOperation] = Field(default_factory=list)
+    to_update: list[SyncOperation] = Field(default_factory=list)
 
     def is_empty(self) -> bool:
         """Check if the sync plan contains any actions.
@@ -125,3 +138,13 @@ class SyncResult(BaseModel):
     deleted: int = Field(ge=0, default=0)
     updated: int = Field(ge=0, default=0)
     errors: list[str] = Field(default_factory=list)
+    
+    @property
+    def successful(self) -> int:
+        """Total successful operations."""
+        return self.copied + self.deleted + self.updated
+    
+    @property
+    def failed(self) -> int:
+        """Total failed operations."""
+        return len(self.errors)
