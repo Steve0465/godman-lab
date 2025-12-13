@@ -4,19 +4,28 @@ Classifies tax documents by inferring year and category from content analysis.
 
 Trust Boundaries:
     - PDF text extraction may fail silently (malformed PDFs, encryption)
+    - OCR may fail or produce garbled text
     - Extracted text may be incomplete or garbled
     - Year/category inference is heuristic, not guaranteed accurate
     - Confidence scores are subjective estimates, not statistical probabilities
     - All operations are wrapped in error handling to prevent exceptions
 
 Classification Strategy:
-    1. Extract text from first 2 pages of PDF using pdfplumber (no OCR)
-    2. Normalize whitespace and clean text
-    3. Scan for explicit tax year patterns ("Tax Year 2024", "For the year ended...")
-    4. Fall back to dominant year frequency in content
-    5. Reject future years beyond current_year + 1
-    6. Look for known document type keywords (1099, W-2, etc.)
-    7. Calculate confidence based on evidence strength
+    1. Extract text from first 2 pages of PDF using pdfplumber
+    2. If text is insufficient (<50 chars), fall back to OCR using pytesseract
+    3. Normalize whitespace and clean text
+    4. Scan for explicit tax year patterns ("Tax Year 2024", "For the year ended...")
+    5. Fall back to dominant year frequency in content
+    6. Reject future years beyond current_year + 1
+    7. Look for known document type keywords (1099, W-2, etc.)
+    8. Calculate confidence based on evidence strength
+
+OCR Fallback:
+    - Triggered when pdfplumber extracts <50 characters
+    - Converts first 2 pages to images using pdf2image
+    - Runs pytesseract on each page
+    - Reduces confidence by 0.1 (OCR less reliable than native text)
+    - Requires tesseract to be installed on PATH
 
 Confidence Scoring:
     Start at 0.0, add points for:
@@ -24,6 +33,7 @@ Confidence Scoring:
     - Known document type (e.g., "Form 1099"): +0.3
     - Filename match: +0.1
     - Multiple corroborating signals increase confidence
+    - OCR usage: -0.1 (less reliable)
     - Capped at 1.0
 
 Year Inference:
@@ -50,6 +60,13 @@ try:
     PDF_AVAILABLE = True
 except ImportError:
     PDF_AVAILABLE = False
+
+try:
+    import pytesseract
+    from pdf2image import convert_from_path
+    OCR_AVAILABLE = True
+except ImportError:
+    OCR_AVAILABLE = False
 
 from pydantic import BaseModel
 
@@ -161,12 +178,17 @@ class TaxClassifier:
     - May misclassify ambiguous documents
     """
     
-    def __init__(self):
+    def __init__(self, ocr_threshold: int = 50):
         """Initialize tax classifier.
         
-        Checks for pdfplumber availability at initialization.
+        Checks for pdfplumber and OCR availability at initialization.
+        
+        Args:
+            ocr_threshold: Minimum characters required before OCR fallback (default: 50)
         """
         self.pdf_available = PDF_AVAILABLE
+        self.ocr_available = OCR_AVAILABLE
+        self.ocr_threshold = ocr_threshold
     
     def classify(self, path: Path) -> TaxClassificationResult:
         """Classify a tax document by analyzing its content.
@@ -221,6 +243,7 @@ class TaxClassifier:
         
         # Extract text from PDF
         text = self._extract_pdf_text(path)
+        used_ocr = False
         
         if text is None:
             return TaxClassificationResult(
@@ -229,15 +252,30 @@ class TaxClassifier:
                 evidence=["Failed to extract text from PDF"]
             )
         
+        # Check if text is insufficient and OCR fallback is available
+        if len(text.strip()) < self.ocr_threshold:
+            if self.ocr_available:
+                ocr_text = self._extract_ocr_text(path)
+                if ocr_text and len(ocr_text.strip()) > len(text.strip()):
+                    text = ocr_text
+                    used_ocr = True
+            else:
+                if not text.strip():
+                    return TaxClassificationResult(
+                        path=rel_path,
+                        confidence=0.0,
+                        evidence=["PDF contains no extractable text (OCR not available)"]
+                    )
+        
         if not text.strip():
             return TaxClassificationResult(
                 path=rel_path,
                 confidence=0.0,
-                evidence=["PDF contains no extractable text (may be scanned/OCR needed)"]
+                evidence=["PDF contains no extractable text"]
             )
         
         # Classify based on content
-        return self._classify_text(rel_path, text, path.name)
+        return self._classify_text(rel_path, text, path.name, used_ocr=used_ocr)
     
     def _extract_pdf_text(self, path: Path) -> Optional[str]:
         """Extract text from first 2 pages of PDF file.
@@ -281,7 +319,51 @@ class TaxClassifier:
             # Catch all exceptions (encrypted, malformed, etc.)
             return None
     
-    def _classify_text(self, rel_path: str, text: str, filename: str) -> TaxClassificationResult:
+    def _extract_ocr_text(self, path: Path) -> Optional[str]:
+        """Extract text from PDF using OCR (pytesseract).
+        
+        Used as fallback when pdfplumber returns insufficient text.
+        Converts first 2 pages to images and runs OCR on each.
+        
+        Trust Boundaries:
+        - Requires tesseract installed on system PATH
+        - May fail on encrypted/protected PDFs
+        - OCR quality depends on image resolution and clarity
+        - May return garbled text for poor quality scans
+        - Slower than native text extraction
+        
+        Args:
+            path: Path to PDF file
+            
+        Returns:
+            OCR-extracted text or None if extraction failed
+        """
+        try:
+            # Convert first 2 pages to images (300 DPI for good quality)
+            images = convert_from_path(path, first_page=1, last_page=2, dpi=300)
+            
+            text_parts = []
+            for img in images:
+                # Run OCR on each page
+                ocr_text = pytesseract.image_to_string(img)
+                if ocr_text:
+                    text_parts.append(ocr_text)
+            
+            if not text_parts:
+                return None
+            
+            # Join and normalize whitespace
+            text = "\n".join(text_parts)
+            text = re.sub(r'\s+', ' ', text)  # Collapse whitespace
+            text = re.sub(r'\n+', '\n', text)  # Collapse newlines
+            
+            return text.strip()
+            
+        except Exception as e:
+            # OCR failed (tesseract not installed, conversion failed, etc.)
+            return None
+    
+    def _classify_text(self, rel_path: str, text: str, filename: str, used_ocr: bool = False) -> TaxClassificationResult:
         """Classify document based on text content and filename.
         
         Confidence Scoring:
@@ -290,17 +372,24 @@ class TaxClassifier:
         - Known document type: +0.3
         - Filename match: +0.1
         - Multiple corroborating signals increase confidence
+        - OCR usage: -0.1 (less reliable than native text)
         
         Args:
             rel_path: Relative path for result
             text: Extracted and normalized text content
             filename: Original filename
+            used_ocr: Whether OCR was used for extraction
             
         Returns:
             TaxClassificationResult with inferred metadata
         """
         evidence = []
         confidence = 0.0
+        
+        # Track if OCR was used
+        if used_ocr:
+            evidence.append("Text extracted via OCR (pytesseract)")
+            confidence -= 0.1  # OCR is less reliable
         
         # Normalize text for analysis
         text_lower = text.lower()
@@ -316,8 +405,8 @@ class TaxClassifier:
         evidence.extend(category_evidence)
         confidence += cat_conf_boost
         
-        # Cap confidence at 1.0
-        confidence = min(confidence, 1.0)
+        # Cap confidence at 1.0 and floor at 0.0
+        confidence = max(0.0, min(confidence, 1.0))
         
         return TaxClassificationResult(
             path=rel_path,
