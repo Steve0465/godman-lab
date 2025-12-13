@@ -10,6 +10,7 @@ from rich import print as rprint
 from libs.tax.tax_validator import TaxValidator
 from libs.tax.tax_sync import TaxSync
 from libs.tax.tax_classifier import TaxClassifier
+from libs.tax.tax_inbox_watcher import TaxInboxWatcher
 
 app = typer.Typer(help="Tax archive management tools")
 console = Console()
@@ -188,6 +189,41 @@ def classify(
         console.print("\n[bold]Evidence:[/bold]")
         for evidence in result.evidence:
             console.print(f"  • {evidence}")
+
+
+@app.command()
+def watch(
+    archive_path: str = typer.Argument(..., help="Path to TAX_MASTER_ARCHIVE root"),
+    debounce: int = typer.Option(30, "--debounce", help="Seconds to wait after last file before processing")
+):
+    """
+    Watch the _inbox directory and automatically process new files.
+    
+    Files are classified and routed to the appropriate year/category folders.
+    High-confidence classifications are auto-applied. Low-confidence files
+    are moved to _metadata/review for manual inspection.
+    """
+    root = Path(archive_path).expanduser().resolve()
+    
+    if not root.exists():
+        console.print(f"[red]Error: Path does not exist: {root}[/red]")
+        raise typer.Exit(1)
+    
+    inbox = root / "_inbox"
+    console.print(f"[cyan]Starting inbox watcher[/cyan]")
+    console.print(f"  Archive: {root}")
+    console.print(f"  Inbox:   {inbox}")
+    console.print(f"  Debounce: {debounce}s")
+    console.print()
+    console.print("[green]Watching for new files... (Press Ctrl+C to stop)[/green]")
+    console.print()
+    
+    watcher = TaxInboxWatcher(root, debounce_seconds=debounce)
+    
+    try:
+        watcher.start()
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Stopping watcher...[/yellow]")
 
 
 if __name__ == "__main__":
