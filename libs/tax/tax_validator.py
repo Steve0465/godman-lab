@@ -14,6 +14,14 @@ Directory Exclusions:
     Excluded directories are checked at the top level of the archive only.
     Nested directories with similar names are not automatically excluded.
 
+Duplicate Resolution:
+    Files located under _metadata/duplicates/ are considered "resolved duplicates"
+    and are excluded from duplicate warnings. These files have already been identified
+    as duplicates and moved by TaxSync, so they should not trigger validation warnings.
+    
+    Only the canonical file (the one kept in the proper YYYY/category structure) will
+    remain in the validation results. This prevents false positives after running sync.
+
 See TAX_VALIDATOR_IMPLEMENTATION.md for specifications.
 """
 
@@ -157,6 +165,12 @@ class TaxValidator:
         - iCloud placeholders: zero-byte files
         - Misplaced files: wrong year or category
         
+        Duplicate Detection:
+        - Files under _metadata/duplicates/ are excluded from duplicate warnings
+        - These are "resolved duplicates" already moved by TaxSync
+        - Only canonical files (in proper YYYY/category structure) are checked
+        - Prevents false positives after running sync operations
+        
         Returns:
             ValidationReport with all issues found and validity status
         """
@@ -178,17 +192,21 @@ class TaxValidator:
         for record in records:
             file_path = self.root_path / record.path
             
-            # Track MD5 duplicates
-            if record.md5:
+            # Track MD5 duplicates (exclude resolved duplicates)
+            rel_path = Path(record.path)
+            is_resolved = self._is_resolved_duplicate(rel_path)
+            
+            if record.md5 and not is_resolved:
                 if record.md5 not in md5_to_paths:
                     md5_to_paths[record.md5] = []
                 md5_to_paths[record.md5].append(record.path)
             
-            # Track filename duplicates
-            filename = Path(record.path).name
-            if filename not in filename_to_paths:
-                filename_to_paths[filename] = []
-            filename_to_paths[filename].append(record.path)
+            # Track filename duplicates (exclude resolved duplicates)
+            if not is_resolved:
+                filename = Path(record.path).name
+                if filename not in filename_to_paths:
+                    filename_to_paths[filename] = []
+                filename_to_paths[filename].append(record.path)
             
             # Check for iCloud placeholders (size 0, no hash)
             if record.size_bytes == 0 and record.md5 is None:
@@ -296,6 +314,33 @@ class TaxValidator:
             pass
         
         return False
+    
+    def _is_resolved_duplicate(self, rel_path: Path) -> bool:
+        """Check if a path is under _metadata/duplicates/ (resolved duplicate).
+        
+        Resolved duplicates have already been identified and moved by TaxSync.
+        They should not trigger duplicate warnings during validation, as they
+        are intentionally stored outside the canonical structure.
+        
+        Only the canonical file (kept in proper YYYY/category structure) should
+        be validated. This prevents false positive duplicate warnings after sync.
+        
+        Args:
+            rel_path: Path relative to root_path
+            
+        Returns:
+            True if path is a resolved duplicate
+            
+        Examples:
+            _metadata/duplicates/abc123/file.pdf -> True (resolved duplicate)
+            2024/receipts/file.pdf -> False (canonical location)
+        """
+        parts = rel_path.parts
+        if len(parts) < 2:
+            return False
+        
+        # Check if path is under _metadata/duplicates/
+        return parts[0] == "_metadata" and parts[1] == "duplicates"
     
     def _infer_year(self, file_path: Path) -> int | None:
         """Infer tax year from file path.
