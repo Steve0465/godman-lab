@@ -1,3 +1,4 @@
+# Environment & secrets
 .env
 
 # Python
@@ -12,7 +13,7 @@ venv/
 env/
 ENV/
 
-# IDE
+# IDE / Editor
 .vscode/
 .idea/
 *.swp
@@ -22,12 +23,28 @@ ENV/
 .DS_Store
 Thumbs.db
 
-# Logs and cache
+# Logs & cache
 *.log
-.cache/
 logs/
+.cache/
+tmp/
 
-# Sensitive data
+# Local runtime data
+data/
+exports/
+
+# Sensitive / browser artifacts
 *cookies*.json
 *.har
 fresh_*.json
+
+# Python build artifacts
+build/
+dist/
+*.egg-info/
+
+# Test artifacts
+.coverage
+htmlcov/
+pytest_cache/
+
