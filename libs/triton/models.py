@@ -4,7 +4,7 @@ Defines type-safe configuration schemas using Pydantic for:
 - Triton server configuration
 - Model metadata
 """
-from typing import Optional, Literal
+from typing import Optional, Literal, List
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -99,11 +99,11 @@ class ModelMetadata(BaseModel):
         default=None,
         description="Platform identifier"
     )
-    inputs: list[str] = Field(
+    inputs: List[str] = Field(
         default_factory=list,
         description="Input tensor names"
     )
-    outputs: list[str] = Field(
+    outputs: List[str] = Field(
         default_factory=list,
         description="Output tensor names"
     )

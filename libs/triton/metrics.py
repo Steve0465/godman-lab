@@ -74,7 +74,7 @@ def parse_metrics(raw_text: str) -> dict[str, Any]:
         metrics['inference_count'] = int(float(count_match.group(1)))
     
     # Latency percentiles (microseconds)
-    latency_p50 = re.search(r'nv_inference_latency_us\{quantile="0\.5[0]*"\}\s+([\d.]+)', raw_text)
+    latency_p50 = re.search(r'nv_inference_latency_us\{quantile="0\.5"\}\s+([\d.]+)', raw_text)
     if latency_p50:
         metrics['latency_p50'] = float(latency_p50.group(1))
     
