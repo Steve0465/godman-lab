@@ -17,3 +17,6 @@ f250/data/csv/
 f250/data/parquet/
 f250/data/photos/
 f250/data/*.csv
+
+# Data directory (runtime configs and generated data)
+data/

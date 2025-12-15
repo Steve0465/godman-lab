@@ -1,7 +1,14 @@
 """Main CLI entry point for godman automation lab."""
 import typer
+import sys
 from pathlib import Path
-from godman.commands import receipts
+
+# Add cli directory to path for imports
+_cli_dir = Path(__file__).parent.parent
+if str(_cli_dir) not in sys.path:
+    sys.path.insert(0, str(_cli_dir))
+
+from godman.commands import receipts, shield
 
 app = typer.Typer(
     name="godman",
@@ -11,6 +18,7 @@ app = typer.Typer(
 
 # Register command modules
 app.add_typer(receipts.app, name="receipts", help="Receipt processing commands")
+app.add_typer(shield.app, name="shield", help="Shield Pro Media Box commands")
 
 
 @app.command()
