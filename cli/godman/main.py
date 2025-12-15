@@ -2,6 +2,7 @@
 import typer
 from pathlib import Path
 from godman.commands import receipts
+from godman.commands import trello
 
 app = typer.Typer(
     name="godman",
@@ -11,6 +12,7 @@ app = typer.Typer(
 
 # Register command modules
 app.add_typer(receipts.app, name="receipts", help="Receipt processing commands")
+app.add_typer(trello.app, name="trello", help="Trello sync and analytics")
 
 
 @app.command()

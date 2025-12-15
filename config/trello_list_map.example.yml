@@ -1,0 +1,29 @@
+# Example list role mapping for Trello audit
+# Map roles to arrays of list names. Roles: backlog, todo, in_progress, review, done
+# Copy to config/trello_list_map.yml and edit as needed.
+
+backlog:
+  - Backlog
+  - Icebox
+  - Ideas
+
+todo:
+  - To Do
+  - Ready
+  - Next
+
+in_progress:
+  - Doing
+  - In Progress
+  - WIP
+  - Dev
+
+review:
+  - Review
+  - QA
+  - Verify
+
+done:
+  - Done
+  - Shipped
+  - Completed
