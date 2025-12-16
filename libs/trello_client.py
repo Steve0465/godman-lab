@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import logging
+import os
 import time
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import requests
@@ -19,21 +21,46 @@ class TrelloError(Exception):
 class TrelloClient:
     """Lightweight Trello API client with retry/backoff and minimal deps.
 
+    Reads auth from environment variables TRELLO_KEY and TRELLO_TOKEN.
+    Implements rate limit handling with exponential backoff (up to 5 retries).
+    
     Parameters
-    - api_key: Trello API key
-    - token: Trello API token
+    - api_key: Trello API key (optional, reads from TRELLO_KEY env var if not provided)
+    - token: Trello API token (optional, reads from TRELLO_TOKEN env var if not provided)
     - base_url: Base API url (default https://api.trello.com/1)
+    
+    Raises
+    - TrelloError: If credentials are missing or invalid
     """
 
-    def __init__(self, api_key: str, token: str, base_url: str = "https://api.trello.com/1") -> None:
-        self.api_key = api_key
-        self.token = token
+    def __init__(
+        self, 
+        api_key: Optional[str] = None, 
+        token: Optional[str] = None, 
+        base_url: str = "https://api.trello.com/1"
+    ) -> None:
+        # Read from env vars if not provided
+        self.api_key = api_key or os.environ.get("TRELLO_KEY")
+        self.token = token or os.environ.get("TRELLO_TOKEN")
+        
+        # Validate credentials
+        if not self.api_key:
+            raise TrelloError(
+                "Missing TRELLO_KEY: set environment variable TRELLO_KEY or pass api_key parameter"
+            )
+        if not self.token:
+            raise TrelloError(
+                "Missing TRELLO_TOKEN: set environment variable TRELLO_TOKEN or pass token parameter"
+            )
+        
         self.base_url = base_url.rstrip("/")
         self.session = requests.Session()
         self.session.headers.update({
             "Accept": "application/json",
             "User-Agent": "godman-lab-trello-audit/1.0",
         })
+        
+        print(f"✓ TrelloClient initialized (key: {self.api_key[:8]}...)")
 
     def request(
         self,
@@ -87,6 +114,141 @@ class TrelloClient:
                 detail = resp.text
             logger.error("Trello API error %s: %s", resp.status_code, detail)
             raise TrelloError(f"HTTP {resp.status_code}: {detail}")
+    
+    def get_board_cards(
+        self, 
+        board_id: str, 
+        fields: str = "id,shortLink,name,idList,dateLastActivity"
+    ) -> List[Dict[str, Any]]:
+        """Fetch all cards for a board with specified fields.
+        
+        Args:
+            board_id: Trello board ID
+            fields: Comma-separated card field names to retrieve
+            
+        Returns:
+            List of card dictionaries with requested fields
+            
+        Example:
+            cards = client.get_board_cards("abc123", "id,name,desc,idList")
+        """
+        params = {"fields": fields}
+        print(f"Fetching cards from board {board_id} (fields: {fields})")
+        cards = self.request("GET", f"boards/{board_id}/cards", params=params)
+        print(f"✓ Retrieved {len(cards)} cards")
+        return cards if isinstance(cards, list) else []
+    
+    def get_board_lists(self, board_id: str) -> List[Dict[str, Any]]:
+        """Fetch all lists for a board.
+        
+        Args:
+            board_id: Trello board ID
+            
+        Returns:
+            List of list dictionaries with id, name, closed, pos, etc.
+            
+        Example:
+            lists = client.get_board_lists("abc123")
+            bills_list = next(l for l in lists if l['name'] == 'BILLS')
+        """
+        print(f"Fetching lists from board {board_id}")
+        lists = self.request("GET", f"boards/{board_id}/lists")
+        print(f"✓ Retrieved {len(lists)} lists")
+        return lists if isinstance(lists, list) else []
+    
+    def get_card(
+        self,
+        card_id_or_shortlink: str,
+        *,
+        attachments: bool = True,
+        actions: bool = True,
+        action_types: str = ""
+    ) -> Dict[str, Any]:
+        """Fetch a single card by ID or short link with full details.
+        
+        Args:
+            card_id_or_shortlink: Full card ID or short link (e.g., "Z6JwfLEl")
+            attachments: Include attachments (default: True)
+            actions: Include actions/activity (default: True)
+            action_types: Filter action types (e.g., "commentCard,updateCard:idList")
+                         If empty, returns all action types
+        
+        Returns:
+            Card dictionary with full details including attachments, actions, etc.
+            
+        Example:
+            card = client.get_card("Z6JwfLEl", attachments=True, actions=True)
+            card = client.get_card("abc123", action_types="commentCard,addAttachmentToCard")
+        """
+        params: Dict[str, Any] = {
+            "attachments": str(attachments).lower(),
+            "actions": "all" if actions else "none",
+            "members": "true",
+            "checklists": "all",
+            "fields": "all",
+        }
+        
+        if action_types:
+            params["actions"] = action_types
+        
+        print(f"Fetching card {card_id_or_shortlink} (attachments={attachments}, actions={actions})")
+        card = self.request("GET", f"cards/{card_id_or_shortlink}", params=params)
+        
+        if isinstance(card, dict):
+            num_attachments = len(card.get("attachments", []))
+            num_actions = len(card.get("actions", []))
+            print(f"✓ Card: {card.get('name', 'Unknown')} ({num_attachments} attachments, {num_actions} actions)")
+        
+        return card if isinstance(card, dict) else {}
+    
+    def download_url(self, url: str, dest_path: Path) -> None:
+        """Download a file from URL to destination path with streaming.
+        
+        Handles large files efficiently using streaming and shows progress.
+        Creates parent directories if needed.
+        
+        Args:
+            url: Full URL to download from (e.g., attachment URL)
+            dest_path: Destination Path object where file will be saved
+            
+        Raises:
+            TrelloError: If download fails
+            
+        Example:
+            attachment_url = card['attachments'][0]['url']
+            client.download_url(attachment_url, Path('/tmp/invoice.pdf'))
+        """
+        dest_path = Path(dest_path)
+        dest_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        print(f"Downloading {url} -> {dest_path}")
+        
+        try:
+            with self.session.get(url, stream=True, timeout=60) as resp:
+                resp.raise_for_status()
+                
+                # Get file size if available
+                total_size = int(resp.headers.get('content-length', 0))
+                
+                with open(dest_path, 'wb') as f:
+                    downloaded = 0
+                    for chunk in resp.iter_content(chunk_size=8192):
+                        if chunk:
+                            f.write(chunk)
+                            downloaded += len(chunk)
+                            
+                            # Simple progress indicator for large files
+                            if total_size > 1_000_000:  # > 1MB
+                                progress = (downloaded / total_size) * 100 if total_size else 0
+                                print(f"  Progress: {progress:.1f}%", end='\r')
+                
+                if total_size > 1_000_000:
+                    print()  # New line after progress
+                    
+                print(f"✓ Downloaded {downloaded:,} bytes to {dest_path}")
+                
+        except requests.RequestException as e:
+            raise TrelloError(f"Failed to download {url}: {e}")
 
     def get_board_snapshot(self, board_id: str) -> Dict[str, Any]:
         """Fetch a rich board snapshot using the board endpoint with expansions.
