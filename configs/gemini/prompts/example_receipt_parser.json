@@ -1,0 +1,39 @@
+{
+  "name": "receipt_parser",
+  "model": "gemini-1.5-flash",
+  "system_instructions": "You are a receipt parser.  Extract structured data from receipt text.",
+  "user_prompt_template": "Parse this receipt:\n{receipt_text}",
+  "generation_config":  {
+    "temperature": 0.1,
+    "top_p":  0.95,
+    "top_k": 40,
+    "max_output_tokens": 2048,
+    "stop_sequences":  []
+  },
+  "test_cases": [
+    {
+      "input": {
+        "receipt_text": "Target\n123 Main St\nDate: 12/15/2025\nBananas $3.50\nMilk $4.99\nTotal:  $8.49"
+      },
+      "expected_json_schema":  {
+        "type": "object",
+        "required": ["store", "total", "items"],
+        "properties": {
+          "store": {"type": "string"},
+          "total": {"type": "number"},
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["name", "price"],
+              "properties": {
+                "name": {"type": "string"},
+                "price": {"type": "number"}
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
