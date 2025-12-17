@@ -11,6 +11,10 @@ scans/
 .DS_Store
 .env.local
 
+# Memphis Pool raw/private data (do not commit PDFs and text)
+data/memphis_pool/raw_bills/
+data/memphis_pool/bills_text/
+
 # F250 data files
 f250/data/*.db
 f250/data/csv/
