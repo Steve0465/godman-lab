@@ -1,0 +1,14 @@
+pytesseract
+Pillow
+pandas
+python-dateutil
+python-dotenv
+openai
+streamlit
+pyarrow
+fastparquet
+requests
+gspread
+google-auth
+pytest
+pypdf>=4.0.0
