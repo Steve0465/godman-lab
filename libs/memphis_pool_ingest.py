@@ -94,6 +94,54 @@ def parse_bill_date_from_filename(name: str) -> str:
     return ""
 
 
+def parse_bill_date_from_url(url: str) -> str:
+    """Extract bill date from Trello attachment URL.
+    
+    Extracts the actual downloadable filename from URL and attempts to
+    parse date using parse_bill_date_from_filename().
+    
+    Args:
+        url: Trello attachment URL (e.g., 
+             "https://trello.com/.../download/Xerox_Scan_05272025153405.pdf")
+        
+    Returns:
+        Date string in YYYY-MM-DD format, or empty string if parse fails
+        
+    Example:
+        >>> parse_bill_date_from_url("https://trello.com/.../download/Xerox_Scan_05272025153405.pdf")
+        "2025-05-27"
+    """
+    if not url:
+        return ""
+    
+    try:
+        from urllib.parse import urlparse, unquote
+        
+        # Parse URL
+        parsed = urlparse(url)
+        path = parsed.path
+        
+        # Extract filename from path
+        # Prefer substring after "/download/" if present
+        if "/download/" in path:
+            filename = path.split("/download/")[-1]
+        else:
+            # Use last path segment
+            filename = path.split("/")[-1] if "/" in path else path
+        
+        # URL decode
+        filename = unquote(filename)
+        
+        # Strip query params if any leaked through
+        filename = filename.split("?")[0]
+        
+        # Try to parse date from filename
+        return parse_bill_date_from_filename(filename)
+        
+    except Exception:
+        return ""
+
+
 def load_board_export(export_json_path: Path) -> dict:
     """Load Trello board export JSON from disk.
     
@@ -445,12 +493,13 @@ def build_bills_index(
         out_csv: Output CSV file path
         
     CSV columns:
-        bill_date_action, bill_date_filename, attachment_name, attachment_id,
-        attachment_url, source_card_id, source_card_name, action_id, 
-        action_datetime_utc
+        bill_date, bill_date_action, bill_date_filename, attachment_name, 
+        attachment_id, attachment_url, source_card_id, source_card_name, 
+        action_id, action_datetime_utc
         
+    bill_date: Best available date (action date > filename date > "UNKNOWN")
     bill_date_action: Date from action timestamp (YYYY-MM-DD UTC), empty if no action
-    bill_date_filename: Parsed from filename pattern _MMDDYYYYHHMMSS
+    bill_date_filename: Parsed from attachment name or URL (pattern _MMDDYYYYHHMMSS)
     
     Note: This is index-only. Use download_url() separately to fetch PDFs.
     """
@@ -516,10 +565,18 @@ def build_bills_index(
                 attachment_name = attachment_data.get("name", "")
                 attachment_url = attachment_data.get("url", "")
                 
-                # Parse bill_date_filename from attachment name
+                # Parse bill_date_filename with fallback to URL
                 bill_date_filename = parse_bill_date_from_filename(attachment_name)
+                if not bill_date_filename and attachment_url:
+                    bill_date_filename = parse_bill_date_from_url(attachment_url)
+                
+                # Compute best bill_date
+                bill_date = bill_date_action if bill_date_action else bill_date_filename
+                if not bill_date:
+                    bill_date = "UNKNOWN"
                 
                 action_rows.append({
+                    "bill_date": bill_date,
                     "bill_date_action": bill_date_action,
                     "bill_date_filename": bill_date_filename,
                     "attachment_name": attachment_name,
@@ -539,10 +596,17 @@ def build_bills_index(
                     attachment_name = attachment.get("name", "")
                     attachment_url = attachment.get("url", "")
                     
-                    # Parse bill_date_filename from attachment name
+                    # Parse bill_date_filename with priority:
+                    # a) from attachment name, b) from URL, c) blank
                     bill_date_filename = parse_bill_date_from_filename(attachment_name)
+                    if not bill_date_filename and attachment_url:
+                        bill_date_filename = parse_bill_date_from_url(attachment_url)
+                    
+                    # Compute best bill_date (no action date in export mode)
+                    bill_date = bill_date_filename if bill_date_filename else "UNKNOWN"
                     
                     action_rows.append({
+                        "bill_date": bill_date,
                         "bill_date_action": "",  # No action date available
                         "bill_date_filename": bill_date_filename,
                         "attachment_name": attachment_name,
@@ -566,7 +630,7 @@ def build_bills_index(
     # Write CSV
     if rows:
         fieldnames = [
-            "bill_date_action", "bill_date_filename", "attachment_name",
+            "bill_date", "bill_date_action", "bill_date_filename", "attachment_name",
             "attachment_id", "attachment_url", "source_card_id",
             "source_card_name", "action_id", "action_datetime_utc"
         ]
