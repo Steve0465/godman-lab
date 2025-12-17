@@ -81,7 +81,13 @@ def download_bills_from_index(
         List of successfully downloaded PDF paths
         
     Download filename format:
-        <bill_date_action>__<attachment_id>__<safe_filename>.pdf
+        <date_for_filename>__<attachment_id>__<safe_filename>.pdf
+        
+    Date priority for filename:
+        1. bill_date (best available from index)
+        2. bill_date_action (action timestamp if present)
+        3. bill_date_filename (parsed from name or URL)
+        4. "UNKNOWN" as fallback
         
     Download strategy:
         1. Try direct attachment_url
@@ -118,7 +124,18 @@ def download_bills_from_index(
     failed: List[Tuple[str, str]] = []
     
     for idx, row in enumerate(rows, 1):
-        bill_date = row.get('bill_date_action', 'unknown')
+        # Determine date for filename with fallback priority
+        # 1. bill_date (best available from index)
+        # 2. bill_date_action (action timestamp if present)
+        # 3. bill_date_filename (parsed from name or URL)
+        # 4. "UNKNOWN" as last resort
+        date_for_filename = (
+            row.get('bill_date') or 
+            row.get('bill_date_action') or 
+            row.get('bill_date_filename') or 
+            'UNKNOWN'
+        )
+        
         attachment_id = row.get('attachment_id', '')
         attachment_name = row.get('attachment_name', 'unknown.pdf')
         attachment_url = row.get('attachment_url', '')
@@ -129,7 +146,7 @@ def download_bills_from_index(
         if not safe_name.lower().endswith('.pdf'):
             safe_name += '.pdf'
         
-        filename = f"{bill_date}__{attachment_id}__{safe_name}"
+        filename = f"{date_for_filename}__{attachment_id}__{safe_name}"
         pdf_path = out_dir / filename
         
         print(f"[{idx}/{len(rows)}] {attachment_name[:50]}...", end=" ")
