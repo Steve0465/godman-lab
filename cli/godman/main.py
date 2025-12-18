@@ -20,6 +20,7 @@ from cli.godman import measurements as measurements_cli
 from cli.godman import passwords as passwords_cli
 from cli.godman import drive as drive_cli
 from cli.godman import tax as tax_cli
+from cli.godman.commands import plaid
 
 app = typer.Typer(help="Godman Automation Lab CLI.")
 console = Console()
@@ -62,6 +63,8 @@ app.add_typer(drive_cli.app, name="drive")
 app.add_typer(passwords_cli.app, name="passwords")
 # Tax archive management
 app.add_typer(tax_cli.app, name="tax")
+# Plaid banking integration
+app.add_typer(plaid.app, name="plaid", help="Plaid banking integration")
 
 
 @app.command()
