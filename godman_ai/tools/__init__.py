@@ -54,6 +54,21 @@ except Exception:  # pragma: no cover - optional dependency path
     bank_statement_ingest = extract_dates_from_statement = _banking_missing  # type: ignore
     determine_primary_tax_year = ensure_bank_csv_exists = _banking_missing  # type: ignore
 
+# Optional Trello import
+try:
+    from .trello import (  # type: ignore
+        FavoritesManager,
+        add_part_info_to_card,
+        get_card_part_comments,
+    )
+    _HAS_TRELLO = True
+except Exception:  # pragma: no cover - optional dependency path
+    _HAS_TRELLO = False
+    FavoritesManager = None  # type: ignore
+    def _trello_missing(*_, **__):
+        raise ImportError("Trello tools require libs.trello_client; check dependencies.")
+    add_part_info_to_card = get_card_part_comments = _trello_missing  # type: ignore
+
 __all__ = [
     'Receipt',
     'OCRResult',
@@ -82,4 +97,7 @@ __all__ = [
     'get_tool',
     'initialize_mcp_tools',
     'TOOL_REGISTRY',
+    'FavoritesManager',
+    'add_part_info_to_card',
+    'get_card_part_comments',
 ]

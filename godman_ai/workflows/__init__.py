@@ -16,6 +16,7 @@ from godman_ai.workflows.measurements_ocr_batch import (
     extract_measurements,
     OCRResult,
 )
+from godman_ai.workflows.part_identifier_workflow import PartIdentifierWorkflow
 
 __all__ = [
     "Workflow",
@@ -34,4 +35,5 @@ __all__ = [
     "run_ocr_batch",
     "extract_measurements",
     "OCRResult",
+    "PartIdentifierWorkflow",
 ]

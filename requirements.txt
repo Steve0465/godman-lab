@@ -21,6 +21,8 @@ Pillow
 opencv-python
 pytesseract
 face_recognition
+pymupdf>=1.23.0
+pypdf>=3.0.0
 
 # Vector DB & Memory
 faiss-cpu

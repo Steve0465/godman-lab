@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Plaid Production Test</title>
+    <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+  </head>
+  <body>
+    <button id="link-button">Connect Bank</button>
+
+    <script>
+      const handler = Plaid.create({
+        token: 'link-production-b591f39d-519a-4737-b40b-b8c1765ba6ae',
+        onSuccess: (public_token, metadata) => {
+          console.log('PUBLIC TOKEN:', public_token);
+          console.log('METADATA:', metadata);
+          alert('Success! Check console for public_token.');
+        },
+        onExit: (err, metadata) => {
+          console.log('EXIT:', err, metadata);
+        }
+      });
+
+      document
+        .getElementById('link-button')
+        .onclick = () => handler.open();
+    </script>
+  </body>
+</html>
+
