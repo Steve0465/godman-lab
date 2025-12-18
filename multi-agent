@@ -1,0 +1,443 @@
+#!/usr/bin/env python3
+"""
+Multi-Agent Coordinator - Route tasks to the best AI agent
+Orchestrates GitHub Copilot CLI, Gemini API, and Ollama Codex
+
+Usage:
+    ./multi-agent "your task"
+    ./multi-agent --gemini "analyze this image"
+    ./multi-agent --codex "write sorting code"
+    ./multi-agent --all "complex multi-step task"
+    ./multi-agent --interactive
+"""
+
+import sys
+import os
+import subprocess
+import json
+import argparse
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
+# Colors for terminal output
+class Colors:
+    BLUE = '\033[94m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    PURPLE = '\033[95m'
+    CYAN = '\033[96m'
+    BOLD = '\033[1m'
+    END = '\033[0m'
+
+def print_agent(agent: str, message: str):
+    """Print message with agent color coding"""
+    colors = {
+        'copilot': Colors.BLUE,
+        'gemini': Colors.GREEN,
+        'codex': Colors.PURPLE,
+        'coordinator': Colors.CYAN
+    }
+    color = colors.get(agent.lower(), Colors.CYAN)
+    print(f"{color}{Colors.BOLD}[{agent.upper()}]{Colors.END} {message}")
+
+def detect_task_type(prompt: str) -> str:
+    """Detect what type of task this is"""
+    prompt_lower = prompt.lower()
+    
+    # Media/multimodal tasks → Gemini
+    media_keywords = ['image', 'video', 'audio', 'picture', 'photo', 'receipt', 
+                      'pdf', 'scan', 'screenshot', 'transcribe', 'mp4', 'mp3']
+    if any(kw in prompt_lower for kw in media_keywords):
+        return 'gemini'
+    
+    # File operations → Copilot
+    file_ops = ['edit', 'modify', 'refactor', 'git', 'commit', 'push', 
+                'create file', 'change', 'fix', 'debug', 'test']
+    if any(kw in prompt_lower for kw in file_ops):
+        return 'copilot'
+    
+    # Code generation → Codex
+    code_gen = ['write', 'generate', 'create function', 'implement', 
+                'algorithm', 'script', 'code']
+    if any(kw in prompt_lower for kw in code_gen):
+        return 'codex'
+    
+    # Strategic planning → Codex Overmind
+    planning = ['plan', 'design', 'architect', 'strategy', 'approach']
+    if any(kw in prompt_lower for kw in planning):
+        return 'codex'
+    
+    # Default to Copilot (best for general tasks)
+    return 'copilot'
+
+def detect_files_in_prompt(prompt: str) -> List[str]:
+    """Extract file paths mentioned in prompt"""
+    words = prompt.split()
+    files = []
+    for word in words:
+        # Remove quotes if present
+        word = word.strip('"').strip("'")
+        if Path(word).exists():
+            files.append(word)
+    return files
+
+def call_gemini(prompt: str, files: List[str] = None) -> Dict:
+    """Call Gemini API via the registered tools"""
+    if not os.environ.get("GEMINI_API_KEY"):
+        print_agent('gemini', "GEMINI_API_KEY is not set. Get one at https://aistudio.google.com/apikey and export GEMINI_API_KEY.")
+        return {'status': 'error', 'error': {'message': 'GEMINI_API_KEY not set'}}
+
+    print_agent('gemini', f"Processing: {prompt[:60]}...")
+    
+    # Check if files are images/videos/audio
+    if files:
+        for file_path in files:
+            path = Path(file_path)
+            suffix = path.suffix.lower()
+            
+            # Image analysis
+            if suffix in ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.pdf']:
+                result = subprocess.run(
+                    ['curl', '-s', '-X', 'POST', 'http://localhost:8000/api/handler',
+                     '-H', 'Content-Type: application/json',
+                     '-d', json.dumps({
+                         'function': 'analyze_image',
+                         'parameters': {
+                             'image_path': str(path),
+                             'prompt': prompt
+                         }
+                     })],
+                    capture_output=True,
+                    text=True
+                )
+                return json.loads(result.stdout)
+            
+            # Video analysis
+            elif suffix in ['.mp4', '.mov', '.avi', '.webm']:
+                result = subprocess.run(
+                    ['curl', '-s', '-X', 'POST', 'http://localhost:8000/api/handler',
+                     '-H', 'Content-Type: application/json',
+                     '-d', json.dumps({
+                         'function': 'analyze_video',
+                         'parameters': {
+                             'video_path': str(path),
+                             'prompt': prompt
+                         }
+                     })],
+                    capture_output=True,
+                    text=True
+                )
+                return json.loads(result.stdout)
+            
+            # Audio transcription
+            elif suffix in ['.mp3', '.wav', '.m4a', '.aac']:
+                result = subprocess.run(
+                    ['curl', '-s', '-X', 'POST', 'http://localhost:8000/api/handler',
+                     '-H', 'Content-Type: application/json',
+                     '-d', json.dumps({
+                         'function': 'transcribe_audio',
+                         'parameters': {
+                             'audio_path': str(path),
+                             'include_timestamps': True
+                         }
+                     })],
+                    capture_output=True,
+                    text=True
+                )
+                return json.loads(result.stdout)
+    
+    # Default to ask_gemini
+    result = subprocess.run(
+        ['curl', '-s', '-X', 'POST', 'http://localhost:8000/api/handler',
+         '-H', 'Content-Type: application/json',
+         '-d', json.dumps({
+             'function': 'ask_gemini',
+             'parameters': {'prompt': prompt}
+         })],
+        capture_output=True,
+        text=True
+    )
+    
+    try:
+        return json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return {'status': 'error', 'error': {'message': f'Failed to parse response: {result.stdout[:200]}'}}
+
+def call_codex(prompt: str, preset: str = 'forge') -> str:
+    """Call local Ollama Codex"""
+    preset_names = {
+        'forge': 'Forge (Code Gen)',
+        'overmind': 'Overmind (Reasoning)',
+        'handler': 'Handler (Functions)'
+    }
+    print_agent('codex', f"Using {preset_names.get(preset, preset)}: {prompt[:60]}...")
+    
+    result = subprocess.run(
+        ['./codex', f'--{preset}', prompt],
+        capture_output=True,
+        text=True
+    )
+    return result.stdout
+
+def multi_agent_workflow(prompt: str) -> Dict:
+    """Execute a complex workflow using multiple agents"""
+    print_agent('coordinator', 'Analyzing task and creating execution plan...')
+    
+    # Use Gemini smart_agent to plan the workflow
+    plan_result = subprocess.run(
+        ['curl', '-s', '-X', 'POST', 'http://localhost:8000/api/handler',
+         '-H', 'Content-Type: application/json',
+         '-d', json.dumps({
+             'function': 'smart_agent',
+             'parameters': {
+                 'task_description': prompt,
+                 'auto_execute': False
+             }
+         })],
+        capture_output=True,
+        text=True
+    )
+    
+    plan = json.loads(plan_result.stdout)
+    
+    if plan.get('status') == 'success':
+        print_agent('coordinator', f"Plan created with {len(plan['result'].get('tool_calls', []))} steps")
+        print(f"\n{Colors.YELLOW}Execution Plan:{Colors.END}")
+        print(json.dumps(plan['result'].get('plan', 'See tool calls'), indent=2))
+        
+        tool_calls = plan['result'].get('tool_calls', [])
+        if tool_calls:
+            print(f"\n{Colors.YELLOW}Tool Calls:{Colors.END}")
+            for i, call in enumerate(tool_calls, 1):
+                print(f"  {i}. {call['function']}({list(call['parameters'].keys())})")
+        
+        # Ask if user wants to execute
+        confirm = input(f"\n{Colors.BOLD}Execute this plan? (y/n):{Colors.END} ")
+        if confirm.lower() == 'y':
+            print_agent('coordinator', 'Executing plan...')
+            # Re-run with auto_execute
+            exec_result = subprocess.run(
+                ['curl', '-s', '-X', 'POST', 'http://localhost:8000/api/handler',
+                 '-H', 'Content-Type: application/json',
+                 '-d', json.dumps({
+                     'function': 'smart_agent',
+                     'parameters': {
+                         'task_description': prompt,
+                         'auto_execute': True
+                     }
+                 })],
+                capture_output=True,
+                text=True
+            )
+            return json.loads(exec_result.stdout)
+    
+    return plan
+
+def interactive_mode():
+    """Interactive multi-agent mode"""
+    print(f"{Colors.BOLD}{Colors.CYAN}")
+    print("╔═══════════════════════════════════════════════════════════════╗")
+    print("║           MULTI-AGENT COORDINATOR - INTERACTIVE MODE          ║")
+    print("╚═══════════════════════════════════════════════════════════════╝")
+    print(f"{Colors.END}")
+    print(f"{Colors.YELLOW}Available agents:{Colors.END}")
+    print(f"  {Colors.BLUE}• Copilot{Colors.END} - File ops, git, coordination")
+    print(f"  {Colors.GREEN}• Gemini{Colors.END}  - Images, video, audio, OCR")
+    print(f"  {Colors.PURPLE}• Codex{Colors.END}   - Code generation, reasoning")
+    print(f"\n{Colors.YELLOW}Commands:{Colors.END}")
+    print("  /gemini <prompt>  - Force Gemini")
+    print("  /codex <prompt>   - Force Codex")
+    print("  /all <prompt>     - Multi-agent workflow")
+    print("  /quit or exit     - Exit")
+    print()
+    
+    while True:
+        try:
+            prompt = input(f"{Colors.BOLD}You:{Colors.END} ")
+            if not prompt:
+                continue
+            
+            if prompt.lower() in ['exit', 'quit', '/quit']:
+                print_agent('coordinator', 'Goodbye! 👋')
+                break
+            
+            # Handle commands
+            if prompt.startswith('/gemini '):
+                result = call_gemini(prompt[8:])
+                if result.get('status') == 'success':
+                    print(f"{Colors.GREEN}{result['result'].get('response', result['result'])}{Colors.END}")
+                else:
+                    print(f"{Colors.RED}Error: {result.get('error')}{Colors.END}")
+            
+            elif prompt.startswith('/codex '):
+                result = call_codex(prompt[7:])
+                print(f"{Colors.PURPLE}{result}{Colors.END}")
+            
+            elif prompt.startswith('/all '):
+                result = multi_agent_workflow(prompt[5:])
+                print(json.dumps(result, indent=2))
+            
+            else:
+                # Auto-detect best agent
+                agent = detect_task_type(prompt)
+                files = detect_files_in_prompt(prompt)
+                
+                print_agent('coordinator', f'Routing to {agent.upper()}...')
+                
+                if agent == 'gemini':
+                    result = call_gemini(prompt, files)
+                    if result.get('status') == 'success':
+                        response = result['result']
+                        if isinstance(response, dict):
+                            # Handle different response types
+                            if 'response' in response:
+                                print(f"{Colors.GREEN}{response['response']}{Colors.END}")
+                            elif 'analysis' in response:
+                                print(f"{Colors.GREEN}{response['analysis']}{Colors.END}")
+                            elif 'transcript' in response:
+                                print(f"{Colors.GREEN}{response['transcript']}{Colors.END}")
+                            else:
+                                print(f"{Colors.GREEN}{json.dumps(response, indent=2)}{Colors.END}")
+                        else:
+                            print(f"{Colors.GREEN}{response}{Colors.END}")
+                    else:
+                        print(f"{Colors.RED}Error: {result.get('error')}{Colors.END}")
+                
+                elif agent == 'codex':
+                    # Detect if it's planning or coding
+                    if any(kw in prompt.lower() for kw in ['plan', 'design', 'architect']):
+                        result = call_codex(prompt, 'overmind')
+                    else:
+                        result = call_codex(prompt, 'forge')
+                    print(f"{Colors.PURPLE}{result}{Colors.END}")
+                
+                else:
+                    print_agent('copilot', 'This task is best handled interactively...')
+                    print(f"{Colors.BLUE}Run: copilot \"{prompt}\"{Colors.END}")
+            
+            print()
+        
+        except KeyboardInterrupt:
+            print(f"\n{Colors.YELLOW}Use /quit to exit{Colors.END}")
+        except Exception as e:
+            print(f"{Colors.RED}Error: {str(e)}{Colors.END}")
+
+def main():
+    parser = argparse.ArgumentParser(
+        description='Multi-Agent Coordinator - Route tasks to best AI agent',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  ./multi-agent "explain docker"
+  ./multi-agent "analyze receipt.jpg and extract data"
+  ./multi-agent "write a sorting algorithm"
+  ./multi-agent --gemini "transcribe meeting.m4a"
+  ./multi-agent --codex "plan a REST API architecture"
+  ./multi-agent --all "process all receipts and generate report"
+  ./multi-agent --interactive
+
+Agent Routing:
+  • Media tasks (images/video/audio) → Gemini
+  • File operations (edit/git) → Copilot (manual)
+  • Code generation → Codex
+  • Complex workflows → All agents coordinated
+        """
+    )
+    
+    parser.add_argument('prompt', nargs='*', help='Task to execute')
+    parser.add_argument('--gemini', action='store_true', help='Force use Gemini')
+    parser.add_argument('--codex', action='store_true', help='Force use Codex')
+    parser.add_argument('--all', action='store_true', help='Multi-agent workflow')
+    parser.add_argument('--interactive', '-i', action='store_true', help='Interactive mode')
+    parser.add_argument('--preset', choices=['forge', 'overmind', 'handler'], 
+                       default='forge', help='Codex preset (default: forge)')
+    
+    args = parser.parse_args()
+    
+    # Interactive mode
+    if args.interactive:
+        interactive_mode()
+        return
+    
+    # Need a prompt
+    if not args.prompt:
+        parser.print_help()
+        return
+    
+    prompt = ' '.join(args.prompt)
+    
+    # Multi-agent workflow
+    if args.all:
+        result = multi_agent_workflow(prompt)
+        print(json.dumps(result, indent=2))
+        return
+    
+    # Force Gemini
+    if args.gemini:
+        files = detect_files_in_prompt(prompt)
+        result = call_gemini(prompt, files)
+        
+        if result.get('status') == 'success':
+            response = result['result']
+            if isinstance(response, dict):
+                if 'response' in response:
+                    print(response['response'])
+                elif 'analysis' in response:
+                    print(response['analysis'])
+                elif 'transcript' in response:
+                    print(response['transcript'])
+                else:
+                    print(json.dumps(response, indent=2))
+            else:
+                print(response)
+        else:
+            print(f"Error: {result.get('error', 'Unknown error')}")
+        return
+    
+    # Force Codex
+    if args.codex:
+        result = call_codex(prompt, args.preset)
+        print(result)
+        return
+    
+    # Auto-detect best agent
+    agent = detect_task_type(prompt)
+    files = detect_files_in_prompt(prompt)
+    
+    print_agent('coordinator', f'Routing to {agent.upper()}...')
+    print()
+    
+    if agent == 'gemini':
+        result = call_gemini(prompt, files)
+        
+        if result.get('status') == 'success':
+            response = result['result']
+            if isinstance(response, dict):
+                if 'response' in response:
+                    print(response['response'])
+                elif 'analysis' in response:
+                    print(response['analysis'])
+                elif 'transcript' in response:
+                    print(response['transcript'])
+                else:
+                    print(json.dumps(response, indent=2))
+            else:
+                print(response)
+        else:
+            print(f"Error: {result.get('error', 'Unknown error')}")
+    
+    elif agent == 'codex':
+        # Detect if it's planning or coding
+        if any(kw in prompt.lower() for kw in ['plan', 'design', 'architect']):
+            result = call_codex(prompt, 'overmind')
+        else:
+            result = call_codex(prompt, 'forge')
+        print(result)
+    
+    else:
+        print_agent('copilot', 'This task requires interactive terminal control')
+        print(f"Run: {Colors.BOLD}copilot \"{prompt}\"{Colors.END}")
+
+if __name__ == '__main__':
+    main()

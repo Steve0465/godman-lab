@@ -17,7 +17,7 @@ fi
 export GODMAN_ENV=production
 export GODMAN_LOG_LEVEL=INFO
 
-# Start the server
+# Start the server (no reload to avoid file-watch permission issues)
 echo ""
 echo "Starting FastAPI server on http://0.0.0.0:8000"
 echo ""
@@ -31,4 +31,4 @@ echo ""
 echo "Press Ctrl+C to stop the server"
 echo "======================================================================"
 
-python -m uvicorn godman_ai.server.api:app --host 0.0.0.0 --port 8000 --reload
+python -m uvicorn godman_ai.server.api:app --host 0.0.0.0 --port 8000 --log-level info
