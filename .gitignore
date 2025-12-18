@@ -12,6 +12,8 @@ __pycache__/
 venv/
 env/
 ENV/
+.venv/
+.venv*/
 
 # IDE / Editor
 .vscode/
@@ -47,4 +49,3 @@ dist/
 .coverage
 htmlcov/
 pytest_cache/
-
