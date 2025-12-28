@@ -92,7 +92,28 @@ result = runner.run("add", {"x": 5, "y": 3})
 }
 ```
 
-### 4. Error Handling
+### 4. Async Execution
+
+Execute tools asynchronously using `run_async`. This supports both async functions (coroutines) and synchronous functions (run in a thread pool), as well as asynchronous shell commands.
+
+```python
+import asyncio
+
+# Register async tool
+@runner.tool(schema={"name": str})
+async def async_greet(name: str):
+    await asyncio.sleep(1)
+    return {"message": f"Hello {name}"}
+
+# Execute asynchronously
+async def main():
+    result = await runner.run_async("async_greet", {"name": "Bob"})
+    print(result)
+
+asyncio.run(main())
+```
+
+### 5. Error Handling
 
 Errors are captured and returned in a structured format:
 
@@ -114,7 +135,7 @@ result = runner.run("divide", {"x": 10, "y": 0})
 }
 ```
 
-### 5. Tool Discovery
+### 6. Tool Discovery
 
 List and inspect registered tools:
 
@@ -168,6 +189,17 @@ Decorator to register a function or command as a tool.
 #### `run(function_name: str, parameters: dict = None, timeout: int = 30) -> dict`
 
 Execute a registered tool by name.
+
+**Parameters:**
+- `function_name` (str): Name of registered tool
+- `parameters` (dict, optional): Tool parameters
+- `timeout` (int): Execution timeout in seconds
+
+**Returns:** JSON result dictionary
+
+#### `run_async(function_name: str, parameters: dict = None, timeout: int = 30) -> dict`
+
+Execute a registered tool asynchronously by name.
 
 **Parameters:**
 - `function_name` (str): Name of registered tool
