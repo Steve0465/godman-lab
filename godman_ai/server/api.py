@@ -26,6 +26,14 @@ from godman_ai.server.security import get_api_key
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Tool registration (safe imports)
+try:
+    import register_tools
+    import godman_ai.tools.spotify
+    import godman_ai.tools.trello
+except ImportError:
+    pass
+
 app = FastAPI(
     title="Godman AI API",
     description="API for WebUI presets, Handler endpoint, and ToolRunner execution",

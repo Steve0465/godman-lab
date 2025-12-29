@@ -5,7 +5,8 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from godman_ai.workflows.engine import Context, Step, Workflow
-from godman_ai.tools.trello import FavoritesManager, add_part_info_to_card
+from godman_ai.tools.trello_parts_legacy import FavoritesManager, add_part_info_to_card
+
 
 logger = logging.getLogger(__name__)
 
