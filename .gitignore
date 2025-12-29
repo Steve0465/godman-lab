@@ -1,53 +1,121 @@
-# Environment & secrets
+############################################
+# ENVIRONMENT & SECRETS
+############################################
 .env
+.env.*
+!.env.example
 
-# Python
+############################################
+# PYTHON
+############################################
 __pycache__/
 *.py[cod]
-*$py.class
+*.pyo
+*.pyd
 *.so
 .Python
+.pytest_cache/
+.mypy_cache/
+.pyre/
+ruff_cache/
 
-# Virtual environments
+############################################
+# PYTHON VIRTUAL ENVIRONMENTS
+############################################
 venv/
 env/
 ENV/
 .venv/
 .venv*/
+.virtualenv/
 
-# IDE / Editor
+############################################
+# PYTHON BUILD ARTIFACTS
+############################################
+build/
+dist/
+*.egg-info/
+pip-wheel-metadata/
+
+############################################
+# TEST / COVERAGE ARTIFACTS
+############################################
+.coverage
+.coverage.*
+htmlcov/
+pytest_cache/
+test-results/
+nosetests.xml
+coverage.xml
+
+############################################
+# LOGS & RUNTIME OUTPUT
+############################################
+logs/
+*.log
+*.out
+tmp/
+.cache/
+
+############################################
+# LOCAL DATA / EXPORTS (NON-SOURCE)
+############################################
+data/
+exports/
+scans/
+ocr_output/
+receipts/
+sessions/
+
+############################################
+# BROWSER / AUTH / COOKIE ARTIFACTS
+############################################
+*cookies*.json
+*.har
+fresh_*.json
+auth_*.json
+session_*.json
+
+############################################
+# AT&T / NETWORK / DEBUG ARTIFACTS
+############################################
+att_*.json
+fiber_*.log
+network_dump_*.txt
+
+############################################
+# NODE / JS (JUST IN CASE)
+############################################
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+############################################
+# IDE / EDITOR
+############################################
 .vscode/
 .idea/
 *.swp
 *.swo
+*.swn
 
-# OS
+############################################
+# OS / SYSTEM
+############################################
 .DS_Store
-Thumbs.db
+.DS_Store?
+.Trashes
+.Spotlight-V100
+.AppleDouble
+.LSOverride
 
-# Logs & cache
-*.log
-logs/
-.cache/
-tmp/
+############################################
+# MISC
+############################################
+*.bak
+*.tmp
+*.old
+*.orig
 
-# Local runtime data
-data/
-exports/
-
-# Sensitive / browser artifacts
-*cookies*.json
-*.har
-fresh_*.json
-
-# Python build artifacts
-build/
-dist/
-*.egg-info/
-
-# Test artifacts
-.coverage
-htmlcov/
-pytest_cache/
-__pycache__/
-*.pyc
