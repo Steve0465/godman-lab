@@ -31,8 +31,12 @@ try:
     import register_tools
     import godman_ai.tools.spotify
     import godman_ai.tools.trello
-except ImportError:
-    pass
+    import godman_ai.tools.trello_workorders
+    import godman_ai.tools.trello_export   # <-- add this line
+except ImportError as e:
+    logger.warning("Tool registration import failed: %s", e)
+
+
 
 app = FastAPI(
     title="Godman AI API",
