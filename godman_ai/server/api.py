@@ -1,18 +1,27 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Security, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.security import APIKeyHeader
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 from typing import Dict, Any, Optional
 from pathlib import Path
+import os
+import logging
 from godman_ai.config.presets import get_all_presets, get_preset_by_name
 from libs.tool_runner import runner as tool_runner
 
 # Import WebUI router and static files
 from godman_ai.server.webui import router as webui_router, get_static_files_app, WEBUI_DIR
+from godman_ai.server.spotify_router import router as spotify_router
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Import to register sample tools
 try:
     import register_tools
+    import godman_ai.tools.spotify  # Register Spotify tools
 except ImportError:
     pass  # Tools can be registered separately
 
@@ -22,17 +31,45 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Add CORS middleware for localhost and WebUI access
+# --- Security Configuration ---
+API_KEY_NAME = "X-API-Key"
+api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
+
+def get_api_key(api_key_header: str = Security(api_key_header)):
+    """
+    Validates the API Key provided in the header.
+    Requires GODMAN_API_KEY to be set in the environment.
+    """
+    expected_api_key = os.getenv("GODMAN_API_KEY")
+
+    if not expected_api_key:
+        raise RuntimeError("GODMAN_API_KEY is not set")
+
+    if api_key_header == expected_api_key:
+        return api_key_header
+
+    logger.warning("Unauthorized access attempt.")
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Could not validate credentials"
+    )
+
+
+
+# --- CORS Configuration ---
+# Restrict origins to known local development ports. 
+# In production, this should be strictly configured.
+origins = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://localhost:3000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:8000",
-        "http://127.0.0.1:8000",
-        "http://localhost:3000",  # Common dev port
-        "*"  # Allow all for development
-    ],
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -41,6 +78,8 @@ app.mount("/webui", get_static_files_app(), name="webui")
 
 # Include WebUI router
 app.include_router(webui_router, tags=["WebUI"])
+# Include Spotify router
+app.include_router(spotify_router)
 
 
 # Root route - serve index.html
@@ -95,10 +134,10 @@ def get_preset(name: str):
     return preset
 
 
-@app.post("/api/handler", response_model=HandlerResponse)
-def execute_handler(request: HandlerRequest):
+@app.post("/api/handler", response_model=HandlerResponse, dependencies=[Depends(get_api_key)])
+async def execute_handler(request: HandlerRequest):
     """
-    Execute a registered function from Handler preset.
+    Execute a registered function from Handler preset asynchronously.
     
     Accepts JSON with function name and parameters, validates that the function
     exists, executes it via ToolRunner, and returns structured output.
@@ -127,19 +166,21 @@ def execute_handler(request: HandlerRequest):
     
     # Execute the function
     try:
-        result = tool_runner.run(request.function, request.parameters)
+        result = await tool_runner.run_async(request.function, request.parameters)
         
         # Return result directly if successful
         if result["status"] == "success":
             return HandlerResponse(**result)
         
         # If tool execution returned error status, return 500
+        logger.error(f"Tool execution failed for {request.function}: {result.get('error')}")
         raise HTTPException(
             status_code=500,
             detail={
                 "error": "Execution failed",
                 "function": request.function,
-                "error_details": result.get("error"),
+                # Sanitize detail: do not return full tracebacks
+                "error_details": str(result.get("error")),
                 "execution_time": result.get("execution_time"),
                 "timestamp": result.get("timestamp")
             }
@@ -150,19 +191,18 @@ def execute_handler(request: HandlerRequest):
         raise
     
     except Exception as e:
-        # Catch unexpected errors
+        # Catch unexpected errors and log them securely
+        logger.exception(f"Unexpected error executing {request.function}")
         raise HTTPException(
             status_code=500,
             detail={
-                "error": "Unexpected error",
-                "function": request.function,
-                "message": str(e),
-                "type": type(e).__name__
+                "error": "Internal Server Error",
+                "message": "An unexpected error occurred. Please check server logs."
             }
         )
 
 
-@app.get("/api/handler/tools")
+@app.get("/api/handler/tools", dependencies=[Depends(get_api_key)])
 def list_handler_tools():
     """
     List all available tools registered in ToolRunner.
