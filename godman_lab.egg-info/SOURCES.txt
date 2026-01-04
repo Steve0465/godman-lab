@@ -1,6 +1,7 @@
 README.md
 pyproject.toml
 cli/godman/__init__.py
+cli/godman/gemini.py
 cli/godman/main.py
 cli/godman/commands/__init__.py
 cli/godman/commands/receipts.py
@@ -20,6 +21,9 @@ godman_ai/appstore/registry.py
 godman_ai/config/__init__.py
 godman_ai/config/loader.py
 godman_ai/config/settings.py
+godman_ai/diagnostics/__init__.py
+godman_ai/diagnostics/installer.py
+godman_ai/diagnostics/llm_health.py
 godman_ai/memory/__init__.py
 godman_ai/memory/episodic_memory.py
 godman_ai/memory/store.py
@@ -73,6 +77,7 @@ godman_lab.egg-info/requires.txt
 godman_lab.egg-info/top_level.txt
 libs/__init__.py
 libs/expenses.py
+libs/gemini_promptlab.py
 libs/ocr.py
 libs/receipts.py
 libs/triton/__init__.py
@@ -84,6 +89,7 @@ tests/test_api.py
 tests/test_appstore.py
 tests/test_config.py
 tests/test_daemon.py
+tests/test_diagnostics.py
 tests/test_memory.py
 tests/test_model_router.py
 tests/test_orchestrator_routing.py
