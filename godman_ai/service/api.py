@@ -130,7 +130,7 @@ def run_orchestrator(request: RunRequest, _: None = Header(None, alias="Authoriz
         return {"success": True, "result": result}
     except Exception as e:
         logger.error(f"Error in /run: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
 @app.post("/agent")
@@ -146,7 +146,7 @@ def run_agent(request: AgentRequest, authorization: Optional[str] = Header(None)
         return {"success": True, "result": result}
     except Exception as e:
         logger.error(f"Error in /agent: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
 @app.post("/queue/enqueue")
@@ -162,7 +162,7 @@ def enqueue_job(request: EnqueueRequest, authorization: Optional[str] = Header(N
         return {"success": True, "job_id": job_id}
     except Exception as e:
         logger.error(f"Error in /queue/enqueue: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
 @app.get("/queue/status")
@@ -178,7 +178,7 @@ def queue_status():
         }
     except Exception as e:
         logger.error(f"Error in /queue/status: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
 @app.get("/os/state")
@@ -191,7 +191,7 @@ def os_state():
         return state.snapshot()
     except Exception as e:
         logger.error(f"Error in /os/state: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
 @app.get("/os/health")
@@ -203,7 +203,7 @@ def os_health():
         return system_health()
     except Exception as e:
         logger.error(f"Error in /os/health: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
 @app.get("/tools")
@@ -225,7 +225,7 @@ def list_tools():
         return {"tools": tools}
     except Exception as e:
         logger.error(f"Error in /tools: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
 @app.get("/models")
@@ -238,7 +238,7 @@ def list_models():
         return {"models": router.available_models()}
     except Exception as e:
         logger.error(f"Error in /models: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
 @app.post("/memory/add")
@@ -254,7 +254,7 @@ def memory_add(request: MemoryAddRequest, authorization: Optional[str] = Header(
         return {"success": True}
     except Exception as e:
         logger.error(f"Error in /memory/add: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
 @app.post("/memory/search")
@@ -268,4 +268,4 @@ def memory_search(request: MemorySearchRequest):
         return {"success": True, "results": results}
     except Exception as e:
         logger.error(f"Error in /memory/search: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal Server Error")

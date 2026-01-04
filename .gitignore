@@ -11,6 +11,11 @@ scans/
 .DS_Store
 .env.local
 
+# Logs
+*.log
+logs/
+godman_ai/logs/
+
 # F250 data files
 f250/data/*.db
 f250/data/csv/
