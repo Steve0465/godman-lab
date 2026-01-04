@@ -1,6 +1,7 @@
 README.md
 pyproject.toml
 cli/godman/__init__.py
+cli/godman/gemini.py
 cli/godman/main.py
 cli/godman/commands/__init__.py
 cli/godman/commands/receipts.py
@@ -62,6 +63,7 @@ godman_ai/tools/trello.py
 godman_ai/tools/video.py
 godman_ai/tools/vision.py
 godman_ai/workflows/__init__.py
+godman_ai/workflows/measurements_ocr_batch.py
 godman_ai/workflows/pooljob_workflow.py
 godman_ai/workflows/receipts_workflow.py
 godman_ai/workflows/video_workflow.py
@@ -73,6 +75,7 @@ godman_lab.egg-info/requires.txt
 godman_lab.egg-info/top_level.txt
 libs/__init__.py
 libs/expenses.py
+libs/gemini_promptlab.py
 libs/ocr.py
 libs/receipts.py
 libs/triton/__init__.py
@@ -84,6 +87,7 @@ tests/test_api.py
 tests/test_appstore.py
 tests/test_config.py
 tests/test_daemon.py
+tests/test_measurements_ocr_batch.py
 tests/test_memory.py
 tests/test_model_router.py
 tests/test_orchestrator_routing.py
