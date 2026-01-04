@@ -30,13 +30,16 @@ class GodmanDaemon:
         """Run the scheduler loop"""
         try:
             from godman_ai.scheduler.scheduler import Scheduler
+            from godman_ai.scheduler.task_manager import TaskManager
             
             scheduler = Scheduler()
+            task_manager = TaskManager()
             logger.info("Scheduler loop started")
             
             while True:
                 try:
                     scheduler.run_pending()
+                    task_manager.run_pending_tasks()
                     time.sleep(1)
                 except Exception as e:
                     logger.error(f"Error in scheduler loop: {e}", exc_info=True)

@@ -20,3 +20,15 @@ f250/data/*.csv
 
 # Data directory (runtime configs and generated data)
 data/
+
+# Test coverage
+.coverage
+htmlcov/
+
+# Log files
+*.log
+godman_ai/logs/*.log
+
+# SQLite databases (state and jobs)
+.godman/state/*.db
+.godman/state/*.db-journal
