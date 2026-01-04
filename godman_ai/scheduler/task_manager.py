@@ -8,7 +8,7 @@ import json
 import logging
 from typing import Optional, Dict, Any, List
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from dataclasses import dataclass, asdict
 
 logger = logging.getLogger(__name__)
@@ -101,7 +101,7 @@ class TaskManager:
         # Calculate next run time
         next_run = self._calculate_next_run(schedule_type, schedule_value)
         
-        created_at = datetime.utcnow().isoformat()
+        created_at = datetime.now(timezone.utc).isoformat()
         status = 'active' if schedule_type != 'now' else 'pending'
         
         cursor = self.conn.execute("""
@@ -140,7 +140,7 @@ class TaskManager:
         """Calculate next run time based on schedule type and value."""
         from datetime import timedelta
         
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         
         if schedule_type == 'now':
             return now.isoformat()
@@ -174,6 +174,7 @@ class TaskManager:
                 raise ValueError("Cron schedule type requires a cron expression")
             
             # Use cron parser to calculate next run
+            # Import here to avoid circular dependency with scheduler module
             from godman_ai.scheduler.cron_parser import parse_cron
             parser = parse_cron(schedule_value)
             
@@ -199,7 +200,7 @@ class TaskManager:
         job_id = queue.enqueue(task['task_input'], priority=task['priority'])
         
         # Update task metadata
-        now = datetime.utcnow().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         run_count = task['run_count'] + 1
         
         # Calculate next run for recurring tasks
@@ -350,7 +351,7 @@ class TaskManager:
         
         # Add updated_at
         updates.append("updated_at = ?")
-        params.append(datetime.utcnow().isoformat())
+        params.append(datetime.now(timezone.utc).isoformat())
         
         # Add task_id for WHERE clause
         params.append(task_id)
@@ -386,7 +387,7 @@ class TaskManager:
     
     def run_pending_tasks(self):
         """Check for pending tasks and execute them."""
-        now = datetime.utcnow().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         
         # Find tasks that are due
         cursor = self.conn.execute("""
