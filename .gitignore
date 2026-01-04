@@ -11,6 +11,14 @@ scans/
 .DS_Store
 .env.local
 
+# Testing and coverage
+.coverage
+.pytest_cache/
+htmlcov/
+
+# Logs
+godman_ai/logs/*.log
+
 # F250 data files
 f250/data/*.db
 f250/data/csv/
