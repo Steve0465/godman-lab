@@ -1,0 +1,66 @@
+2026-01-04 04:49:17,717 - godman_ai - INFO - 🚀 Initializing Godman AI Agent Engine
+2026-01-04 04:49:17,717 - godman_ai - INFO - Loading tools...
+2026-01-04 04:49:17,719 - godman_ai - INFO -   ✓ Loaded tool: drive_backup
+2026-01-04 04:49:17,719 - godman_ai - INFO -   ✓ Loaded tool: drive_organizer
+2026-01-04 04:49:17,719 - godman_ai - INFO -   ✓ Loaded tool: drive_scanner
+2026-01-04 04:49:17,719 - godman_ai - INFO -   ✓ Loaded tool: drive
+2026-01-04 04:49:17,720 - godman_ai - INFO -   ✓ Loaded tool: automation_metrics
+2026-01-04 04:49:17,720 - godman_ai - INFO -   ✓ Loaded tool: expense_analyzer
+2026-01-04 04:49:17,721 - godman_ai - INFO -   ✓ Loaded tool: pool_job_reporter
+2026-01-04 04:49:17,721 - godman_ai - INFO -   ✓ Loaded tool: reports
+2026-01-04 04:49:17,722 - godman_ai - INFO -   ✓ Loaded tool: sheets_receipt_logger
+2026-01-04 04:49:17,722 - godman_ai - INFO -   ✓ Loaded tool: sheets_report
+2026-01-04 04:49:17,722 - godman_ai - INFO -   ✓ Loaded tool: sheets
+2026-01-04 04:49:17,732 - godman_ai - INFO -   ✓ Loaded tool: video
+2026-01-04 04:49:17,733 - godman_ai - INFO -   ✓ Loaded tool: image_categorizer
+2026-01-04 04:49:17,733 - godman_ai - INFO -   ✓ Loaded tool: receipt_analyzer
+2026-01-04 04:49:17,733 - godman_ai - INFO -   ✓ Loaded tool: vision
+2026-01-04 04:49:17,734 - godman_ai - INFO -   ✓ Loaded tool: ocr_batch
+2026-01-04 04:49:17,734 - godman_ai - INFO -   ✓ Loaded tool: ocr
+2026-01-04 04:49:17,735 - godman_ai - INFO -   ✓ Loaded tool: trello_job_tracker
+2026-01-04 04:49:17,736 - godman_ai - INFO -   ✓ Loaded tool: trello_task_automation
+2026-01-04 04:49:17,736 - godman_ai - INFO -   ✓ Loaded tool: trello
+2026-01-04 04:49:17,736 - godman_ai - INFO - Loading workflows...
+2026-01-04 04:49:17,739 - godman_ai - INFO -   ✓ Loaded workflow: video_organizer
+2026-01-04 04:49:17,739 - godman_ai - INFO -   ✓ Loaded workflow: video_to_frames
+2026-01-04 04:49:17,741 - godman_ai - INFO -   ✓ Loaded workflow: measurements_ocr_batch
+2026-01-04 04:49:17,743 - godman_ai - INFO -   ✓ Loaded workflow: pooljob_completion
+2026-01-04 04:49:17,743 - godman_ai - INFO -   ✓ Loaded workflow: pooljob_workflow
+2026-01-04 04:49:17,745 - godman_ai - INFO -   ✓ Loaded workflow: quick_receipt
+2026-01-04 04:49:17,745 - godman_ai - INFO -   ✓ Loaded workflow: receipts_workflow
+2026-01-04 04:49:17,745 - godman_ai - INFO - ✓ Loaded 20 tools and 7 workflows
+2026-01-04 04:49:29,464 - godman_ai - INFO - 🚀 Initializing Godman AI Agent Engine
+2026-01-04 04:49:29,464 - godman_ai - INFO - Loading tools...
+2026-01-04 04:49:29,465 - godman_ai - INFO -   ✓ Loaded tool: drive_backup
+2026-01-04 04:49:29,465 - godman_ai - INFO -   ✓ Loaded tool: drive_organizer
+2026-01-04 04:49:29,465 - godman_ai - INFO -   ✓ Loaded tool: drive_scanner
+2026-01-04 04:49:29,465 - godman_ai - INFO -   ✓ Loaded tool: drive
+2026-01-04 04:49:29,465 - godman_ai - INFO -   ✓ Loaded tool: automation_metrics
+2026-01-04 04:49:29,465 - godman_ai - INFO -   ✓ Loaded tool: expense_analyzer
+2026-01-04 04:49:29,465 - godman_ai - INFO -   ✓ Loaded tool: pool_job_reporter
+2026-01-04 04:49:29,465 - godman_ai - INFO -   ✓ Loaded tool: reports
+2026-01-04 04:49:29,466 - godman_ai - INFO -   ✓ Loaded tool: sheets_receipt_logger
+2026-01-04 04:49:29,466 - godman_ai - INFO -   ✓ Loaded tool: sheets_report
+2026-01-04 04:49:29,466 - godman_ai - INFO -   ✓ Loaded tool: sheets
+2026-01-04 04:49:29,471 - godman_ai - INFO -   ✓ Loaded tool: video
+2026-01-04 04:49:29,472 - godman_ai - INFO -   ✓ Loaded tool: image_categorizer
+2026-01-04 04:49:29,472 - godman_ai - INFO -   ✓ Loaded tool: receipt_analyzer
+2026-01-04 04:49:29,472 - godman_ai - INFO -   ✓ Loaded tool: vision
+2026-01-04 04:49:29,472 - godman_ai - INFO -   ✓ Loaded tool: ocr_batch
+2026-01-04 04:49:29,472 - godman_ai - INFO -   ✓ Loaded tool: ocr
+2026-01-04 04:49:29,472 - godman_ai - INFO -   ✓ Loaded tool: trello_job_tracker
+2026-01-04 04:49:29,473 - godman_ai - INFO -   ✓ Loaded tool: trello_task_automation
+2026-01-04 04:49:29,473 - godman_ai - INFO -   ✓ Loaded tool: trello
+2026-01-04 04:49:29,473 - godman_ai - INFO - Loading workflows...
+2026-01-04 04:49:29,473 - godman_ai - INFO -   ✓ Loaded workflow: video_organizer
+2026-01-04 04:49:29,473 - godman_ai - INFO -   ✓ Loaded workflow: video_to_frames
+2026-01-04 04:49:29,475 - godman_ai - INFO -   ✓ Loaded workflow: measurements_ocr_batch
+2026-01-04 04:49:29,476 - godman_ai - INFO -   ✓ Loaded workflow: pooljob_completion
+2026-01-04 04:49:29,476 - godman_ai - INFO -   ✓ Loaded workflow: pooljob_workflow
+2026-01-04 04:49:29,476 - godman_ai - INFO -   ✓ Loaded workflow: quick_receipt
+2026-01-04 04:49:29,476 - godman_ai - INFO -   ✓ Loaded workflow: receipts_workflow
+2026-01-04 04:49:29,476 - godman_ai - INFO - ✓ Loaded 20 tools and 7 workflows
+2026-01-04 04:49:29,476 - godman_ai - INFO - ▶️  Running workflow: measurements_ocr_batch
+2026-01-04 04:49:29,476 - godman_ai - INFO - 📞 Calling tool: ocr
+2026-01-04 04:49:29,538 - godman_ai - ERROR - ✗ Tool ocr failed: cannot identify image file '/tmp/tmprvfaeh6w.txt'
+2026-01-04 04:49:29,538 - godman_ai - INFO - ✓ Workflow measurements_ocr_batch completed successfully
