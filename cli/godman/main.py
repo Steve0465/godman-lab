@@ -755,6 +755,146 @@ def store_install(name: str = typer.Argument(..., help="Skill name to install"))
         raise typer.Exit(code=1)
 
 
+@app.command()
+def diagnostics_install(
+    pip: str = typer.Option(None, help="Comma-separated pip packages to install"),
+    npm: str = typer.Option(None, help="Comma-separated npm packages to install"),
+    npm_global: bool = typer.Option(False, help="Install npm packages globally")
+):
+    """
+    Install dependencies using async subprocess.
+    
+    Examples:
+        godman diagnostics install --pip "requests,beautifulsoup4"
+        godman diagnostics install --npm "typescript" --npm-global
+    """
+    import asyncio
+    from godman_ai.diagnostics import install_all
+    
+    pip_packages = [p.strip() for p in pip.split(",")] if pip else None
+    npm_packages = [p.strip() for p in npm.split(",")] if npm else None
+    
+    if not pip_packages and not npm_packages:
+        typer.echo("❌ No packages specified. Use --pip or --npm options", err=True)
+        raise typer.Exit(code=1)
+    
+    typer.echo("🔧 GodmanAI Dependency Installer")
+    typer.echo("=" * 60)
+    
+    if pip_packages:
+        typer.echo(f"\n📦 Pip packages: {', '.join(pip_packages)}")
+    if npm_packages:
+        npm_type = "global" if npm_global else "local"
+        typer.echo(f"📦 NPM packages ({npm_type}): {', '.join(npm_packages)}")
+    
+    typer.echo("\n⏳ Installing packages...\n")
+    
+    # Run async function
+    result = asyncio.run(install_all(
+        pip_packages=pip_packages,
+        npm_packages=npm_packages,
+        npm_global=npm_global
+    ))
+    
+    # Display results
+    typer.echo("\n📊 Installation Results")
+    typer.echo("=" * 60)
+    
+    if result.get("pip"):
+        pip_result = result["pip"]
+        if pip_result.get("success"):
+            typer.echo(f"\n✅ Pip: Successfully installed {len(pip_result.get('installed', []))} packages")
+        else:
+            typer.echo(f"\n❌ Pip: Installation failed")
+            if pip_result.get("stderr"):
+                typer.echo(f"   Error: {pip_result['stderr']}")
+    
+    if result.get("npm"):
+        npm_result = result["npm"]
+        if npm_result.get("success"):
+            typer.echo(f"\n✅ NPM: Successfully installed {len(npm_result.get('installed', []))} packages")
+        else:
+            typer.echo(f"\n❌ NPM: Installation failed")
+            if npm_result.get("error"):
+                typer.echo(f"   Error: {npm_result['error']}")
+    
+    if result.get("errors"):
+        typer.echo(f"\n⚠️  Errors encountered:")
+        for error in result["errors"]:
+            typer.echo(f"   • {error}")
+    
+    if not result.get("success"):
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def diagnostics_health(
+    openai: bool = typer.Option(True, help="Check OpenAI API"),
+    google: bool = typer.Option(True, help="Check Google Generative AI"),
+    anthropic: bool = typer.Option(False, help="Check Anthropic API")
+):
+    """
+    Run LLM health checks using async subprocess.
+    
+    Examples:
+        godman diagnostics health
+        godman diagnostics health --no-openai --anthropic
+    """
+    import asyncio
+    from godman_ai.diagnostics import run_llm_health_check
+    import json
+    
+    typer.echo("🏥 GodmanAI LLM Health Check")
+    typer.echo("=" * 60)
+    typer.echo("\n⏳ Running health checks...\n")
+    
+    # Run async health check
+    result = asyncio.run(run_llm_health_check(
+        check_openai=openai,
+        check_google=google,
+        check_anthropic=anthropic
+    ))
+    
+    # Display results
+    typer.echo("📊 Health Check Results")
+    typer.echo("=" * 60)
+    
+    # Overall status
+    status_icon = "✅" if result["overall_status"] == "healthy" else "⚠️" if result["overall_status"] == "degraded" else "❌"
+    typer.echo(f"\n{status_icon} Overall Status: {result['overall_status'].upper()}")
+    typer.echo(f"⏱️  Execution Time: {result['execution_time_ms']}ms")
+    
+    # Python info
+    if result.get("python_info"):
+        typer.echo(f"\n🐍 Python Environment:")
+        typer.echo(f"   Version: {result['python_info'].get('python_version', 'N/A').split()[0]}")
+        typer.echo(f"   Platform: {result['python_info'].get('platform', 'N/A')}")
+    
+    # Service checks
+    if result.get("services"):
+        typer.echo(f"\n🤖 LLM Services:")
+        for service_name, service_result in result["services"].items():
+            if service_result.get("available"):
+                typer.echo(f"   ✅ {service_name.upper()}: Available ({service_result.get('response_time_ms', 0)}ms)")
+                if service_result.get("models_count"):
+                    typer.echo(f"      Models: {service_result['models_count']}")
+            else:
+                typer.echo(f"   ❌ {service_name.upper()}: Unavailable")
+                if service_result.get("error"):
+                    typer.echo(f"      Error: {service_result['error']}")
+    
+    # Summary
+    summary = result.get("summary", {})
+    typer.echo(f"\n📈 Summary:")
+    typer.echo(f"   Total Services: {summary.get('total_services', 0)}")
+    typer.echo(f"   Available: {summary.get('available_services', 0)}")
+    typer.echo(f"   Unavailable: {summary.get('unavailable_services', 0)}")
+    
+    # Exit with error if critical
+    if result["overall_status"] == "critical":
+        raise typer.Exit(code=1)
+
+
 def main():
     """Main entry point."""
     app()
