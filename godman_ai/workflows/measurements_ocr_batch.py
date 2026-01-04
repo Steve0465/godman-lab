@@ -14,15 +14,20 @@ class OCRResult:
     file: str
     text: str
     customer_name: Optional[str] = None
-    measurements: Optional[Tuple[float, float]] = None  # (width, height) or (length, width)
+    measurements: Optional[Tuple[float, float]] = None  # (width, height) in feet
     confidence: float = 0.0
     validation_errors: List[str] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
     
     @property
     def is_valid(self) -> bool:
-        """Check if the result has valid extracted data."""
-        return bool(self.measurements and self.customer_name and not self.validation_errors)
+        """
+        Check if the result has valid extracted data.
+        
+        A result is considered valid if it has measurements without validation errors.
+        Customer name is optional and doesn't affect validity.
+        """
+        return bool(self.measurements and not self.validation_errors)
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""

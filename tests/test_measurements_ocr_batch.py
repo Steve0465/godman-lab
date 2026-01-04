@@ -69,6 +69,21 @@ class TestOCRResult:
         assert not result.is_valid
         assert len(result.validation_errors) > 0
     
+    def test_ocr_result_valid_without_customer(self):
+        """Test valid result with measurements but no customer name."""
+        result = OCRResult(
+            file="test.pdf",
+            text="Pool: 20 x 40",
+            customer_name=None,
+            measurements=(20.0, 40.0),
+            confidence=0.9
+        )
+        
+        # Should be valid even without customer name
+        assert result.is_valid
+        assert result.customer_name is None
+        assert result.measurements == (20.0, 40.0)
+    
     def test_to_dict(self):
         """Test conversion to dictionary."""
         result = OCRResult(
@@ -166,7 +181,7 @@ class TestMeasurementExtraction:
         
         text = """
         Invoice #12345
-        Date: 01/04/2026
+        Date: 01/04/2023
         Pool dimensions: 20 x 40
         Total: $1234.56
         """
@@ -201,7 +216,7 @@ class TestCustomerNameExtraction:
         """Test extraction with 'Name:' label."""
         workflow = MeasurementsOCRBatchWorkflow(engine=MockEngine())
         
-        text = "Name: Bob Johnson\nService Date: 01/04/2026"
+        text = "Name: Bob Johnson\nService Date: 01/04/2023"
         name = workflow.extract_customer_name(text)
         
         assert name == "Bob Johnson"
@@ -245,8 +260,8 @@ class TestCustomerNameExtraction:
         text = "Customer: John"
         name = workflow.extract_customer_name(text)
         
-        # Should not extract single word names
-        assert name is None or len(name.split()) >= 2
+        # Should not extract single word names (requires at least 2 words)
+        assert name is None
 
 
 class TestMeasurementValidation:
