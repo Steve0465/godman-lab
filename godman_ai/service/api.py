@@ -104,6 +104,22 @@ class MemorySearchRequest(BaseModel):
     top_k: int = 5
 
 
+class TaskCreateRequest(BaseModel):
+    task_input: str
+    schedule_type: str  # 'now', 'hourly', 'daily', 'cron'
+    schedule_value: Optional[str] = None
+    priority: int = 1
+    metadata: Optional[Dict[str, Any]] = None
+
+
+class TaskUpdateRequest(BaseModel):
+    schedule_type: Optional[str] = None
+    schedule_value: Optional[str] = None
+    priority: Optional[int] = None
+    status: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
+
+
 @app.get("/")
 def root():
     """Root endpoint"""
@@ -268,4 +284,130 @@ def memory_search(request: MemorySearchRequest):
         return {"success": True, "results": results}
     except Exception as e:
         logger.error(f"Error in /memory/search: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Task scheduling endpoints
+@app.post("/task")
+def create_task(request: TaskCreateRequest, authorization: Optional[str] = Header(None)):
+    """Create a scheduled task"""
+    verify_token(authorization)
+    
+    try:
+        from godman_ai.scheduler.task_manager import TaskManager
+        
+        manager = TaskManager()
+        task_id = manager.create_task(
+            task_input=request.task_input,
+            schedule_type=request.schedule_type,
+            schedule_value=request.schedule_value,
+            priority=request.priority,
+            metadata=request.metadata
+        )
+        
+        task = manager.get_task(task_id)
+        return {"success": True, "task_id": task_id, "task": task}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error in /task POST: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/task")
+def list_tasks(
+    status: Optional[str] = None,
+    schedule_type: Optional[str] = None,
+    limit: int = 100,
+    offset: int = 0
+):
+    """List scheduled tasks"""
+    try:
+        from godman_ai.scheduler.task_manager import TaskManager
+        
+        manager = TaskManager()
+        tasks = manager.list_tasks(
+            status=status,
+            schedule_type=schedule_type,
+            limit=limit,
+            offset=offset
+        )
+        
+        return {"success": True, "tasks": tasks, "count": len(tasks)}
+    except Exception as e:
+        logger.error(f"Error in /task GET: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/task/{task_id}")
+def get_task(task_id: int):
+    """Get task details"""
+    try:
+        from godman_ai.scheduler.task_manager import TaskManager
+        
+        manager = TaskManager()
+        task = manager.get_task(task_id)
+        
+        if not task:
+            raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+        
+        return {"success": True, "task": task}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in /task/{task_id} GET: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.put("/task/{task_id}")
+def update_task(task_id: int, request: TaskUpdateRequest, authorization: Optional[str] = Header(None)):
+    """Update a scheduled task"""
+    verify_token(authorization)
+    
+    try:
+        from godman_ai.scheduler.task_manager import TaskManager
+        
+        manager = TaskManager()
+        updated = manager.update_task(
+            task_id=task_id,
+            schedule_type=request.schedule_type,
+            schedule_value=request.schedule_value,
+            priority=request.priority,
+            status=request.status,
+            metadata=request.metadata
+        )
+        
+        if not updated:
+            raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+        
+        task = manager.get_task(task_id)
+        return {"success": True, "task": task}
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error in /task/{task_id} PUT: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/task/{task_id}")
+def delete_task(task_id: int, authorization: Optional[str] = Header(None)):
+    """Delete/cancel a scheduled task"""
+    verify_token(authorization)
+    
+    try:
+        from godman_ai.scheduler.task_manager import TaskManager
+        
+        manager = TaskManager()
+        deleted = manager.delete_task(task_id)
+        
+        if not deleted:
+            raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+        
+        return {"success": True, "message": f"Task {task_id} deleted"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in /task/{task_id} DELETE: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
