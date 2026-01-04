@@ -1,0 +1,21 @@
+2026-01-04 04:52:38,227 - godman_ai.service.api - ERROR - Error in /tools: 'Mock' object is not iterable
+Traceback (most recent call last):
+  File "/home/runner/work/godman-lab/godman-lab/godman_ai/service/api.py", line 219, in list_tools
+    for name, tool_cls in orchestrator.tools.items():
+TypeError: 'Mock' object is not iterable
+2026-01-04 04:52:38,229 - httpx - INFO - HTTP Request: GET http://testserver/tools "HTTP/1.1 500 Internal Server Error"
+2026-01-04 04:52:38,231 - godman_ai.service.api - ERROR - Error in /run: Connection to internal_server:5432 failed with user 'admin'
+Traceback (most recent call last):
+  File "/home/runner/work/godman-lab/godman-lab/godman_ai/service/api.py", line 129, in run_orchestrator
+    result = orchestrator.run_task(request.input)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/mock.py", line 1193, in _execute_mock_call
+    raise effect
+ValueError: Connection to internal_server:5432 failed with user 'admin'
+2026-01-04 04:52:38,232 - httpx - INFO - HTTP Request: POST http://testserver/run "HTTP/1.1 500 Internal Server Error"
